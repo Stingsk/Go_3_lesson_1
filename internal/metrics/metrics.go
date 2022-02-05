@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"encoding/json"
 	"math/rand"
 	"runtime"
 )
@@ -38,7 +37,7 @@ type Monitor struct {
 	PollCount int
 }
 
-func NewMonitor() ([]byte, error) {
+func NewMonitor() (Monitor, error) {
 	var m Monitor
 	var rtm runtime.MemStats
 	count := 0
@@ -83,10 +82,5 @@ func NewMonitor() ([]byte, error) {
 	m.PollCount = count
 	m.RandomValue = rand.Uint64()
 
-	// Live objects = Mallocs - Frees
-
-	// Just encode to json and print
-	jsonMonitor, err := json.Marshal(m)
-
-	return jsonMonitor, err
+	return m, nil
 }

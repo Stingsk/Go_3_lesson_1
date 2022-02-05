@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 )
@@ -13,18 +12,11 @@ func setMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
-	// читаем Body
-	b, err := io.ReadAll(r.Body)
-	// обрабатываем ошибку
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
 
-	fmt.Println(b)
+	fmt.Println(r.RequestURI)
 }
 
 func main() {
-	http.HandleFunc("/setMetrics/", setMetrics)
+	http.HandleFunc("/", setMetrics)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

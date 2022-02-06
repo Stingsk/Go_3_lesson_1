@@ -1,8 +1,16 @@
 package metrics
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"math/rand"
+	"os"
+	"reflect"
 	"runtime"
+	"strconv"
+	"sync"
+	"time"
 )
 
 type Monitor struct {
@@ -37,7 +45,108 @@ type Monitor struct {
 	PollCount     int     `json:"PollCount"`
 }
 
-func NewMonitor(count int) (Monitor, error) {
+type SensorData struct {
+	mu   sync.RWMutex
+	last []string
+}
+
+func (d *SensorData) Store(data []string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.last = data
+}
+
+func (d *SensorData) Get() []string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	return d.last
+}
+
+func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup, sigChan chan os.Signal) error {
+	defer wg.Done()
+	ticker := time.NewTicker(time.Duration(duration) * time.Second) // создаём таймер
+	count := 0
+	for {
+		count++
+		select {
+		case <-ticker.C:
+			metrics := getMetrics(count)
+			messages.Store(metrics)
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-sigChan:
+			return errors.New("аварийное завершение")
+		}
+	}
+}
+
+func getMetrics(count int) []string {
+	monitor, err := newMonitor(count)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	v := reflect.ValueOf(monitor)
+
+	names := GetNames()
+
+	result := make([]string, len(names))
+	for i, name := range names {
+		value := v.FieldByName(name)
+		val := ""
+		switch value.Kind() {
+		case reflect.Uint64, reflect.Uint32:
+			val = strconv.FormatUint(value.Uint(), 10)
+		case reflect.Int:
+			val = strconv.FormatInt(value.Int(), 10)
+		case reflect.Float64:
+			val = strconv.FormatFloat(value.Float(), 'f', 6, 64)
+		}
+		nameType := value.Type().Name()
+		result[i] = nameType + "/" + name + "/" + val
+	}
+
+	return result
+}
+
+func GetNames() []string {
+	result := []string{"Alloc",
+		"BuckHashSys",
+		"Frees",
+		"GCSys",
+		"HeapAlloc",
+		"HeapIdle",
+		"HeapInuse",
+		"HeapObjects",
+		"HeapReleased",
+		"HeapSys",
+		"LastGC",
+		"Lookups",
+		"MCacheInuse",
+		"MCacheSys",
+		"MSpanInuse",
+		"MSpanSys",
+		"Mallocs",
+		"NextGC",
+		"OtherSys",
+		"PauseTotalNs",
+		"StackInuse",
+		"StackSys",
+		"RandomValue",
+		"Sys",
+		"NumGC",
+		"NumForcedGC",
+		"GCCPUFraction",
+		"NumGoroutine",
+		"PollCount"}
+
+	return result
+}
+
+func newMonitor(count int) (Monitor, error) {
 	var m Monitor
 	var rtm runtime.MemStats
 	// Read full mem stats

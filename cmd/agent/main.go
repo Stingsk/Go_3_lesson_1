@@ -10,19 +10,39 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
+	"sync"
 	"time"
 )
 
-func RunGetMetrics(ctx context.Context, duration int, messages chan []string) error {
+type SensorData struct {
+	mu   sync.RWMutex
+	last []string
+}
+
+func (d *SensorData) Store(data []string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.last = data
+}
+
+func (d *SensorData) Get() []string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	return d.last
+}
+
+func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	ticker := time.NewTicker(time.Duration(duration) * time.Second) // создаём таймер
 	count := 0
 	for {
 		count++
 		select {
 		case <-ticker.C:
-			messages <- GetMetrics(count)
-			return nil
+			metrics := GetMetrics(count)
+			messages.Store(metrics)
 		case <-ctx.Done():
 			return ctx.Err()
 		}
@@ -35,66 +55,89 @@ func GetMetrics(count int) []string {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	v := reflect.ValueOf(monitor)
 
-	result := make([]string, v.NumField())
-	for i := 0; i < v.NumField(); i++ {
-		val := ""
-		json := ""
-		switch v.Field(i).Kind() {
-		case reflect.Uint64, reflect.Uint32:
-			val = strconv.FormatUint(v.Field(i).Uint(), 10)
+	names := GetNames()
 
+	result := make([]string, len(names))
+	for i, name := range names {
+		value := v.FieldByName(name)
+		val := ""
+		switch value.Kind() {
+		case reflect.Uint64, reflect.Uint32:
+			val = strconv.FormatUint(value.Uint(), 10)
 		case reflect.Int:
-			val = strconv.FormatInt(v.Field(i).Int(), 10)
+			val = strconv.FormatInt(value.Int(), 10)
 		case reflect.Float64:
-			val = strconv.FormatFloat(v.Field(i).Float(), 'f', 6, 64)
+			val = strconv.FormatFloat(value.Float(), 'f', 6, 64)
 		}
-		json = GetName(v.Field(i))
-		name := v.Field(i).Type().Name()
-		result[i] = name + "/" + json + "/" + val
+		nameType := value.Type().Name()
+		result[i] = nameType + "/" + name + "/" + val
 	}
 
 	return result
 }
 
-func GetName(field reflect.Value) string {
-	rt := reflect.TypeOf(field)
-	if rt.Kind() != reflect.Struct {
-		panic("bad type")
-	}
-	for i := 0; i < rt.NumField(); i++ {
-		f := rt.Field(i)
-		v := strings.Split(f.Tag.Get("Alloc"), ",")[0] // use split to ignore tag "options" like omitempty, etc.
-		if v != "" {
-			return f.Name
-		}
-	}
-	return ""
+func GetNames() []string {
+	result := []string{"Alloc",
+		"BuckHashSys",
+		"Frees",
+		"GCSys",
+		"HeapAlloc",
+		"HeapIdle",
+		"HeapInuse",
+		"HeapObjects",
+		"HeapReleased",
+		"HeapSys",
+		"LastGC",
+		"Lookups",
+		"MCacheInuse",
+		"MCacheSys",
+		"MSpanInuse",
+		"MSpanSys",
+		"Mallocs",
+		"NextGC",
+		"OtherSys",
+		"PauseTotalNs",
+		"StackInuse",
+		"StackSys",
+		"RandomValue",
+		"Sys",
+		"NumGC",
+		"NumForcedGC",
+		"GCCPUFraction",
+		"NumGoroutine",
+		"PollCount"}
+
+	return result
 }
 
 func main() {
-	messages := make(chan []string)
-
+	var wg sync.WaitGroup
+	var sensorData SensorData
+	sensorData.Store(GetNames())
 	ctx, _ := context.WithCancel(context.Background())
 
-	go RunGetMetrics(ctx, 2, messages)
+	wg.Add(1)
+	go RunGetMetrics(ctx, 2, &sensorData, &wg)
 
-	go RunSender(ctx, 10, messages)
+	wg.Add(2)
+	go RunSender(ctx, 10, &sensorData, &wg)
 
-	<-ctx.Done()
+	wg.Wait()
 }
 
-func RunSender(ctx context.Context, duration int, messages chan []string) error {
+func RunSender(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	ticker := time.NewTicker(time.Duration(duration) * time.Second) // создаём таймер
 	for {
 		select {
 		case <-ticker.C:
-			messagesFromChan := <-messages
+			messagesFromChan := messages.Get()
 			for _, mes := range messagesFromChan {
 				Send(mes)
 			}
-			return nil
 		case <-ctx.Done():
 			return ctx.Err()
 		}

@@ -6,43 +6,40 @@ import (
 )
 
 type Monitor struct {
-	Alloc,
-	BuckHashSys,
-	Frees,
-	GCSys,
-	HeapAlloc,
-	HeapIdle,
-	HeapInuse,
-	HeapObjects,
-	HeapReleased,
-	HeapSys,
-	LastGC,
-	Lookups,
-	MCacheInuse,
-	MCacheSys,
-	MSpanInuse,
-	MSpanSys,
-	Mallocs,
-	NextGC,
-	OtherSys,
-	PauseTotalNs,
-	StackInuse,
-	StackSys,
-	RandomValue,
-	Sys uint64
-	NumGC,
-	NumForcedGC uint32
-	GCCPUFraction float64
-	NumGoroutine,
-	PollCount int
+	Alloc         uint64  `json:"Alloc"`
+	BuckHashSys   uint64  `json:"BuckHashSys"`
+	Frees         uint64  `json:"Frees"`
+	GCSys         uint64  `json:"GCSys"`
+	HeapAlloc     uint64  `json:"HeapAlloc"`
+	HeapIdle      uint64  `json:"HeapIdle"`
+	HeapInuse     uint64  `json:"HeapInuse"`
+	HeapObjects   uint64  `json:"HeapObjects"`
+	HeapReleased  uint64  `json:"HeapReleased"`
+	HeapSys       uint64  `json:"HeapSys"`
+	LastGC        uint64  `json:"LastGC"`
+	Lookups       uint64  `json:"Lookups"`
+	MCacheInuse   uint64  `json:"MCacheInuse"`
+	MCacheSys     uint64  `json:"MCacheSys"`
+	MSpanInuse    uint64  `json:"MSpanInuse"`
+	MSpanSys      uint64  `json:"MSpanSys"`
+	Mallocs       uint64  `json:"Mallocs"`
+	NextGC        uint64  `json:"NextGC"`
+	OtherSys      uint64  `json:"OtherSys"`
+	PauseTotalNs  uint64  `json:"PauseTotalNs"`
+	StackInuse    uint64  `json:"StackInuse"`
+	StackSys      uint64  `json:"StackSys"`
+	RandomValue   uint64  `json:"RandomValue"`
+	Sys           uint64  `json:"Sys"`
+	NumGC         uint32  `json:"NumGC"`
+	NumForcedGC   uint32  `json:"NumForcedGC"`
+	GCCPUFraction float64 `json:"GCCPUFraction"`
+	NumGoroutine  int     `json:"NumGoroutine"`
+	PollCount     int     `json:"PollCount"`
 }
 
-func NewMonitor() (Monitor, error) {
+func NewMonitor(count int) (Monitor, error) {
 	var m Monitor
 	var rtm runtime.MemStats
-	count := 0
-
-	count++
 	// Read full mem stats
 	runtime.ReadMemStats(&rtm)
 

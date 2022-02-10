@@ -46,7 +46,7 @@ func send(send string) {
 		os.Exit(1)
 	}
 	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
-	request.Header.Add("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Add("Content-Type", "text/plain")
 	request.Header.Add("Content-Length", strconv.Itoa(len("monitor")))
 	// отправляем запрос и получаем ответ
 	response, err := client.Do(request)

@@ -97,15 +97,18 @@ func getMetrics(count int) []string {
 	for i, name := range names {
 		value := v.FieldByName(name)
 		val := ""
+		nameType := ""
 		switch value.Kind() {
 		case reflect.Uint64, reflect.Uint32:
 			val = strconv.FormatUint(value.Uint(), 10)
+			nameType = "gauge"
 		case reflect.Int:
 			val = strconv.FormatInt(value.Int(), 10)
+			nameType = "counter"
 		case reflect.Float64:
 			val = strconv.FormatFloat(value.Float(), 'f', 6, 64)
+			nameType = "gauge"
 		}
-		nameType := value.Type().Name()
 		result[i] = nameType + "/" + name + "/" + val
 	}
 

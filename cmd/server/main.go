@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
+	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,6 +13,9 @@ import (
 )
 
 func main() {
+	logs.Init()
+
+	logrus.Debug("Запуск сервера")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
 		syscall.SIGINT,
@@ -26,4 +31,6 @@ func main() {
 	go httputil.RunRecipient(ctx, &wg, sigChan)
 
 	wg.Wait()
+
+	logrus.Debug("Сервер завершил работу")
 }

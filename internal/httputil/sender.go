@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
@@ -51,11 +52,11 @@ func send(send string) {
 	// отправляем запрос и получаем ответ
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println(err)
+		logrus.Println(err)
 		os.Exit(1)
 	}
 	// печатаем код ответа
-	fmt.Println("Статус-код ", response.Status)
+	logrus.Println("Статус-код ", response.Status)
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -69,5 +70,5 @@ func send(send string) {
 		os.Exit(1)
 	}
 	// и печатаем его
-	fmt.Println(string(body))
+	logrus.Println(string(body))
 }

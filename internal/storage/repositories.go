@@ -14,14 +14,13 @@ func (e NotFoundError) Error() string {
 }
 
 type Repository interface {
-	AddTraining(ctx context.Context, tr *Training) error
+	AddTraining(ctx context.Context) error
 
-	GetTraining(ctx context.Context, trainingUUID string, user User) (*Training, error)
+	GetTraining(ctx context.Context) error
 
 	UpdateTraining(
 		ctx context.Context,
 		trainingUUID string,
-		user User,
-		updateFn func(ctx context.Context, tr *Training) (*Training, error),
+		updateFn func(ctx context.Context) error,
 	) error
 }

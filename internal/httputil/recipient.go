@@ -82,7 +82,7 @@ func recipientPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
 		return
 	}
-	if metricType != "gauge" || metricType != "counter" {
+	if metricType != "gauge" && metricType != "counter" {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
 		return
 	}

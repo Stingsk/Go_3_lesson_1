@@ -1,16 +1,13 @@
 package httputil
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
+	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
-	"io"
-	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -34,39 +31,20 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 func send(send string) {
 	endpoint := "http://localhost:8080/update/" + send
 	// конструируем HTTP-клиент
-	client := &http.Client{}
-	// конструируем запрос
-	// запрос методом POST должен, кроме заголовков, содержать тело
-	// тело должно быть источником потокового чтения io.Reader
-	// в большинстве случаев отлично подходит bytes.Buffer
-	request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString("monitor"))
+	client := resty.New()
+
+	response, err := client.R().
+		SetHeader("Content-Type", "text/plain").
+		Post(endpoint)
+
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
-	request.Header.Add("Content-Type", "text/plain")
-	request.Header.Add("Content-Length", strconv.Itoa(len("monitor")))
-	// отправляем запрос и получаем ответ
-	response, err := client.Do(request)
-	if err != nil {
-		logrus.Println(err)
-		os.Exit(1)
-	}
+
 	// печатаем код ответа
-	logrus.Println("Статус-код ", response.Status)
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(response.Body)
-	// читаем поток из тела ответа
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	logrus.Info("Запрос: ", send)
+	logrus.Info("Статус-код ", response.StatusCode())
 	// и печатаем его
-	logrus.Println(string(body))
+	logrus.Info(string(response.Body()))
 }

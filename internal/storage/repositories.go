@@ -56,6 +56,7 @@ var (
 	NumGoroutine  = MetricName{"numgoroutine"}
 	PullCounter   = MetricName{"pullcounter"}
 	TestGauge     = MetricName{"testgauge"}
+	TestCounter   = MetricName{"testcounter"}
 )
 
 func (u MetricName) IsZero() bool {

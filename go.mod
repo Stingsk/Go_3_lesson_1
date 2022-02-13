@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/go-chi/chi/v5 v5.0.7
-	github.com/go-chi/cors v1.2.0
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect

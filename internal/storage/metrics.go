@@ -78,6 +78,8 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 		return PullCounter, nil
 	case "testgauge":
 		return TestGauge, nil
+	case "testcounter":
+		return TestCounter, nil
 	}
 
 	return MetricName{}, fmt.Errorf("invalid '%s' MetricName", metricName)

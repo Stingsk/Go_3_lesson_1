@@ -46,12 +46,15 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update/*", recipient)
+	apiRouter.Post("/update/*", recipientPost)
+	apiRouter.Get("/value/*", recipientGet)
+	apiRouter.Get("/", recipientGetAllMetrics)
 
 	logrus.Info("Starting HTTP server")
 	return apiRouter
 }
-func recipient(w http.ResponseWriter, r *http.Request) {
+
+func recipientPost(w http.ResponseWriter, r *http.Request) {
 	// этот обработчик принимает только запросы, отправленные методом POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
@@ -88,6 +91,63 @@ func recipient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logrus.Info(r.RequestURI)
+}
+
+func recipientGet(w http.ResponseWriter, r *http.Request) {
+	// этот обработчик принимает только запросы, отправленные методом GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+	s := strings.Split(r.URL.Path, "/")
+	if len(s) != 4 {
+		http.Error(w, "Only 2 params in request are allowed!", http.StatusNotFound)
+		return
+	}
+
+	var metric storage.Metric
+
+	metric.NewMetricString(strings.ToLower(s[3]), strings.ToLower(s[2]), "")
+
+	if metric.GetMetricType().IsZero() {
+		http.Error(w, "MetricType NotImplemented!", http.StatusNotFound)
+		return
+	}
+	if metric.GetMetricName().IsZero() {
+		http.Error(w, "MetricName NotImplemented!", http.StatusNotFound)
+		return
+	}
+	var valueMetric, found = metricData[metric.GetMetricName()]
+	if found && valueMetric.GetMetricType().String() == strings.ToLower(s[2]) {
+		logrus.Info("Данные обновлены")
+		w.Write([]byte(valueMetric.GetValue()))
+	} else {
+		http.Error(w, "Value NotFound!", http.StatusNotFound)
+		return
+	}
+
+	logrus.Info(r.RequestURI)
+}
+
+func recipientGetAllMetrics(w http.ResponseWriter, r *http.Request) {
+	// этот обработчик принимает только запросы, отправленные методом GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Write([]byte(getAllMetrics()))
+
+	logrus.Info(r.RequestURI)
+}
+
+func getAllMetrics() string {
+	s := ""
+	for _, element := range metricData {
+		s += element.GetMetricName().String() + ": " + element.GetValue() + "\r"
+	}
+
+	return s
 }
 
 func setMiddlewares(router *chi.Mux) {

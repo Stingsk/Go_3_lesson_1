@@ -115,3 +115,6 @@ func (u *Metric) GetMetricName() MetricName {
 func (u *Metric) GetMetricType() MetricType {
 	return u.metricType
 }
+func (u *Metric) GetValue() string {
+	return u.value
+}

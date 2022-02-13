@@ -40,7 +40,7 @@ func Test_recipient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			recipient(tt.args.w, tt.args.r)
+			recipientPost(tt.args.w, tt.args.r)
 		})
 	}
 }

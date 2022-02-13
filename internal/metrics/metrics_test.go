@@ -47,54 +47,9 @@ func TestRunGetMetrics(t *testing.T) {
 }
 
 func TestSensorData_Get(t *testing.T) {
-	type fields struct {
-		mu   sync.RWMutex
-		last []string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &SensorData{
-				mu:   tt.fields.mu,
-				last: tt.fields.last,
-			}
-			if got := d.Get(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Get() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
 
 func TestSensorData_Store(t *testing.T) {
-	type fields struct {
-		mu   sync.RWMutex
-		last []string
-	}
-	type args struct {
-		data []string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &SensorData{
-				mu:   tt.fields.mu,
-				last: tt.fields.last,
-			}
-			d.Store(tt.args.data)
-		})
-	}
 }
 
 func Test_getMetrics(t *testing.T) {

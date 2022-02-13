@@ -80,11 +80,11 @@ func (u *Metric) UpdateMetric(value string, metricType string) Metric {
 		u.value = value
 	} else if metricType == "counter" {
 		oldValue, err := strconv.ParseInt(u.value, 10, 64)
-		if err == nil {
+		if err != nil {
 			oldValue = 0
 		}
 		newValue, err := strconv.ParseInt(value, 10, 64)
-		if err == nil {
+		if err != nil {
 			newValue = 0
 		}
 		u.value = strconv.FormatInt(oldValue+newValue, 10)

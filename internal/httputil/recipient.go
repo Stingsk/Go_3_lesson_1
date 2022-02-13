@@ -82,10 +82,15 @@ func recipientPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
 		return
 	}
+	if metricType != "gauge" || metricType != "counter" {
+		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
+		return
+	}
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		metricData[metricName] = valueMetric.UpdateMetric(metricValue, metricType)
+		valueMetric.UpdateMetric(metricValue, metricType)
+		metricData[metricName] = valueMetric
 		logrus.Info("Данные обновлены")
 	} else {
 		var metric storage.Metric

@@ -153,26 +153,29 @@ type Metric struct {
 	value      string
 }
 
-func (u Metric) NewMetricString(metricName string, metricType string, value string) (*Metric, error) {
+func (u *Metric) NewMetricString(metricName string, metricType string, value string) error {
 	mt, err := NewMetricTypeString(metricType)
 	if err != nil {
-		return nil, errors.New("error Match MetricType")
+		return errors.New("error Match MetricType")
 	}
 	mn, err := NewMetricNameString(metricName)
 	if err != nil {
-		return nil, errors.New("error Match MetricName")
+		return errors.New("error Match MetricName")
 	}
 
-	return &Metric{
-		metricType: mt,
-		metricName: mn,
-		counter:    0,
-		value:      value,
-	}, nil
+	u.metricType = mt
+	u.metricName = mn
+	u.counter = 0
+	u.value = value
+
+	return nil
 }
 
 func (u *Metric) UpdateMetric(value string) Metric {
 	u.value = value
 	u.counter++
 	return *u
+}
+func (u *Metric) GetMetricName() MetricName {
+	return u.metricName
 }

@@ -119,7 +119,7 @@ func recipientGet(w http.ResponseWriter, r *http.Request) {
 	}
 	var valueMetric, found = metricData[metric.GetMetricName()]
 	if found && valueMetric.GetMetricType().String() == strings.ToLower(s[2]) {
-		logrus.Info("Данные обновлены")
+		logrus.Info("Данные получены: " + valueMetric.GetValue())
 		w.Write([]byte(valueMetric.GetValue()))
 	} else {
 		http.Error(w, "Value NotFound!", http.StatusNotFound)
@@ -136,7 +136,9 @@ func recipientGetAllMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(getAllMetrics()))
+	metrics := getAllMetrics()
+	logrus.Info("Данные получены: " + metrics)
+	w.Write([]byte(metrics))
 
 	logrus.Info(r.RequestURI)
 }

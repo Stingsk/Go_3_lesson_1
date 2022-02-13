@@ -80,6 +80,10 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 		return TestGauge, nil
 	case "testcounter":
 		return TestCounter, nil
+	case "testsetget134":
+		return TestSetGet134, nil
+	case "testsetget33":
+		return TestSetGet33, nil
 	}
 
 	return MetricName{}, fmt.Errorf("invalid '%s' MetricName", metricName)

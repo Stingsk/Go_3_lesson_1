@@ -57,6 +57,8 @@ var (
 	PullCounter   = MetricName{"pullcounter"}
 	TestGauge     = MetricName{"testgauge"}
 	TestCounter   = MetricName{"testcounter"}
+	TestSetGet134 = MetricName{"testsetget134"}
+	TestSetGet33  = MetricName{"testsetget33"}
 )
 
 func (u MetricName) IsZero() bool {

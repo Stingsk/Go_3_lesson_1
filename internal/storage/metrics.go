@@ -74,8 +74,8 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 		return GCCPUFraction, nil
 	case "numgoroutine":
 		return NumGoroutine, nil
-	case "pollcount":
-		return PollCount, nil
+	case "testcounter":
+		return TestCounter, nil
 	}
 
 	return MetricName{}, errors.New(fmt.Sprintf("invalid '%s' MetricName", metricName))

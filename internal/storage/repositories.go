@@ -54,7 +54,7 @@ var (
 	NumForcedGC   = MetricName{"numforcedgc"}
 	GCCPUFraction = MetricName{"gccpufraction"}
 	NumGoroutine  = MetricName{"numgoroutine"}
-	PollCount     = MetricName{"pollcount"}
+	TestCounter   = MetricName{"testcounter"}
 )
 
 func (u MetricName) IsZero() bool {

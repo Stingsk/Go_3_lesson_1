@@ -42,7 +42,7 @@ type Monitor struct {
 	NumForcedGC   uint32  `json:"NumForcedGC"`
 	GCCPUFraction float64 `json:"GCCPUFraction"`
 	NumGoroutine  int     `json:"NumGoroutine"`
-	PollCount     int     `json:"PollCount"`
+	TestCounter   int     `json:"TestCounter"`
 }
 
 type SensorData struct {
@@ -142,7 +142,7 @@ func GetNames() []string {
 		"NumForcedGC",
 		"GCCPUFraction",
 		"NumGoroutine",
-		"PollCount"}
+		"TestCounter"}
 
 	return result
 }
@@ -186,7 +186,7 @@ func newMonitor(count int) (Monitor, error) {
 	m.Mallocs = rtm.Mallocs
 	m.Frees = rtm.Frees
 
-	m.PollCount = count
+	m.TestCounter = count
 	m.RandomValue = rand.Uint64()
 
 	return m, nil

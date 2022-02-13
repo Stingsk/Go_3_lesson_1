@@ -2,25 +2,6 @@ package storage
 
 // MetricType is enum-like type.
 // We are using struct instead of string, to ensure about immutability.
-type MetricType struct {
-	s string
-}
-
-func (u MetricType) IsZero() bool {
-	return u == MetricType{}
-}
-
-func (u MetricType) String() string {
-	return u.s
-}
-
-var (
-	Gauge   = MetricType{"gauge"}
-	Counter = MetricType{"counter"}
-)
-
-// MetricType is enum-like type.
-// We are using struct instead of string, to ensure about immutability.
 type MetricName struct {
 	s string
 }
@@ -53,12 +34,6 @@ var (
 	NumGC         = MetricName{"numgc"}
 	NumForcedGC   = MetricName{"numforcedgc"}
 	GCCPUFraction = MetricName{"gccpufraction"}
-	NumGoroutine  = MetricName{"numgoroutine"}
-	PullCounter   = MetricName{"pullcounter"}
-	TestGauge     = MetricName{"testgauge"}
-	TestCounter   = MetricName{"testcounter"}
-	TestSetGet134 = MetricName{"testsetget134"}
-	TestSetGet33  = MetricName{"testsetget33"}
 )
 
 func (u MetricName) IsZero() bool {
@@ -70,16 +45,14 @@ func (u MetricName) String() string {
 }
 
 type Metric struct {
-	metricType MetricType
-	metricName MetricName
-	counter    int
+	metricType string
+	metricName string
 	value      string
 }
 
 type Repository interface {
-	NewMetricTypeString(metricType string) (MetricType, error)
 	NewMetricNameString(metricName string) (MetricName, error)
 	NewMetricString(metricName string, metricType string, value string) error
-	UpdateMetric(value string) Metric
+	UpdateMetric(value string, metricType string) Metric
 	GetMetricName() MetricName
 }

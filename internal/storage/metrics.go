@@ -1,20 +1,9 @@
 package storage
 
 import (
-	"errors"
 	"fmt"
+	"strconv"
 )
-
-func NewMetricTypeString(metricType string) (MetricType, error) {
-	switch metricType {
-	case "gauge":
-		return Gauge, nil
-	case "counter":
-		return Counter, nil
-	}
-
-	return MetricType{}, fmt.Errorf("invalid '%s' MetricType", metricType)
-}
 
 func NewMetricNameString(metricName string) (MetricName, error) {
 	switch metricName {
@@ -72,51 +61,41 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 		return NumForcedGC, nil
 	case "gccpufraction":
 		return GCCPUFraction, nil
-	case "numgoroutine":
-		return NumGoroutine, nil
-	case "pullcounter":
-		return PullCounter, nil
-	case "testgauge":
-		return TestGauge, nil
-	case "testcounter":
-		return TestCounter, nil
-	case "testsetget134":
-		return TestSetGet134, nil
-	case "testsetget33":
-		return TestSetGet33, nil
 	}
 
 	return MetricName{}, fmt.Errorf("invalid '%s' MetricName", metricName)
 }
 
-func (u *Metric) NewMetricString(metricName string, metricType string, value string) error {
-	mt, err := NewMetricTypeString(metricType)
-	if err != nil {
-		return errors.New("error Match MetricType")
-	}
-	mn, err := NewMetricNameString(metricName)
-	if err != nil {
-		return errors.New("error Match MetricName")
-	}
-
-	u.metricType = mt
-	u.metricName = mn
-	u.counter = 0
+func (u *Metric) NewMetricString(metricName string, metricType string, value string) {
+	u.metricType = metricType
+	u.metricName = metricName
 	u.value = value
-
-	return nil
+}
+func (u *MetricName) NewMetricNameString(metricName string) {
+	u.s = metricName
 }
 
-func (u *Metric) UpdateMetric(value string) Metric {
-	u.value = value
-	u.counter++
+func (u *Metric) UpdateMetric(value string, metricType string) Metric {
+	if metricType == "gauge" {
+		u.value = value
+	} else if metricType == "counter" {
+		oldValue, err := strconv.ParseInt(u.value, 10, 64)
+		if err == nil {
+			oldValue = 0
+		}
+		newValue, err := strconv.ParseInt(value, 10, 64)
+		if err == nil {
+			newValue = 0
+		}
+		u.value = strconv.FormatInt(oldValue+newValue, 10)
+	}
 	return *u
 }
-func (u *Metric) GetMetricName() MetricName {
+func (u *Metric) GetMetricName() string {
 	return u.metricName
 }
 
-func (u *Metric) GetMetricType() MetricType {
+func (u *Metric) GetMetricType() string {
 	return u.metricType
 }
 func (u *Metric) GetValue() string {

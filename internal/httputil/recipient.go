@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var metricData = make(map[storage.MetricName]storage.Metric)
+var metricData = make(map[string]storage.Metric)
 
 func RunRecipient(wg *sync.WaitGroup, sigChan chan os.Signal) {
 	defer wg.Done()
@@ -66,34 +66,39 @@ func recipientPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var metric storage.Metric
-	metric.NewMetricString(strings.ToLower(s[3]), strings.ToLower(s[2]), strings.ToLower(s[4]))
+	metricType := strings.ToLower(s[2])
+	metricName := strings.ToLower(s[3])
+	metricValue := strings.ToLower(s[4])
+
+	var metricNameType storage.MetricName
+	metricNameType.NewMetricNameString(metricName)
+
 	if _, err := strconv.ParseFloat(s[4], 64); err != nil {
 		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
 		return
 	}
 
-	if metric.GetMetricType().IsZero() {
-		http.Error(w, "MetricType NotImplemented!", http.StatusNotImplemented)
-		return
-	}
-	if metric.GetMetricName().IsZero() {
+	if metricType == "gauge" && metricNameType.IsZero() {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
 		return
 	}
-	var valueMetric, found = metricData[metric.GetMetricName()]
+
+	var valueMetric, found = metricData[metricName]
 	if found {
+		metricData[metricName] = valueMetric.UpdateMetric(metricValue, metricType)
 		logrus.Info("Данные обновлены")
-		metricData[metric.GetMetricName()] = valueMetric.UpdateMetric(strings.ToLower(s[4]))
 	} else {
-		logrus.Info("Данныу добавлены")
-		metricData[metric.GetMetricName()] = metric
+		var metric storage.Metric
+		metric.NewMetricString(strings.ToLower(s[3]), strings.ToLower(s[2]), strings.ToLower(s[4]))
+		metricData[metricName] = metric
+		logrus.Info("Данные добавлены")
 	}
 
 	logrus.Info(r.RequestURI)
 }
 
 func recipientGet(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Адрес запроса : " + r.RequestURI)
 	// этот обработчик принимает только запросы, отправленные методом GET
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
@@ -105,28 +110,25 @@ func recipientGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var metric storage.Metric
+	metricType := strings.ToLower(s[2])
+	metricName := strings.ToLower(s[3])
 
-	metric.NewMetricString(strings.ToLower(s[3]), strings.ToLower(s[2]), "")
-
-	if metric.GetMetricType().IsZero() {
+	if metricType == "" {
 		http.Error(w, "MetricType NotImplemented!", http.StatusNotFound)
 		return
 	}
-	if metric.GetMetricName().IsZero() {
+	if metricName == "" {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotFound)
 		return
 	}
-	var valueMetric, found = metricData[metric.GetMetricName()]
-	if found && valueMetric.GetMetricType().String() == strings.ToLower(s[2]) {
+	var valueMetric, found = metricData[metricName]
+	if found && valueMetric.GetMetricType() == metricType {
 		logrus.Info("Данные получены: " + valueMetric.GetValue())
 		w.Write([]byte(valueMetric.GetValue()))
 	} else {
 		http.Error(w, "Value NotFound!", http.StatusNotFound)
 		return
 	}
-
-	logrus.Info(r.RequestURI)
 }
 
 func recipientGetAllMetrics(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +148,7 @@ func recipientGetAllMetrics(w http.ResponseWriter, r *http.Request) {
 func getAllMetrics() string {
 	s := ""
 	for _, element := range metricData {
-		s += element.GetMetricName().String() + ": " + element.GetValue() + "\r"
+		s += element.GetMetricName() + ": " + element.GetValue() + "\r"
 	}
 
 	return s

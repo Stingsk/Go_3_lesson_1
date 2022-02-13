@@ -13,7 +13,7 @@ func NewMetricTypeString(metricType string) (MetricType, error) {
 		return Counter, nil
 	}
 
-	return MetricType{}, errors.New(fmt.Sprintf("invalid '%s' MetricType", metricType))
+	return MetricType{}, fmt.Errorf("invalid '%s' MetricType", metricType)
 }
 
 func NewMetricNameString(metricName string) (MetricName, error) {
@@ -78,7 +78,7 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 		return TestCounter, nil
 	}
 
-	return MetricName{}, errors.New(fmt.Sprintf("invalid '%s' MetricName", metricName))
+	return MetricName{}, fmt.Errorf("invalid '%s' MetricName", metricName)
 }
 
 func (u *Metric) NewMetricString(metricName string, metricType string, value string) error {

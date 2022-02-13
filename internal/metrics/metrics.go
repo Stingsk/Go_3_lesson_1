@@ -64,8 +64,7 @@ func (d *SensorData) Get() []string {
 	return d.last
 }
 
-func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup, sigChan chan os.Signal) error {
-	defer wg.Done()
+func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup) error {
 	ticker := time.NewTicker(time.Duration(duration) * time.Second) // создаём таймер
 	count := 0
 	for {
@@ -75,8 +74,7 @@ func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *
 			metrics := getMetrics(count)
 			messages.Store(metrics)
 		case <-ctx.Done():
-			return ctx.Err()
-		case <-sigChan:
+			wg.Done()
 			return errors.New("аварийное завершение")
 		}
 	}

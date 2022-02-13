@@ -22,16 +22,22 @@ func main() {
 		syscall.SIGTERM,
 		syscall.SIGQUIT)
 
-	var wg sync.WaitGroup
+	wg := &sync.WaitGroup{}
 	var sensorData metrics.SensorData
 	sensorData.Store(metrics.GetNames())
-	ctx, _ := context.WithCancel(context.Background())
+
+	ctx, cancel := context.WithCancel(context.Background())
 
 	wg.Add(1)
-	go metrics.RunGetMetrics(ctx, 2, &sensorData, &wg, sigChan)
+	go metrics.RunGetMetrics(ctx, 2, &sensorData, wg)
 
-	wg.Add(2)
-	go httputil.RunSender(ctx, 10, &sensorData, &wg, sigChan)
+	wg.Add(1)
+	go httputil.RunSender(ctx, 10, &sensorData, wg)
+
+	go func() {
+		<-sigChan
+		cancel()
+	}()
 
 	wg.Wait()
 	logrus.Debug("Агент завершил работу")

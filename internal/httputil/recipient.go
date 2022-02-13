@@ -2,7 +2,6 @@ package httputil
 
 import (
 	"context"
-	"errors"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -17,29 +16,40 @@ import (
 
 var metricData = make(map[storage.MetricName]storage.Metric)
 
-func RunRecipient(ctx context.Context, wg *sync.WaitGroup, sigChan chan os.Signal) error {
+func RunRecipient(wg *sync.WaitGroup, sigChan chan os.Signal) {
 	defer wg.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-sigChan:
-			return errors.New("аварийное завершение")
-		default:
-			apiRouter := chi.NewRouter()
-			setMiddlewares(apiRouter)
-			apiRouter.Post("/update/*", recipient)
+	server := &http.Server{Addr: "localhost:8080", Handler: service()}
+	ctx, cancel := context.WithCancel(context.Background())
 
-			logrus.Info("Starting HTTP server")
-
-			err := http.ListenAndServe("localhost:8080", apiRouter)
-			if err != nil {
-				return err
-			}
+	go func() {
+		<-sigChan
+		err := server.Shutdown(ctx)
+		if err != nil {
+			logrus.Fatal(err)
 		}
+
+		cancel()
+	}()
+
+	// Run the server
+	err := server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		logrus.Fatal(err)
 	}
+
+	// Wait for server context to be stopped
+	<-ctx.Done()
 }
 
+func service() http.Handler {
+
+	apiRouter := chi.NewRouter()
+	setMiddlewares(apiRouter)
+	apiRouter.Post("/update/*", recipient)
+
+	logrus.Info("Starting HTTP server")
+	return apiRouter
+}
 func recipient(w http.ResponseWriter, r *http.Request) {
 	// этот обработчик принимает только запросы, отправленные методом POST
 	if r.Method != http.MethodPost {

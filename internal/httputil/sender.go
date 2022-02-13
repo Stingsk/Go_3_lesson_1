@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup, sigChan chan os.Signal) error {
+func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup) error {
 	defer wg.Done()
 	ticker := time.NewTicker(time.Duration(duration) * time.Second) // создаём таймер
 	for {
@@ -26,8 +26,6 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 				send(mes)
 			}
 		case <-ctx.Done():
-			return ctx.Err()
-		case <-sigChan:
 			return errors.New("аварийное завершение")
 		}
 	}

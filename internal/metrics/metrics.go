@@ -3,9 +3,7 @@ package metrics
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
-	"os"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -81,12 +79,7 @@ func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *
 }
 
 func getMetrics(count int) []string {
-	monitor, err := newMonitor(count)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
+	monitor := newMonitor(count)
 	v := reflect.ValueOf(monitor)
 
 	names := GetNames()
@@ -147,7 +140,7 @@ func GetNames() []string {
 	return result
 }
 
-func newMonitor(count int) (Monitor, error) {
+func newMonitor(count int) Monitor {
 	var m Monitor
 	var rtm runtime.MemStats
 	// Read full mem stats
@@ -189,5 +182,5 @@ func newMonitor(count int) (Monitor, error) {
 	m.PollCount = count
 	m.RandomValue = rand.Uint64()
 
-	return m, nil
+	return m
 }

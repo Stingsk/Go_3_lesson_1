@@ -47,9 +47,9 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 	case "mcachesys":
 		return MCacheSys, nil
 	case "mspaninuse":
-		return MCacheInuse, nil
-	case "mspansys":
 		return MSpanInuse, nil
+	case "mspansys":
+		return MSpanSys, nil
 	case "mallocs":
 		return Mallocs, nil
 	case "nextgc":
@@ -67,15 +67,17 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 	case "sys":
 		return Sys, nil
 	case "numgc":
-		return NextGC, nil
+		return NumGC, nil
 	case "numforcedgc":
 		return NumForcedGC, nil
 	case "gccpufraction":
 		return GCCPUFraction, nil
 	case "numgoroutine":
 		return NumGoroutine, nil
-	case "testcounter":
-		return TestCounter, nil
+	case "pullcounter":
+		return PullCounter, nil
+	case "testgauge":
+		return TestGauge, nil
 	}
 
 	return MetricName{}, fmt.Errorf("invalid '%s' MetricName", metricName)
@@ -106,4 +108,8 @@ func (u *Metric) UpdateMetric(value string) Metric {
 }
 func (u *Metric) GetMetricName() MetricName {
 	return u.metricName
+}
+
+func (u *Metric) GetMetricType() MetricType {
+	return u.metricType
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -64,8 +65,20 @@ func recipient(w http.ResponseWriter, r *http.Request) {
 
 	var metric storage.Metric
 	err := metric.NewMetricString(strings.ToLower(s[3]), strings.ToLower(s[2]), strings.ToLower(s[4]))
+	if _, err := strconv.Atoi(s[4]); err != nil {
+		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
+		return
+	}
 	if err != nil {
 		http.Error(w, "Only 3 params in request are allowed!", http.StatusNotFound)
+		return
+	}
+	if metric.GetMetricType().IsZero() {
+		http.Error(w, "MetricType NotImplemented!", http.StatusNotImplemented)
+		return
+	}
+	if metric.GetMetricName().IsZero() {
+		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
 		return
 	}
 	var valueMetric, found = metricData[metric.GetMetricName()]

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func NewMetricNameString(metricName string) (MetricName, error) {
+func NewMetricName(metricName string) (MetricName, error) {
 	switch metricName {
 	case "alloc":
 		return Alloc, nil
@@ -66,12 +66,12 @@ func NewMetricNameString(metricName string) (MetricName, error) {
 	return MetricName{}, fmt.Errorf("invalid '%s' MetricName", metricName)
 }
 
-func (u *Metric) NewMetricString(metricName string, metricType string, value string) {
+func (u *Metric) NewMetric(metricName string, metricType string, value string) {
 	u.metricType = metricType
 	u.metricName = metricName
 	u.value = value
 }
-func (u *MetricName) NewMetricNameString(metricName string) {
+func (u *MetricName) NewMetricName(metricName string) {
 	u.s = metricName
 }
 

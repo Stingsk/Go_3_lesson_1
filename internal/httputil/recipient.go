@@ -71,7 +71,7 @@ func recipientPost(w http.ResponseWriter, r *http.Request) {
 	metricValue := strings.ToLower(s[4])
 
 	var metricNameType storage.MetricName
-	metricNameType.NewMetricNameString(metricName)
+	metricNameType.NewMetricName(metricName)
 
 	if _, err := strconv.ParseFloat(s[4], 64); err != nil {
 		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
@@ -94,7 +94,7 @@ func recipientPost(w http.ResponseWriter, r *http.Request) {
 		logrus.Info("Данные обновлены")
 	} else {
 		var metric storage.Metric
-		metric.NewMetricString(strings.ToLower(s[3]), strings.ToLower(s[2]), strings.ToLower(s[4]))
+		metric.NewMetric(strings.ToLower(s[3]), strings.ToLower(s[2]), strings.ToLower(s[4]))
 		metricData[metricName] = metric
 		logrus.Info("Данные добавлены")
 	}

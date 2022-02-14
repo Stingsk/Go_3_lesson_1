@@ -5,9 +5,6 @@ import (
 	"testing"
 )
 
-func TestMetric_GetMetricName(t *testing.T) {
-}
-
 func TestMetric_GetMetricType(t *testing.T) {
 	type fields struct {
 		metricType string
@@ -43,13 +40,7 @@ func TestMetric_GetMetricType(t *testing.T) {
 	}
 }
 
-func TestMetric_NewMetricString(t *testing.T) {
-}
-
-func TestMetric_UpdateMetric(t *testing.T) {
-}
-
-func TestNewMetricNameString(t *testing.T) {
+func TestNewMetricName(t *testing.T) {
 	type args struct {
 		metricName string
 	}
@@ -59,21 +50,112 @@ func TestNewMetricNameString(t *testing.T) {
 		want    MetricName
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:    "Add Real MetricName",
+			args:    args{metricName: "stackinuse"},
+			want:    MetricName{s: "stackinuse"},
+			wantErr: false,
+		},
+		{
+			name:    "Add Fail MetricName",
+			args:    args{metricName: "MetricName"},
+			want:    MetricName{s: ""},
+			wantErr: true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewMetricNameString(tt.args.metricName)
+			got, err := NewMetricName(tt.args.metricName)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewMetricNameString() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewMetricName() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewMetricNameString() got = %v, want %v", got, tt.want)
+				t.Errorf("NewMetricName() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestNewMetricTypeString(t *testing.T) {
+func TestMetric_UpdateMetric(t *testing.T) {
+	type fields struct {
+		metricType string
+		metricName string
+		value      string
+	}
+	type args struct {
+		value      string
+		metricType string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   Metric
+	}{
+		{
+			name: "Update counter",
+			fields: fields{
+				metricType: "counter",
+				metricName: "testCounter",
+				value:      "12",
+			},
+			args: args{
+				value:      "13",
+				metricType: "counter",
+			},
+			want: Metric{
+				metricType: "counter",
+				metricName: "testCounter",
+				value:      "25",
+			},
+		},
+		{
+			name: "Update gauge",
+			fields: fields{
+				metricType: "gauge",
+				metricName: "stackinuse",
+				value:      "12",
+			},
+			args: args{
+				value:      "13",
+				metricType: "gauge",
+			},
+			want: Metric{
+				metricType: "gauge",
+				metricName: "stackinuse",
+				value:      "13",
+			},
+		},
+		{
+			name: "Update fail type",
+			fields: fields{
+				metricType: "gauge",
+				metricName: "stackinuse",
+				value:      "12",
+			},
+			args: args{
+				value:      "13",
+				metricType: "failType",
+			},
+			want: Metric{
+				metricType: "gauge",
+				metricName: "stackinuse",
+				value:      "12",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &Metric{
+				metricType: tt.fields.metricType,
+				metricName: tt.fields.metricName,
+				value:      tt.fields.value,
+			}
+			if got := u.UpdateMetric(tt.args.value, tt.args.metricType); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("UpdateMetric() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

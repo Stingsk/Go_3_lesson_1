@@ -37,6 +37,7 @@ func TestRunGetMetrics(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	tests := []struct {

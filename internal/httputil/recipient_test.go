@@ -107,6 +107,9 @@ func TestRecipientGet(t *testing.T) {
 			}
 
 			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
 			// получаем и проверяем тело запроса
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
@@ -214,6 +217,9 @@ func TestRecipientPost(t *testing.T) {
 			}
 
 			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
 			// получаем и проверяем тело запроса
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)

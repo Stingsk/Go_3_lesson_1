@@ -31,7 +31,7 @@ func TestRunSender(t *testing.T) {
 	}
 }
 
-func Test_send(t *testing.T) {
+func TestSend(t *testing.T) {
 	type args struct {
 		send string
 	}

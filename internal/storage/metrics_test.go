@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestMetric_GetMetricType(t *testing.T) {
+func TestMetricGetMetricType(t *testing.T) {
 	type fields struct {
 		metricType string
 		metricName string
@@ -78,7 +78,7 @@ func TestNewMetricName(t *testing.T) {
 	}
 }
 
-func TestMetric_UpdateMetric(t *testing.T) {
+func TestMetricUpdateMetric(t *testing.T) {
 	type fields struct {
 		metricType string
 		metricName string

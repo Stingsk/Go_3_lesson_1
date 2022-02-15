@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -12,6 +11,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 )
+
+const protocol string = "http://"
 
 func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup) error {
 	defer wg.Done()
@@ -30,7 +31,7 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 }
 
 func send(send string) {
-	endpoint := "http://localhost:8080/update/" + send
+	endpoint := protocol + host + "/update/" + send
 	client := resty.New()
 
 	response, err := client.R().
@@ -39,7 +40,6 @@ func send(send string) {
 
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
 	}
 
 	// печатаем код ответа

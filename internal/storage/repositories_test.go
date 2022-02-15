@@ -2,7 +2,7 @@ package storage
 
 import "testing"
 
-func TestMetricName_IsZero(t *testing.T) {
+func TestMetricNameIsZero(t *testing.T) {
 	type fields struct {
 		s string
 	}
@@ -25,7 +25,7 @@ func TestMetricName_IsZero(t *testing.T) {
 	}
 }
 
-func TestMetricName_String(t *testing.T) {
+func TestMetricNameString(t *testing.T) {
 	type fields struct {
 		s string
 	}

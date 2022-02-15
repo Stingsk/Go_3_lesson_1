@@ -30,7 +30,7 @@ func TestRunRecipient(t *testing.T) {
 	}
 }
 
-func Test_getAllMetrics(t *testing.T) {
+func TestGetAllMetrics(t *testing.T) {
 	tests := []struct {
 		name string
 		want string
@@ -46,7 +46,7 @@ func Test_getAllMetrics(t *testing.T) {
 	}
 }
 
-func Test_recipientGet(t *testing.T) {
+func TestRecipientGet(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
@@ -125,7 +125,7 @@ func Test_recipientGet(t *testing.T) {
 	}
 }
 
-func Test_recipientGetAllMetrics(t *testing.T) {
+func TestRecipientGetAllMetrics(t *testing.T) {
 	type args struct {
 		w http.ResponseWriter
 		r *http.Request
@@ -143,7 +143,7 @@ func Test_recipientGetAllMetrics(t *testing.T) {
 	}
 }
 
-func Test_recipientPost(t *testing.T) {
+func TestRecipientPost(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
@@ -232,7 +232,7 @@ func Test_recipientPost(t *testing.T) {
 	}
 }
 
-func Test_service(t *testing.T) {
+func TestService(t *testing.T) {
 	tests := []struct {
 		name string
 		want http.Handler

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func Test_newMonitor(t *testing.T) {
+func TestNewMonitor(t *testing.T) {
 	type args struct {
 		count int
 	}

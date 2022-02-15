@@ -18,9 +18,13 @@ import (
 
 var metricData = make(map[string]storage.Metric)
 
+const gauge string = "gauge"
+const counter string = "counter"
+const host string = "localhost:8080"
+
 func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal) {
 	defer wg.Done()
-	server := &http.Server{Addr: "localhost:8080", Handler: service()}
+	server := &http.Server{Addr: host, Handler: service()}
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
@@ -47,8 +51,8 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update/gauge/{gauge}/{value}", postGaugeMetric)
-	apiRouter.Post("/update/counter/{counter}/{value}", postCounterMetric)
+	apiRouter.Post("/update/"+gauge+"/{gauge}/{value}", postGaugeMetric)
+	apiRouter.Post("/update/"+counter+"/{counter}/{value}", postCounterMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
 	apiRouter.Get("/", getAllMetrics)
 
@@ -59,8 +63,7 @@ func service() http.Handler {
 func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
-	metricType := "gauge"
-	metricName := chi.URLParam(r, "gauge")
+	metricName := chi.URLParam(r, gauge)
 	metricValue := chi.URLParam(r, "value")
 
 	var metricNameType storage.MetricName
@@ -71,23 +74,19 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if metricType == "gauge" && metricNameType.IsZero() {
-		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
-		return
-	}
-	if metricType != "gauge" && metricType != "counter" {
+	if metricNameType.IsZero() {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
 		return
 	}
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		valueMetric.UpdateMetric(metricValue, metricType)
+		valueMetric.UpdateMetric(metricValue, gauge)
 		metricData[metricName] = valueMetric
 		logrus.Info("Updated data")
 	} else {
 		var metric storage.Metric
-		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(metricType), strings.ToLower(metricValue))
+		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(gauge), strings.ToLower(metricValue))
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}
@@ -98,8 +97,7 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
-	metricType := "counter"
-	metricName := chi.URLParam(r, "counter")
+	metricName := chi.URLParam(r, counter)
 	metricValue := chi.URLParam(r, "value")
 
 	var metricNameType storage.MetricName
@@ -110,23 +108,14 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if metricType == "gauge" && metricNameType.IsZero() {
-		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
-		return
-	}
-	if metricType != "gauge" && metricType != "counter" {
-		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
-		return
-	}
-
 	var valueMetric, found = metricData[metricName]
 	if found {
-		valueMetric.UpdateMetric(metricValue, metricType)
+		valueMetric.UpdateMetric(metricValue, counter)
 		metricData[metricName] = valueMetric
 		logrus.Info("Updated data")
 	} else {
 		var metric storage.Metric
-		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(metricType), strings.ToLower(metricValue))
+		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(counter), strings.ToLower(metricValue))
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}

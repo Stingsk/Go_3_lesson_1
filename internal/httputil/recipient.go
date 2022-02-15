@@ -2,17 +2,18 @@ package httputil
 
 import (
 	"context"
-	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
-	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
+	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sirupsen/logrus"
 )
 
 var metricData = make(map[string]storage.Metric)
@@ -55,10 +56,7 @@ func service() http.Handler {
 }
 
 func postMetric(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
+	logrus.Info("Url request: " + r.RequestURI)
 	s := strings.Split(r.URL.Path, "/")
 	if len(s) != 5 {
 		http.Error(w, "Only 3 params in request are allowed!", http.StatusNotFound)
@@ -103,10 +101,6 @@ func postMetric(w http.ResponseWriter, r *http.Request) {
 
 func getMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
 	s := strings.Split(r.URL.Path, "/")
 	if len(s) != 4 {
 		http.Error(w, "Only 2 params in request are allowed!", http.StatusNotFound)
@@ -135,11 +129,7 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAllMetrics(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
+	logrus.Info("Url request: " + r.RequestURI)
 	metrics := concatenationMetrics()
 	logrus.Info("Data received: " + metrics)
 	w.Write([]byte(metrics))

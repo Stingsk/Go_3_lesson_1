@@ -2,9 +2,10 @@ package httputil
 
 import (
 	"context"
-	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
 	"sync"
 	"testing"
+
+	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
 )
 
 func TestRunSender(t *testing.T) {

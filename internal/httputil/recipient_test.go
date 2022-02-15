@@ -1,7 +1,6 @@
 package httputil
 
 import (
-	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +8,8 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func TestRunRecipient(t *testing.T) {
@@ -69,16 +70,6 @@ func Test_recipientGet(t *testing.T) {
 		},
 		{
 			name:   "negative test #2",
-			method: http.MethodPost,
-			target: "/status",
-			want: want{
-				code:        405,
-				response:    "Only GET requests are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name:   "negative test #3",
 			method: http.MethodGet,
 			target: "/value/counter/testSetGet33",
 			want: want{
@@ -88,7 +79,7 @@ func Test_recipientGet(t *testing.T) {
 			},
 		},
 		{
-			name:   "negative test #4",
+			name:   "negative test #3",
 			method: http.MethodGet,
 			target: "/value/gauge/Alloc",
 			want: want{
@@ -174,16 +165,6 @@ func Test_recipientPost(t *testing.T) {
 		},
 		{
 			name:   "negative test #2",
-			method: http.MethodGet,
-			target: "/status",
-			want: want{
-				code:        405,
-				response:    "Only POST requests are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name:   "negative test #3",
 			method: http.MethodPost,
 			target: "/update/asd/Alloc/345016",
 			want: want{
@@ -193,7 +174,7 @@ func Test_recipientPost(t *testing.T) {
 			},
 		},
 		{
-			name:   "negative test #4",
+			name:   "negative test #3",
 			method: http.MethodPost,
 			target: "/update/gauge/Alloc/none",
 			want: want{

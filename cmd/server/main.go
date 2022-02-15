@@ -1,13 +1,15 @@
 package main
 
 import (
-	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
-	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
+	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 )
 
 func main() {

@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
-	"github.com/go-resty/resty/v2"
-	"github.com/sirupsen/logrus"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
+	"github.com/go-resty/resty/v2"
+	"github.com/sirupsen/logrus"
 )
 
 func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup) error {

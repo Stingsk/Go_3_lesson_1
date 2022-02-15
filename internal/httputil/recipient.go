@@ -47,30 +47,26 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update/*", postMetric)
-	apiRouter.Get("/value/*", getMetric)
+	apiRouter.Post("/update/gauge/{gauge}/{value}", postGaugeMetric)
+	apiRouter.Post("/update/counter/{counter}/{value}", postCounterMetric)
+	apiRouter.Get("/value/{type}/{name}", getMetric)
 	apiRouter.Get("/", getAllMetrics)
 
 	logrus.Info("Starting HTTP server")
 	return apiRouter
 }
 
-func postMetric(w http.ResponseWriter, r *http.Request) {
+func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
-	s := strings.Split(r.URL.Path, "/")
-	if len(s) != 5 {
-		http.Error(w, "Only 3 params in request are allowed!", http.StatusNotFound)
-		return
-	}
 
-	metricType := strings.ToLower(s[2])
-	metricName := strings.ToLower(s[3])
-	metricValue := strings.ToLower(s[4])
+	metricType := "gauge"
+	metricName := chi.URLParam(r, "gauge")
+	metricValue := chi.URLParam(r, "value")
 
 	var metricNameType storage.MetricName
 	metricNameType.NewMetricName(metricName)
 
-	if _, err := strconv.ParseFloat(s[4], 64); err != nil {
+	if _, err := strconv.ParseFloat(metricValue, 64); err != nil {
 		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
 		return
 	}
@@ -91,7 +87,46 @@ func postMetric(w http.ResponseWriter, r *http.Request) {
 		logrus.Info("Updated data")
 	} else {
 		var metric storage.Metric
-		metric.NewMetric(strings.ToLower(s[3]), strings.ToLower(s[2]), strings.ToLower(s[4]))
+		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(metricType), strings.ToLower(metricValue))
+		metricData[metricName] = metric
+		logrus.Info("Added data")
+	}
+
+	logrus.Info(r.RequestURI)
+}
+
+func postCounterMetric(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Url request: " + r.RequestURI)
+
+	metricType := "counter"
+	metricName := chi.URLParam(r, "counter")
+	metricValue := chi.URLParam(r, "value")
+
+	var metricNameType storage.MetricName
+	metricNameType.NewMetricName(metricName)
+
+	if _, err := strconv.ParseFloat(metricValue, 64); err != nil {
+		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
+		return
+	}
+
+	if metricType == "gauge" && metricNameType.IsZero() {
+		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
+		return
+	}
+	if metricType != "gauge" && metricType != "counter" {
+		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
+		return
+	}
+
+	var valueMetric, found = metricData[metricName]
+	if found {
+		valueMetric.UpdateMetric(metricValue, metricType)
+		metricData[metricName] = valueMetric
+		logrus.Info("Updated data")
+	} else {
+		var metric storage.Metric
+		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(metricType), strings.ToLower(metricValue))
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}
@@ -101,14 +136,8 @@ func postMetric(w http.ResponseWriter, r *http.Request) {
 
 func getMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
-	s := strings.Split(r.URL.Path, "/")
-	if len(s) != 4 {
-		http.Error(w, "Only 2 params in request are allowed!", http.StatusNotFound)
-		return
-	}
-
-	metricType := strings.ToLower(s[2])
-	metricName := strings.ToLower(s[3])
+	metricType := chi.URLParam(r, "type")
+	metricName := chi.URLParam(r, "name")
 
 	if metricType == "" {
 		http.Error(w, "MetricType NotImplemented!", http.StatusNotFound)

@@ -64,7 +64,7 @@ func Test_recipientGet(t *testing.T) {
 			target: "/status",
 			want: want{
 				code:        404,
-				response:    "Only 2 params in request are allowed!\n",
+				response:    "404 page not found\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -91,20 +91,22 @@ func Test_recipientGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(tt.method, tt.target, nil)
 			// создаём новый Recorder
-			w := httptest.NewRecorder()
-			// определяем хендлер
-			h := http.HandlerFunc(getMetric)
-			// запускаем сервер
-			h.ServeHTTP(w, request)
-			res := w.Result()
+			r := chi.NewRouter()
+			httptest.NewServer(r)
 
-			// проверяем код ответа
-			if res.StatusCode != tt.want.code {
-				t.Errorf("Expected status code %d, got %d", tt.want.code, w.Code)
+			r.Route("/value", func(r chi.Router) {
+				r.Get("/{type}/{name}", getMetric)
+			})
+			ts := httptest.NewServer(r)
+			defer ts.Close()
+
+			req, err := http.NewRequest(tt.method, ts.URL+tt.target, nil)
+			if err != nil {
+				t.Fatal(err)
 			}
 
+			res, err := http.DefaultClient.Do(req)
 			// получаем и проверяем тело запроса
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
@@ -112,7 +114,7 @@ func Test_recipientGet(t *testing.T) {
 				t.Fatal(err)
 			}
 			if string(resBody) != tt.want.response {
-				t.Errorf("Expected body %s, got %s", tt.want.response, w.Body.String())
+				t.Errorf("Expected body %s, got %s", tt.want.response, resBody)
 			}
 
 			// заголовок ответа
@@ -159,7 +161,7 @@ func Test_recipientPost(t *testing.T) {
 			target: "/status",
 			want: want{
 				code:        404,
-				response:    "Only 3 params in request are allowed!\n",
+				response:    "404 page not found\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -169,7 +171,7 @@ func Test_recipientPost(t *testing.T) {
 			target: "/update/asd/Alloc/345016",
 			want: want{
 				code:        501,
-				response:    "MetricName NotImplemented!\n",
+				response:    "404 page not found\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -179,8 +181,8 @@ func Test_recipientPost(t *testing.T) {
 			target: "/update/gauge/Alloc/none",
 			want: want{
 				code:        400,
-				response:    "Only Numbers  params in request are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
+				response:    "",
+				contentType: "",
 			},
 		},
 		{
@@ -196,20 +198,22 @@ func Test_recipientPost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(tt.method, tt.target, nil)
 			// создаём новый Recorder
-			w := httptest.NewRecorder()
-			// определяем хендлер
-			h := http.HandlerFunc(postMetric)
-			// запускаем сервер
-			h.ServeHTTP(w, request)
-			res := w.Result()
+			r := chi.NewRouter()
+			httptest.NewServer(r)
 
-			// проверяем код ответа
-			if res.StatusCode != tt.want.code {
-				t.Errorf("Expected status code %d, got %d", tt.want.code, w.Code)
+			r.Route("/update/gauge", func(r chi.Router) {
+				r.Get("/{gauge}/{value}", postGaugeMetric)
+			})
+			ts := httptest.NewServer(r)
+			defer ts.Close()
+
+			req, err := http.NewRequest(tt.method, ts.URL+tt.target, nil)
+			if err != nil {
+				t.Fatal(err)
 			}
 
+			res, err := http.DefaultClient.Do(req)
 			// получаем и проверяем тело запроса
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
@@ -217,7 +221,7 @@ func Test_recipientPost(t *testing.T) {
 				t.Fatal(err)
 			}
 			if string(resBody) != tt.want.response {
-				t.Errorf("Expected body %s, got %s", tt.want.response, w.Body.String())
+				t.Errorf("Expected body %s, got %s", tt.want.response, resBody)
 			}
 
 			// заголовок ответа

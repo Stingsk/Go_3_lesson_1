@@ -55,7 +55,14 @@ func service() http.Handler {
 	apiRouter.Post("/update/"+counter+"/{counter}/{value}", postCounterMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
 	apiRouter.Get("/", getAllMetrics)
-
+	apiRouter.Post("/update/"+gauge+"*", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Method NotImplemented!", http.StatusNotFound)
+		return
+	})
+	apiRouter.Post("/update/"+counter+"*", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Method NotImplemented!", http.StatusNotFound)
+		return
+	})
 	apiRouter.Post("/update/*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method NotImplemented!", http.StatusNotImplemented)
 		return

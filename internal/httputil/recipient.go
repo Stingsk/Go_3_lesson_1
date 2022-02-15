@@ -56,6 +56,11 @@ func service() http.Handler {
 	apiRouter.Get("/value/{type}/{name}", getMetric)
 	apiRouter.Get("/", getAllMetrics)
 
+	apiRouter.Post("/update/*", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Method NotImplemented!", http.StatusNotImplemented)
+		return
+	})
+
 	logrus.Info("Starting HTTP server")
 	return apiRouter
 }

@@ -13,7 +13,6 @@ func NewStructuredLogger(logger *logrus.Logger) func(next http.Handler) http.Han
 	return middleware.RequestLogger(&StructuredLogger{logger})
 }
 
-// based on example from chi: https://github.com/go-chi/chi/blob/master/_examples/logging/main.go
 type StructuredLogger struct {
 	Logger *logrus.Logger
 }

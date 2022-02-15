@@ -63,7 +63,7 @@ func (d *SensorData) Get() []string {
 }
 
 func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup) error {
-	ticker := time.NewTicker(time.Duration(duration) * time.Second) // создаём таймер
+	ticker := time.NewTicker(time.Duration(duration) * time.Second)
 	count := 0
 	for {
 		count++
@@ -73,7 +73,7 @@ func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *
 			messages.Store(metrics)
 		case <-ctx.Done():
 			wg.Done()
-			return errors.New("аварийное завершение")
+			return errors.New("crash shutdown")
 		}
 	}
 }

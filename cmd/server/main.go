@@ -13,7 +13,7 @@ import (
 func main() {
 	logs.Init()
 
-	logrus.Debug("Запуск сервера")
+	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
 		syscall.SIGINT,
@@ -22,9 +22,9 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go httputil.RunRecipient(&wg, sigChan)
+	go httputil.RunServer(&wg, sigChan)
 
 	wg.Wait()
 
-	logrus.Debug("Сервер завершил работу")
+	logrus.Debug("Shutdown server")
 }

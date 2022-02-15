@@ -17,7 +17,7 @@ import (
 
 var metricData = make(map[string]storage.Metric)
 
-func RunRecipient(wg *sync.WaitGroup, sigChan chan os.Signal) {
+func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal) {
 	defer wg.Done()
 	server := &http.Server{Addr: "localhost:8080", Handler: service()}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -46,16 +46,15 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update/*", recipientPost)
-	apiRouter.Get("/value/*", recipientGet)
-	apiRouter.Get("/", recipientGetAllMetrics)
+	apiRouter.Post("/update/*", postMetric)
+	apiRouter.Get("/value/*", getMetric)
+	apiRouter.Get("/", getAllMetrics)
 
 	logrus.Info("Starting HTTP server")
 	return apiRouter
 }
 
-func recipientPost(w http.ResponseWriter, r *http.Request) {
-	// этот обработчик принимает только запросы, отправленные методом POST
+func postMetric(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -91,20 +90,19 @@ func recipientPost(w http.ResponseWriter, r *http.Request) {
 	if found {
 		valueMetric.UpdateMetric(metricValue, metricType)
 		metricData[metricName] = valueMetric
-		logrus.Info("Данные обновлены")
+		logrus.Info("Updated data")
 	} else {
 		var metric storage.Metric
 		metric.NewMetric(strings.ToLower(s[3]), strings.ToLower(s[2]), strings.ToLower(s[4]))
 		metricData[metricName] = metric
-		logrus.Info("Данные добавлены")
+		logrus.Info("Added data")
 	}
 
 	logrus.Info(r.RequestURI)
 }
 
-func recipientGet(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("Адрес запроса : " + r.RequestURI)
-	// этот обработчик принимает только запросы, отправленные методом GET
+func getMetric(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Url request: " + r.RequestURI)
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -128,7 +126,7 @@ func recipientGet(w http.ResponseWriter, r *http.Request) {
 	}
 	var valueMetric, found = metricData[metricName]
 	if found && valueMetric.GetMetricType() == metricType {
-		logrus.Info("Данные получены: " + valueMetric.GetValue())
+		logrus.Info("Data received: " + valueMetric.GetValue())
 		w.Write([]byte(valueMetric.GetValue()))
 	} else {
 		http.Error(w, "Value NotFound!", http.StatusNotFound)
@@ -136,21 +134,20 @@ func recipientGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func recipientGetAllMetrics(w http.ResponseWriter, r *http.Request) {
-	// этот обработчик принимает только запросы, отправленные методом GET
+func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
 
-	metrics := getAllMetrics()
-	logrus.Info("Данные получены: " + metrics)
+	metrics := concatenationMetrics()
+	logrus.Info("Data received: " + metrics)
 	w.Write([]byte(metrics))
 
 	logrus.Info(r.RequestURI)
 }
 
-func getAllMetrics() string {
+func concatenationMetrics() string {
 	s := ""
 	for _, element := range metricData {
 		s += element.GetMetricName() + ": " + element.GetValue() + "\r"

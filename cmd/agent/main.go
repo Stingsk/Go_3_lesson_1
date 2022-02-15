@@ -15,7 +15,7 @@ import (
 func main() {
 	logs.Init()
 
-	logrus.Debug("Запуск агента")
+	logrus.Debug("Start agent")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
 		syscall.SIGINT,
@@ -40,5 +40,5 @@ func main() {
 	}()
 
 	wg.Wait()
-	logrus.Debug("Агент завершил работу")
+	logrus.Debug("Shutdown agent")
 }

@@ -14,7 +14,7 @@ import (
 
 func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup) error {
 	defer wg.Done()
-	ticker := time.NewTicker(time.Duration(duration) * time.Second) // создаём таймер
+	ticker := time.NewTicker(time.Duration(duration) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
@@ -23,14 +23,13 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 				send(mes)
 			}
 		case <-ctx.Done():
-			return errors.New("аварийное завершение")
+			return errors.New("crash agent")
 		}
 	}
 }
 
 func send(send string) {
 	endpoint := "http://localhost:8080/update/" + send
-	// конструируем HTTP-клиент
 	client := resty.New()
 
 	response, err := client.R().
@@ -43,8 +42,8 @@ func send(send string) {
 	}
 
 	// печатаем код ответа
-	logrus.Info("Запрос: ", send)
-	logrus.Info("Статус-код ", response.StatusCode())
+	logrus.Info("Send: ", send)
+	logrus.Info("Status code ", response.StatusCode())
 	// и печатаем его
 	logrus.Info(string(response.Body()))
 }

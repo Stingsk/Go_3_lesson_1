@@ -24,7 +24,7 @@ func TestRunRecipient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			RunRecipient(tt.args.wg, tt.args.sigChan)
+			RunServer(tt.args.wg, tt.args.sigChan)
 		})
 	}
 }
@@ -38,8 +38,8 @@ func Test_getAllMetrics(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getAllMetrics(); got != tt.want {
-				t.Errorf("getAllMetrics() = %v, want %v", got, tt.want)
+			if got := concatenationMetrics(); got != tt.want {
+				t.Errorf("concatenationMetrics() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -104,7 +104,7 @@ func Test_recipientGet(t *testing.T) {
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
 			// определяем хендлер
-			h := http.HandlerFunc(recipientGet)
+			h := http.HandlerFunc(getMetric)
 			// запускаем сервер
 			h.ServeHTTP(w, request)
 			res := w.Result()
@@ -145,7 +145,7 @@ func Test_recipientGetAllMetrics(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			recipientGetAllMetrics(tt.args.w, tt.args.r)
+			getAllMetrics(tt.args.w, tt.args.r)
 		})
 	}
 }
@@ -219,7 +219,7 @@ func Test_recipientPost(t *testing.T) {
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
 			// определяем хендлер
-			h := http.HandlerFunc(recipientPost)
+			h := http.HandlerFunc(postMetric)
 			// запускаем сервер
 			h.ServeHTTP(w, request)
 			res := w.Result()

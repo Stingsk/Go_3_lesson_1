@@ -76,27 +76,23 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 	metricName := chi.URLParam(r, gauge)
 	metricValue := chi.URLParam(r, "value")
 
-	var metricNameType storage.MetricName
-	metricNameType.NewMetricName(metricName)
-
-	if _, err := strconv.ParseFloat(metricValue, 64); err != nil {
+	_, err := strconv.ParseFloat(metricValue, 64)
+	if err != nil {
 		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
-		return
-	}
-
-	if metricNameType.IsZero() {
-		http.Error(w, "MetricName NotImplemented!", http.StatusNotImplemented)
 		return
 	}
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		valueMetric.UpdateMetric(metricValue, gauge)
+		_, err := valueMetric.UpdateMetric(metricValue)
+		if err != nil {
+			http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
+			return
+		}
 		metricData[metricName] = valueMetric
 		logrus.Info("Updated data")
 	} else {
-		var metric storage.Metric
-		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(gauge), strings.ToLower(metricValue))
+		metric, _ := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(gauge))
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}
@@ -110,9 +106,6 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 	metricName := chi.URLParam(r, counter)
 	metricValue := chi.URLParam(r, "value")
 
-	var metricNameType storage.MetricName
-	metricNameType.NewMetricName(metricName)
-
 	if _, err := strconv.ParseFloat(metricValue, 64); err != nil {
 		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
 		return
@@ -120,12 +113,11 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		valueMetric.UpdateMetric(metricValue, counter)
+		valueMetric.UpdateMetric(metricValue)
 		metricData[metricName] = valueMetric
 		logrus.Info("Updated data")
 	} else {
-		var metric storage.Metric
-		metric.NewMetric(strings.ToLower(metricName), strings.ToLower(counter), strings.ToLower(metricValue))
+		metric, _ := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(counter))
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}
@@ -167,8 +159,8 @@ func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 
 func concatenationMetrics() string {
 	s := ""
-	for _, element := range metricData {
-		s += element.GetMetricName() + ": " + element.GetValue() + "\r"
+	for name, element := range metricData {
+		s += name + ": " + element.GetValue() + "\r"
 	}
 
 	return s

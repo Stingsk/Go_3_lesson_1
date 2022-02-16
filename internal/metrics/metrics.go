@@ -4,44 +4,13 @@ import (
 	"context"
 	"errors"
 	"math/rand"
-	"reflect"
 	"runtime"
 	"strconv"
 	"sync"
 	"time"
-)
 
-type Monitor struct {
-	Alloc         uint64  `json:"Alloc"`
-	BuckHashSys   uint64  `json:"BuckHashSys"`
-	Frees         uint64  `json:"Frees"`
-	GCSys         uint64  `json:"GCSys"`
-	HeapAlloc     uint64  `json:"HeapAlloc"`
-	HeapIdle      uint64  `json:"HeapIdle"`
-	HeapInuse     uint64  `json:"HeapInuse"`
-	HeapObjects   uint64  `json:"HeapObjects"`
-	HeapReleased  uint64  `json:"HeapReleased"`
-	HeapSys       uint64  `json:"HeapSys"`
-	LastGC        uint64  `json:"LastGC"`
-	Lookups       uint64  `json:"Lookups"`
-	MCacheInuse   uint64  `json:"MCacheInuse"`
-	MCacheSys     uint64  `json:"MCacheSys"`
-	MSpanInuse    uint64  `json:"MSpanInuse"`
-	MSpanSys      uint64  `json:"MSpanSys"`
-	Mallocs       uint64  `json:"Mallocs"`
-	NextGC        uint64  `json:"NextGC"`
-	OtherSys      uint64  `json:"OtherSys"`
-	PauseTotalNs  uint64  `json:"PauseTotalNs"`
-	StackInuse    uint64  `json:"StackInuse"`
-	StackSys      uint64  `json:"StackSys"`
-	RandomValue   uint64  `json:"RandomValue"`
-	Sys           uint64  `json:"Sys"`
-	NumGC         uint32  `json:"NumGC"`
-	NumForcedGC   uint32  `json:"NumForcedGC"`
-	GCCPUFraction float64 `json:"GCCPUFraction"`
-	NumGoroutine  int     `json:"NumGoroutine"`
-	PollCount     int     `json:"PollCount"`
-}
+	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
+)
 
 type SensorData struct {
 	mu   sync.RWMutex
@@ -64,12 +33,10 @@ func (d *SensorData) Get() []string {
 
 func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup) error {
 	ticker := time.NewTicker(time.Duration(duration) * time.Second)
-	count := 0
 	for {
-		count++
 		select {
 		case <-ticker.C:
-			metrics := getMetrics(count)
+			metrics := getMetrics()
 			messages.Store(metrics)
 		case <-ctx.Done():
 			wg.Done()
@@ -78,109 +45,118 @@ func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *
 	}
 }
 
-func getMetrics(count int) []string {
-	monitor := newMonitor(count)
-	v := reflect.ValueOf(monitor)
+func getMetrics() []string {
+	monitor := newMonitor()
 
-	names := GetNames()
-
-	result := make([]string, len(names))
-	for i, name := range names {
-		value := v.FieldByName(name)
-		val := ""
-		nameType := ""
-		switch value.Kind() {
-		case reflect.Uint64, reflect.Uint32:
-			val = strconv.FormatUint(value.Uint(), 10)
-			nameType = "gauge"
-		case reflect.Int:
-			val = strconv.FormatInt(value.Int(), 10)
-			nameType = "counter"
-		case reflect.Float64:
-			val = strconv.FormatFloat(value.Float(), 'f', 6, 64)
-			nameType = "gauge"
-		}
-		result[i] = nameType + "/" + name + "/" + val
+	result := make([]string, len(monitor))
+	i := 0
+	for name, metric := range monitor {
+		result[i] = metric.GetMetricType() + "/" + name + "/" + metric.GetValue()
+		i++
 	}
 
 	return result
 }
 
-func GetNames() []string {
-	result := []string{"Alloc",
-		"BuckHashSys",
-		"Frees",
-		"GCSys",
-		"HeapAlloc",
-		"HeapIdle",
-		"HeapInuse",
-		"HeapObjects",
-		"HeapReleased",
-		"HeapSys",
-		"LastGC",
-		"Lookups",
-		"MCacheInuse",
-		"MCacheSys",
-		"MSpanInuse",
-		"MSpanSys",
-		"Mallocs",
-		"NextGC",
-		"OtherSys",
-		"PauseTotalNs",
-		"StackInuse",
-		"StackSys",
-		"RandomValue",
-		"Sys",
-		"NumGC",
-		"NumForcedGC",
-		"GCCPUFraction",
-		"NumGoroutine",
-		"PollCount"}
+func newMonitor() map[string]storage.Metric {
 
-	return result
-}
-
-func newMonitor(count int) Monitor {
-	var m Monitor
+	var metricData = make(map[string]storage.Metric)
 	var rtm runtime.MemStats
 	// Read full mem stats
 	runtime.ReadMemStats(&rtm)
 
-	// Number of goroutines
-	m.NumGoroutine = runtime.NumGoroutine()
+	if val, err := storage.NewMetric(strconv.Itoa(runtime.NumGoroutine()), storage.MetricTypeCounter); err == nil {
+		metricData["numgoroutine"] = val
+	}
 
-	// Misc memory stats
-	m.Alloc = rtm.Alloc
-	m.BuckHashSys = rtm.BuckHashSys
-	m.Frees = rtm.Frees
-	m.GCCPUFraction = rtm.GCCPUFraction
-	m.GCSys = rtm.GCSys
-	m.HeapAlloc = rtm.HeapAlloc
-	m.HeapIdle = rtm.HeapIdle
-	m.HeapInuse = rtm.HeapInuse
-	m.HeapObjects = rtm.HeapObjects
-	m.HeapReleased = rtm.HeapReleased
-	m.HeapSys = rtm.HeapSys
-	m.LastGC = rtm.LastGC
-	m.Lookups = rtm.Lookups
-	m.MCacheInuse = rtm.MCacheInuse
-	m.MCacheSys = rtm.MCacheSys
-	m.MSpanInuse = rtm.MSpanInuse
-	m.MSpanSys = rtm.MSpanSys
-	m.Mallocs = rtm.Mallocs
-	m.NextGC = rtm.NextGC
-	m.NumForcedGC = rtm.NumForcedGC
-	m.NumGC = rtm.NumGC
-	m.OtherSys = rtm.OtherSys
-	m.PauseTotalNs = rtm.PauseTotalNs
-	m.StackInuse = rtm.StackInuse
-	m.StackSys = rtm.StackSys
-	m.Sys = rtm.Sys
-	m.Mallocs = rtm.Mallocs
-	m.Frees = rtm.Frees
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Alloc, 10), storage.MetricTypeGauge); err == nil {
+		metricData["alloc"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.BuckHashSys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["buckhashsys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Frees, 10), storage.MetricTypeGauge); err == nil {
+		metricData["frees"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatFloat(rtm.GCCPUFraction, 'f', 2, 64), storage.MetricTypeGauge); err == nil {
+		metricData["gccpufraction"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.GCSys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["gcsys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapAlloc, 10), storage.MetricTypeGauge); err == nil {
+		metricData["heapalloc"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapIdle, 10), storage.MetricTypeGauge); err == nil {
+		metricData["heapidle"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapInuse, 10), storage.MetricTypeGauge); err == nil {
+		metricData["heapinuse"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapObjects, 10), storage.MetricTypeGauge); err == nil {
+		metricData["heapobjects"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapReleased, 10), storage.MetricTypeGauge); err == nil {
+		metricData["heapreleased"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapSys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["heapsys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.LastGC, 10), storage.MetricTypeGauge); err == nil {
+		metricData["lastgc"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Lookups, 10), storage.MetricTypeGauge); err == nil {
+		metricData["lookups"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MCacheInuse, 10), storage.MetricTypeGauge); err == nil {
+		metricData["mcacheinuse"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MCacheSys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["mcachesys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MSpanInuse, 10), storage.MetricTypeGauge); err == nil {
+		metricData["mspaninuse"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MSpanSys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["mspansys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Mallocs, 10), storage.MetricTypeGauge); err == nil {
+		metricData["mallocs"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.NextGC, 10), storage.MetricTypeGauge); err == nil {
+		metricData["nextgc"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(uint64(rtm.NumForcedGC), 10), storage.MetricTypeGauge); err == nil {
+		metricData["numforcedgc"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(uint64(rtm.NumGC), 10), storage.MetricTypeGauge); err == nil {
+		metricData["numgc"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.OtherSys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["othersys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.PauseTotalNs, 10), storage.MetricTypeGauge); err == nil {
+		metricData["pausetotalns"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.StackInuse, 10), storage.MetricTypeGauge); err == nil {
+		metricData["stackinuse"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.StackSys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["stacksys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Sys, 10), storage.MetricTypeGauge); err == nil {
+		metricData["sys"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Mallocs, 10), storage.MetricTypeGauge); err == nil {
+		metricData["mallocs"] = val
+	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Frees, 10), storage.MetricTypeGauge); err == nil {
+		metricData["frees"] = val
+	}
 
-	m.PollCount = count
-	m.RandomValue = rand.Uint64()
+	if val, err := storage.NewMetric(strconv.FormatUint(rand.Uint64(), 10), storage.MetricTypeGauge); err == nil {
+		metricData["randomvalue"] = val
+	}
 
-	return m
+	return metricData
 }

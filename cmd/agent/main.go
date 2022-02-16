@@ -26,7 +26,6 @@ func main() {
 
 	wg := &sync.WaitGroup{}
 	var sensorData metrics.SensorData
-	sensorData.Store(metrics.GetNames())
 
 	ctx, cancel := context.WithCancel(context.Background())
 

@@ -1,58 +1,17 @@
 package storage
 
-// MetricType is enum-like type.
-// We are using struct instead of string, to ensure about immutability.
-type MetricName struct {
-	s string
-}
-
-var (
-	Alloc         = MetricName{"alloc"}
-	BuckHashSys   = MetricName{"buckhashsys"}
-	Frees         = MetricName{"frees"}
-	GCSys         = MetricName{"gcsys"}
-	HeapAlloc     = MetricName{"heapalloc"}
-	HeapIdle      = MetricName{"heapidle"}
-	HeapInuse     = MetricName{"heapinuse"}
-	HeapObjects   = MetricName{"heapobjects"}
-	HeapReleased  = MetricName{"heapreleased"}
-	HeapSys       = MetricName{"heapsys"}
-	LastGC        = MetricName{"lastgc"}
-	Lookups       = MetricName{"lookups"}
-	MCacheInuse   = MetricName{"mcacheinuse"}
-	MCacheSys     = MetricName{"mcachesys"}
-	MSpanInuse    = MetricName{"mspaninuse"}
-	MSpanSys      = MetricName{"mspansys"}
-	Mallocs       = MetricName{"mallocs"}
-	NextGC        = MetricName{"nextgc"}
-	OtherSys      = MetricName{"othersys"}
-	PauseTotalNs  = MetricName{"pausetotalns"}
-	StackInuse    = MetricName{"stackinuse"}
-	StackSys      = MetricName{"stacksys"}
-	RandomValue   = MetricName{"randomvalue"}
-	Sys           = MetricName{"sys"}
-	NumGC         = MetricName{"numgc"}
-	NumForcedGC   = MetricName{"numforcedgc"}
-	GCCPUFraction = MetricName{"gccpufraction"}
+const (
+	MetricTypeGauge   string = "gauge"
+	MetricTypeCounter string = "counter"
 )
 
-func (u MetricName) IsZero() bool {
-	return u == MetricName{}
-}
-
-func (u MetricName) String() string {
-	return u.s
-}
-
 type Metric struct {
-	metricType string
-	metricName string
-	value      string
+	metricType   string
+	valueGauge   float64
+	valueCounter int64
 }
 
 type Repository interface {
-	NewMetricNameString(metricName string) (MetricName, error)
 	NewMetricString(metricName string, metricType string, value string) error
 	UpdateMetric(value string, metricType string) Metric
-	GetMetricName() MetricName
 }

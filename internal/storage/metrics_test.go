@@ -98,7 +98,23 @@ func TestMetric_UpdateMetric(t *testing.T) {
 		want    Metric
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "positive test 1#",
+			fields: fields{
+				metricType:   "",
+				valueGauge:   0,
+				valueCounter: 0,
+			},
+			args: args{
+				value: "",
+			},
+			want: Metric{
+				metricType:   "",
+				valueGauge:   0,
+				valueCounter: 0,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -130,7 +146,33 @@ func TestMetric_GetValue(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "positive test #1",
+			fields: fields{
+				metricType:   "gauge",
+				valueGauge:   1,
+				valueCounter: 2,
+			},
+			want: "1.000",
+		},
+		{
+			name: "positive test #2",
+			fields: fields{
+				metricType:   "counter",
+				valueGauge:   1,
+				valueCounter: 2,
+			},
+			want: "2",
+		},
+		{
+			name: "positive test #3",
+			fields: fields{
+				metricType:   "ty",
+				valueGauge:   1,
+				valueCounter: 2,
+			},
+			want: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -157,7 +199,33 @@ func TestMetric_GetMetricType(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "positive test #1",
+			fields: fields{
+				metricType:   "gauge",
+				valueGauge:   1,
+				valueCounter: 2,
+			},
+			want: "gauge",
+		},
+		{
+			name: "positive test #2",
+			fields: fields{
+				metricType:   "counter",
+				valueGauge:   1,
+				valueCounter: 2,
+			},
+			want: "counter",
+		},
+		{
+			name: "positive test #3",
+			fields: fields{
+				metricType:   "ty",
+				valueGauge:   1,
+				valueCounter: 2,
+			},
+			want: "ty",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

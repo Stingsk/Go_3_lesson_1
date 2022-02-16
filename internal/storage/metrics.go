@@ -47,7 +47,7 @@ func (u *Metric) GetMetricType() string {
 }
 func (u *Metric) GetValue() string {
 	if u.metricType == MetricTypeGauge {
-		return strconv.FormatFloat(u.valueGauge, 'f', 10, 64)
+		return strconv.FormatFloat(u.valueGauge, 'f', 3, 64)
 	} else if u.metricType == MetricTypeCounter {
 		return strconv.FormatInt(u.valueCounter, 10)
 	}

@@ -118,3 +118,57 @@ func TestMetric_UpdateMetric(t *testing.T) {
 		})
 	}
 }
+
+func TestMetric_GetValue(t *testing.T) {
+	type fields struct {
+		metricType   string
+		valueGauge   float64
+		valueCounter int64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &Metric{
+				metricType:   tt.fields.metricType,
+				valueGauge:   tt.fields.valueGauge,
+				valueCounter: tt.fields.valueCounter,
+			}
+			if got := u.GetValue(); got != tt.want {
+				t.Errorf("GetValue() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMetric_GetMetricType(t *testing.T) {
+	type fields struct {
+		metricType   string
+		valueGauge   float64
+		valueCounter int64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &Metric{
+				metricType:   tt.fields.metricType,
+				valueGauge:   tt.fields.valueGauge,
+				valueCounter: tt.fields.valueCounter,
+			}
+			if got := u.GetMetricType(); got != tt.want {
+				t.Errorf("GetMetricType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

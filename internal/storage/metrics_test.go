@@ -81,3 +81,40 @@ func TestMetricUpdateMetric(t *testing.T) {
 		})
 	}
 }
+
+func TestMetric_UpdateMetric(t *testing.T) {
+	type fields struct {
+		metricType   string
+		valueGauge   float64
+		valueCounter int64
+	}
+	type args struct {
+		value string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    Metric
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &Metric{
+				metricType:   tt.fields.metricType,
+				valueGauge:   tt.fields.valueGauge,
+				valueCounter: tt.fields.valueCounter,
+			}
+			got, err := u.UpdateMetric(tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateMetric() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("UpdateMetric() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

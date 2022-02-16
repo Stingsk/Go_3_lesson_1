@@ -7,9 +7,10 @@ import (
 
 func TestMetricUpdateMetric(t *testing.T) {
 	type fields struct {
-		metricType string
-		metricName string
-		value      string
+		metricType   string
+		metricName   string
+		valueGauge   float64
+		valueCounter int64
 	}
 	type args struct {
 		value      string
@@ -24,9 +25,9 @@ func TestMetricUpdateMetric(t *testing.T) {
 		{
 			name: "Update counter",
 			fields: fields{
-				metricType: "counter",
-				metricName: "testCounter",
-				value:      "12",
+				metricType:   "counter",
+				metricName:   "testCounter",
+				valueCounter: 12,
 			},
 			args: args{
 				value:      "13",
@@ -42,7 +43,7 @@ func TestMetricUpdateMetric(t *testing.T) {
 			fields: fields{
 				metricType: "gauge",
 				metricName: "stackinuse",
-				value:      "12",
+				valueGauge: 12,
 			},
 			args: args{
 				value:      "13",
@@ -58,22 +59,24 @@ func TestMetricUpdateMetric(t *testing.T) {
 			fields: fields{
 				metricType: "gauge",
 				metricName: "stackinuse",
-				value:      "12",
+				valueGauge: 12,
 			},
 			args: args{
 				value:      "",
 				metricType: "failType",
 			},
 			want: Metric{
-				metricType: "gauge",
-				valueGauge: 12,
+				metricType: "",
+				valueGauge: 0,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &Metric{
-				metricType: tt.fields.metricType,
+				metricType:   tt.fields.metricType,
+				valueGauge:   tt.fields.valueGauge,
+				valueCounter: tt.fields.valueCounter,
 			}
 			if got, _ := u.UpdateMetric(tt.args.value); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UpdateMetric() = %v, want %v", got, tt.want)

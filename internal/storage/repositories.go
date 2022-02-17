@@ -12,6 +12,6 @@ type Metric struct {
 }
 
 type Repository interface {
-	NewMetricString(metricName string, metricType string, value string) error
-	UpdateMetric(value string, metricType string) Metric
+	NewMetric(metricName string, metricType string, value string) error
+	UpdateMetric(value string) (Metric, error)
 }

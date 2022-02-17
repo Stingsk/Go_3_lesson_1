@@ -91,7 +91,6 @@ func TestRecipientGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// создаём новый Recorder
 			r := chi.NewRouter()
 			httptest.NewServer(r)
 
@@ -110,7 +109,6 @@ func TestRecipientGet(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			// получаем и проверяем тело запроса
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
 			if err != nil {
@@ -201,7 +199,6 @@ func TestRecipientPost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// создаём новый Recorder
 			r := chi.NewRouter()
 			httptest.NewServer(r)
 
@@ -220,7 +217,6 @@ func TestRecipientPost(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			// получаем и проверяем тело запроса
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
 			if err != nil {
@@ -254,7 +250,7 @@ func TestService(t *testing.T) {
 	}
 }
 
-func Test_setMiddlewares(t *testing.T) {
+func TestSetMiddlewares(t *testing.T) {
 	type args struct {
 		router *chi.Mux
 	}

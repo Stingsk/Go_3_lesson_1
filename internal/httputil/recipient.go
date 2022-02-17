@@ -84,12 +84,12 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		_, err := valueMetric.UpdateMetric(metricValue)
+		updatedValueMetric, err := storage.UpdateMetric(strings.ToLower(metricValue), valueMetric)
 		if err != nil {
-			http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
+			http.Error(w, "Fail on update metric", http.StatusBadRequest)
 			return
 		}
-		metricData[metricName] = valueMetric
+		metricData[metricName] = updatedValueMetric
 		logrus.Info("Updated data")
 	} else {
 		metric, _ := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(gauge))
@@ -113,11 +113,19 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		valueMetric.UpdateMetric(metricValue)
-		metricData[metricName] = valueMetric
+		updatedValueMetric, err := storage.UpdateMetric(strings.ToLower(metricValue), valueMetric)
+		if err != nil {
+			http.Error(w, "Fail on update metric", http.StatusBadRequest)
+			return
+		}
+		metricData[metricName] = updatedValueMetric
 		logrus.Info("Updated data")
 	} else {
-		metric, _ := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(counter))
+		metric, err := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(counter))
+		if err != nil {
+			http.Error(w, "Fail on add new metric", http.StatusBadRequest)
+			return
+		}
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}

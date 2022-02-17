@@ -24,7 +24,7 @@ func NewMetric(value string, metricType string) (Metric, error) {
 	return u, nil
 }
 
-func (u *Metric) UpdateMetric(value string) (Metric, error) {
+func UpdateMetric(value string, u Metric) (Metric, error) {
 	if u.metricType == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
@@ -39,7 +39,7 @@ func (u *Metric) UpdateMetric(value string) (Metric, error) {
 
 		u.valueCounter += newValue
 	}
-	return *u, nil
+	return u, nil
 }
 
 func (u *Metric) GetMetricType() string {

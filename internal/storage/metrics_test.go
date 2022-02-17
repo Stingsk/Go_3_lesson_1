@@ -78,7 +78,7 @@ func TestMetricUpdateMetric(t *testing.T) {
 				valueGauge:   tt.fields.valueGauge,
 				valueCounter: tt.fields.valueCounter,
 			}
-			if got, _ := u.UpdateMetric(tt.args.value); !reflect.DeepEqual(got, tt.want) {
+			if got, _ := UpdateMetric(tt.args.value, *u); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UpdateMetric() = %v, want %v", got, tt.want)
 			}
 		})
@@ -126,7 +126,7 @@ func TestMetric_UpdateMetric(t *testing.T) {
 				valueGauge:   tt.fields.valueGauge,
 				valueCounter: tt.fields.valueCounter,
 			}
-			got, err := u.UpdateMetric(tt.args.value)
+			got, err := UpdateMetric(tt.args.value, *u)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateMetric() error = %v, wantErr %v", err, tt.wantErr)
 				return

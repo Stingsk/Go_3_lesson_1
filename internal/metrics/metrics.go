@@ -33,11 +33,13 @@ func (d *SensorData) Get() []storage.Metric {
 
 func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup) error {
 	ticker := time.NewTicker(time.Duration(duration) * time.Second)
+	count := 0
 	for {
 		select {
 		case <-ticker.C:
-			metrics := getMetrics()
+			metrics := getMetrics(count)
 			messages.Store(metrics)
+			count++
 		case <-ctx.Done():
 			wg.Done()
 			return errors.New("crash shutdown")
@@ -45,7 +47,7 @@ func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *
 	}
 }
 
-func getMetrics() []storage.Metric {
+func getMetrics(count int) []storage.Metric {
 
 	var metricData []storage.Metric
 	var rtm runtime.MemStats
@@ -142,6 +144,10 @@ func getMetrics() []storage.Metric {
 	}
 
 	if val, err := storage.NewMetric(strconv.FormatUint(rand.Uint64(), 10), storage.MetricTypeGauge, "randomvalue"); err == nil {
+		metricData = append(metricData, val)
+	}
+
+	if val, err := storage.NewMetric(strconv.Itoa(count), storage.MetricTypeCounter, "pollcount"); err == nil {
 		metricData = append(metricData, val)
 	}
 

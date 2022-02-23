@@ -254,7 +254,6 @@ func setMiddlewares(router *chi.Mux) {
 		middleware.SetHeader("Content-Type", "application/json"),
 	)
 	router.Use(middleware.NoCache)
-	router.Use(middleware.AllowContentType("text/plain"))
 	router.Use(middleware.AllowContentType("application/json"))
 	router.Use(middleware.Timeout(60 * time.Second))
 }

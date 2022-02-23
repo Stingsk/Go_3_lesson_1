@@ -74,6 +74,7 @@ func service() http.Handler {
 	return apiRouter
 }
 func postJsonMetric(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	logrus.Info("Url request: " + r.RequestURI)
 
 	if r.Header.Get("Content-Type") != "application/json" {
@@ -105,6 +106,7 @@ func postJsonMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func postValueMetric(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	logrus.Info("Url request: " + r.RequestURI)
 
 	if r.Header.Get("Content-Type") != "application/json" {
@@ -122,7 +124,6 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 	var valueMetric, found = metricData[m.ID]
 	if found {
 		if m.Delta == nil && m.Value == nil {
-			w.Header().Set("Content-Type", "application/json")
 			render.JSON(w, r, &valueMetric)
 			logrus.Info("Send data")
 		} else {

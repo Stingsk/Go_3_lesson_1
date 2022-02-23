@@ -5,13 +5,14 @@ const (
 	MetricTypeCounter string = "counter"
 )
 
-type Metric struct {
-	metricType   string
-	valueGauge   float64
-	valueCounter int64
-}
-
 type Repository interface {
 	NewMetric(metricName string, metricType string, value string) error
 	UpdateMetric(value string) (Metric, error)
+}
+
+type Metric struct {
+	ID    string   `json:"id"`              // имя метрики
+	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
+	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }

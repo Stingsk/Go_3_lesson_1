@@ -4,53 +4,73 @@ import (
 	"strconv"
 )
 
-func NewMetric(value string, metricType string) (Metric, error) {
+func NewMetric(value string, metricType string, name string) (Metric, error) {
 	var u Metric
-	u.metricType = metricType
+	u.MType = metricType
+	u.ID = name
 	if metricType == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return Metric{}, err
 		}
-		u.valueGauge = v
-	} else if u.metricType == MetricTypeCounter {
+		u.Value = &v
+	} else if u.MType == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return Metric{}, err
 		}
 
-		u.valueCounter += newValue
+		u.Delta = getAdress(*u.Delta + newValue)
 	}
 	return u, nil
 }
 
 func UpdateMetric(value string, u Metric) (Metric, error) {
-	if u.metricType == MetricTypeGauge {
+	if u.MType == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return Metric{}, err
 		}
-		u.valueGauge = v
-	} else if u.metricType == MetricTypeCounter {
+		u.Value = &v
+	} else if u.MType == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return Metric{}, err
 		}
 
-		u.valueCounter += newValue
+		u.Delta = getAdress(*u.Delta + newValue)
 	}
 	return u, nil
 }
 
+func Update(newMetric Metric, u Metric) Metric {
+	if newMetric.MType == MetricTypeGauge {
+		return newMetric
+	} else if newMetric.MType == MetricTypeCounter {
+		newMetric.Delta = getAdress(*u.Delta + *newMetric.Delta)
+	}
+	return newMetric
+}
+
 func (u *Metric) GetMetricType() string {
-	return u.metricType
+	return u.MType
 }
 func (u *Metric) GetValue() string {
-	if u.metricType == MetricTypeGauge {
-		return strconv.FormatFloat(u.valueGauge, 'f', 3, 64)
-	} else if u.metricType == MetricTypeCounter {
-		return strconv.FormatInt(u.valueCounter, 10)
+	if u.MType == MetricTypeGauge {
+		if u.Value == nil {
+			return ""
+		}
+		return strconv.FormatFloat(*u.Value, 'f', 3, 64)
+	} else if u.MType == MetricTypeCounter {
+		if u.Delta == nil {
+			return ""
+		}
+		return strconv.FormatInt(*u.Delta, 10)
 	}
 
 	return ""
+}
+
+func getAdress[T any](t T) *T {
+	return &t
 }

@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"reflect"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -34,8 +34,10 @@ func TestMetricUpdateMetric(t *testing.T) {
 				metricType: "counter",
 			},
 			want: Metric{
-				metricType:   "counter",
-				valueCounter: 25,
+				MType: "counter",
+				Delta: getAdress[int64](25),
+				Value: nil,
+				ID:    "testCounter",
 			},
 		},
 		{
@@ -50,8 +52,8 @@ func TestMetricUpdateMetric(t *testing.T) {
 				metricType: "gauge",
 			},
 			want: Metric{
-				metricType: "gauge",
-				valueGauge: 13,
+				MType: "gauge",
+				Value: getAdress[float64](13),
 			},
 		},
 		{
@@ -66,21 +68,22 @@ func TestMetricUpdateMetric(t *testing.T) {
 				metricType: "failType",
 			},
 			want: Metric{
-				metricType: "",
-				valueGauge: 0,
+				MType: "",
+				Value: nil,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &Metric{
-				metricType:   tt.fields.metricType,
-				valueGauge:   tt.fields.valueGauge,
-				valueCounter: tt.fields.valueCounter,
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
-			if got, _ := UpdateMetric(tt.args.value, *u); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UpdateMetric() = %v, want %v", got, tt.want)
-			}
+
+			got, _ := UpdateMetric(tt.args.value, *u)
+			assert.Equal(t, got.GetValue(), tt.want.GetValue())
+			assert.Equal(t, got.GetMetricType(), tt.want.GetMetricType())
 		})
 	}
 }
@@ -112,9 +115,9 @@ func TestMetric_UpdateMetric(t *testing.T) {
 				value: "",
 			},
 			want: Metric{
-				metricType:   "",
-				valueGauge:   0,
-				valueCounter: 0,
+				MType: "",
+				Value: nil,
+				Delta: nil,
 			},
 			wantErr: false,
 		},
@@ -122,18 +125,18 @@ func TestMetric_UpdateMetric(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &Metric{
-				metricType:   tt.fields.metricType,
-				valueGauge:   tt.fields.valueGauge,
-				valueCounter: tt.fields.valueCounter,
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
 			got, err := UpdateMetric(tt.args.value, *u)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateMetric() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UpdateMetric() got = %v, want %v", got, tt.want)
-			}
+
+			assert.Equal(t, got.GetValue(), tt.want.GetValue())
+			assert.Equal(t, got.GetMetricType(), tt.want.GetMetricType())
 		})
 	}
 }
@@ -180,9 +183,9 @@ func TestMetric_GetValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &Metric{
-				metricType:   tt.fields.metricType,
-				valueGauge:   tt.fields.valueGauge,
-				valueCounter: tt.fields.valueCounter,
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
 			if got := u.GetValue(); got != tt.want {
 				t.Errorf("GetValue() = %v, want %v", got, tt.want)
@@ -233,9 +236,9 @@ func TestMetric_GetMetricType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &Metric{
-				metricType:   tt.fields.metricType,
-				valueGauge:   tt.fields.valueGauge,
-				valueCounter: tt.fields.valueCounter,
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
 			if got := u.GetMetricType(); got != tt.want {
 				t.Errorf("GetMetricType() = %v, want %v", got, tt.want)

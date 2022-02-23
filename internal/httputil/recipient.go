@@ -2,6 +2,7 @@ package httputil
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 	"strconv"
@@ -51,6 +52,7 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
+	apiRouter.Post("/update", postJsonMetric)
 	apiRouter.Post("/update/"+gauge+"/{gauge}/{value}", postGaugeMetric)
 	apiRouter.Post("/update/"+counter+"/{counter}/{value}", postCounterMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
@@ -68,6 +70,31 @@ func service() http.Handler {
 	logrus.Info("Starting HTTP server")
 
 	return apiRouter
+}
+func postJsonMetric(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Url request: " + r.RequestURI)
+
+	if r.Header.Get("Content-Type") != "application/json" {
+
+		http.Error(w, "Only application/json  can be Content-Type", http.StatusBadRequest)
+	}
+	defer r.Body.Close()
+
+	var m storage.Metric
+	err := json.NewDecoder(r.Body).Decode(&m)
+	if err != nil {
+		http.Error(w, "Fail on parse request", http.StatusBadRequest)
+		return
+	}
+
+	var valueMetric, found = metricData[m.ID]
+	if found {
+		updatedValueMetric := storage.Update(m, valueMetric)
+		metricData[m.ID] = updatedValueMetric
+		logrus.Info("Update data")
+	}
+
+	logrus.Info(r.RequestURI)
 }
 
 func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +119,7 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 		metricData[metricName] = updatedValueMetric
 		logrus.Info("Updated data")
 	} else {
-		metric, _ := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(gauge))
+		metric, _ := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(gauge), metricName)
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}
@@ -121,7 +148,7 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 		metricData[metricName] = updatedValueMetric
 		logrus.Info("Updated data")
 	} else {
-		metric, err := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(counter))
+		metric, err := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(counter), metricName)
 		if err != nil {
 			http.Error(w, "Fail on add new metric", http.StatusBadRequest)
 			return

@@ -101,8 +101,10 @@ func postJsonMetric(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logrus.Info(r)
-	logrus.Info(w)
+	logrus.Info(w.Header().Get("Content-Type"))
+	logrus.Info(r.Body)
+	logrus.Info(r.Header)
+	return
 }
 
 func postValueMetric(w http.ResponseWriter, r *http.Request) {
@@ -131,8 +133,10 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logrus.Info(r)
-	logrus.Info(w)
+	logrus.Info(w.Header().Get("Content-Type"))
+	logrus.Info(r.Body)
+	logrus.Info(r.Header)
+	return
 }
 
 func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
@@ -163,6 +167,7 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logrus.Info(r.RequestURI)
+	return
 }
 
 func postCounterMetric(w http.ResponseWriter, r *http.Request) {

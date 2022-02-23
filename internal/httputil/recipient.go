@@ -100,7 +100,8 @@ func postJsonMetric(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logrus.Info(r.RequestURI)
+	logrus.Info(r)
+	logrus.Info(w)
 }
 
 func postValueMetric(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +130,8 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logrus.Info(r.RequestURI)
+	logrus.Info(r)
+	logrus.Info(w)
 }
 
 func postGaugeMetric(w http.ResponseWriter, r *http.Request) {

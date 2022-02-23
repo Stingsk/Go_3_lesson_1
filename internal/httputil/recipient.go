@@ -78,7 +78,7 @@ func postJsonMetric(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("Content-Type") != "application/json" {
 
-		http.Error(w, "Only application/json  can be Content-Type", http.StatusBadRequest)
+		http.Error(w, "Only application/json  can be Content-Type", http.StatusUnsupportedMediaType)
 	}
 	defer r.Body.Close()
 
@@ -107,7 +107,7 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
 	if r.Header.Get("Content-Type") != "application/json" {
-		http.Error(w, "Only application/json  can be Content-Type", http.StatusBadRequest)
+		http.Error(w, "Only application/json  can be Content-Type", http.StatusUnsupportedMediaType)
 	}
 	defer r.Body.Close()
 
@@ -121,6 +121,7 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 	var valueMetric, found = metricData[m.ID]
 	if found {
 		if m.Delta == nil && m.Value == nil {
+			w.Header().Set("Content-Type", "application/json")
 			render.JSON(w, r, &valueMetric)
 			logrus.Info("Send data")
 		} else {

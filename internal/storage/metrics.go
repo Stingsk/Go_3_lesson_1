@@ -20,7 +20,11 @@ func NewMetric(value string, metricType string, name string) (Metric, error) {
 			return Metric{}, err
 		}
 
-		u.Delta = getAdress(*u.Delta + newValue)
+		delta := int64(0)
+		if u.Delta != nil {
+			delta = *u.Delta
+		}
+		u.Delta = getAdress(delta + newValue)
 	}
 	return u, nil
 }
@@ -38,7 +42,11 @@ func UpdateMetric(value string, u Metric) (Metric, error) {
 			return Metric{}, err
 		}
 
-		u.Delta = getAdress(*u.Delta + newValue)
+		delta := int64(0)
+		if u.Delta != nil {
+			delta = *u.Delta
+		}
+		u.Delta = getAdress(delta + newValue)
 	}
 	return u, nil
 }

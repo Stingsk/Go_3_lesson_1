@@ -2,8 +2,10 @@ package httputil
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"sync"
 	"time"
 
@@ -22,7 +24,7 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 		case <-ticker.C:
 			messagesFromChan := messages.Get()
 			for _, mes := range messagesFromChan {
-				send(mes)
+				sendPost(mes)
 			}
 		case <-ctx.Done():
 			return errors.New("crash agent")
@@ -44,6 +46,30 @@ func send(send string) {
 
 	// печатаем код ответа
 	logrus.Info("Send: ", send)
+	logrus.Info("Status code ", response.StatusCode())
+	// и печатаем его
+	logrus.Info(string(response.Body()))
+}
+
+func sendPost(metric storage.Metric) {
+	endpoint := protocol + host + "/update/"
+	client := resty.New()
+
+	m, err := json.Marshal(metric)
+	if err != nil {
+		logrus.Error(err)
+	}
+	response, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(m).
+		Post(endpoint)
+
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	// печатаем код ответа
+	logrus.Info("Send: ", metric)
 	logrus.Info("Status code ", response.StatusCode())
 	// и печатаем его
 	logrus.Info(string(response.Body()))

@@ -14,6 +14,7 @@ import (
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"github.com/sirupsen/logrus"
 )
 
@@ -52,7 +53,8 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update", postJsonMetric)
+	apiRouter.Post("/update/", postJsonMetric)
+	apiRouter.Post("/value/", postValueMetric)
 	apiRouter.Post("/update/"+gauge+"/{gauge}/{value}", postGaugeMetric)
 	apiRouter.Post("/update/"+counter+"/{counter}/{value}", postCounterMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
@@ -89,9 +91,41 @@ func postJsonMetric(w http.ResponseWriter, r *http.Request) {
 
 	var valueMetric, found = metricData[m.ID]
 	if found {
-		updatedValueMetric := storage.Update(m, valueMetric)
-		metricData[m.ID] = updatedValueMetric
-		logrus.Info("Update data")
+		if m.Delta != nil || m.Value != nil {
+			updatedValueMetric := storage.Update(m, valueMetric)
+			metricData[m.ID] = updatedValueMetric
+			logrus.Info("Update data")
+		} else {
+			http.Error(w, "Data is empty", http.StatusBadRequest)
+		}
+	}
+
+	logrus.Info(r.RequestURI)
+}
+
+func postValueMetric(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Url request: " + r.RequestURI)
+
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Only application/json  can be Content-Type", http.StatusBadRequest)
+	}
+	defer r.Body.Close()
+
+	var m storage.Metric
+	err := json.NewDecoder(r.Body).Decode(&m)
+	if err != nil {
+		http.Error(w, "Fail on parse request", http.StatusBadRequest)
+		return
+	}
+
+	var valueMetric, found = metricData[m.ID]
+	if found {
+		if m.Delta == nil && m.Value == nil {
+			render.JSON(w, r, &valueMetric)
+			logrus.Info("Send data")
+		} else {
+			http.Error(w, "Data Not Found", http.StatusNotFound)
+		}
 	}
 
 	logrus.Info(r.RequestURI)

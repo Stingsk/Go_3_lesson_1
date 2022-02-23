@@ -14,17 +14,17 @@ import (
 
 type SensorData struct {
 	mu   sync.RWMutex
-	last []string
+	last []storage.Metric
 }
 
-func (d *SensorData) Store(data []string) {
+func (d *SensorData) Store(data []storage.Metric) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	d.last = data
 }
 
-func (d *SensorData) Get() []string {
+func (d *SensorData) Get() []storage.Metric {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
@@ -45,117 +45,104 @@ func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *
 	}
 }
 
-func getMetrics() []string {
-	monitor := newMonitor()
+func getMetrics() []storage.Metric {
 
-	result := make([]string, len(monitor))
-	i := 0
-	for name, metric := range monitor {
-		result[i] = metric.GetMetricType() + "/" + name + "/" + metric.GetValue()
-		i++
-	}
-
-	return result
-}
-
-func newMonitor() map[string]storage.Metric {
-
-	var metricData = make(map[string]storage.Metric)
+	var metricData []storage.Metric
 	var rtm runtime.MemStats
 	// Read full mem stats
 	runtime.ReadMemStats(&rtm)
 
-	if val, err := storage.NewMetric(strconv.Itoa(runtime.NumGoroutine()), storage.MetricTypeCounter); err == nil {
-		metricData["numgoroutine"] = val
+	if val, err := storage.NewMetric(strconv.Itoa(runtime.NumGoroutine()), storage.MetricTypeCounter, "numgoroutine"); err == nil {
+		metricData = append(metricData, val)
 	}
 
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Alloc, 10), storage.MetricTypeGauge); err == nil {
-		metricData["alloc"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Alloc, 10), storage.MetricTypeGauge, "alloc"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.BuckHashSys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["buckhashsys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.BuckHashSys, 10), storage.MetricTypeGauge, "buckhashsys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Frees, 10), storage.MetricTypeGauge); err == nil {
-		metricData["frees"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Frees, 10), storage.MetricTypeGauge, "frees"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatFloat(rtm.GCCPUFraction, 'f', 2, 64), storage.MetricTypeGauge); err == nil {
-		metricData["gccpufraction"] = val
+	if val, err := storage.NewMetric(strconv.FormatFloat(rtm.GCCPUFraction, 'f', 2, 64), storage.MetricTypeGauge, "gccpufraction"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.GCSys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["gcsys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.GCSys, 10), storage.MetricTypeGauge, "gcsys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapAlloc, 10), storage.MetricTypeGauge); err == nil {
-		metricData["heapalloc"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapAlloc, 10), storage.MetricTypeGauge, "heapalloc"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapIdle, 10), storage.MetricTypeGauge); err == nil {
-		metricData["heapidle"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapIdle, 10), storage.MetricTypeGauge, "heapidle"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapInuse, 10), storage.MetricTypeGauge); err == nil {
-		metricData["heapinuse"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapInuse, 10), storage.MetricTypeGauge, "heapinuse"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapObjects, 10), storage.MetricTypeGauge); err == nil {
-		metricData["heapobjects"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapObjects, 10), storage.MetricTypeGauge, "heapobjects"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapReleased, 10), storage.MetricTypeGauge); err == nil {
-		metricData["heapreleased"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapReleased, 10), storage.MetricTypeGauge, "heapreleased"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapSys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["heapsys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.HeapSys, 10), storage.MetricTypeGauge, "heapsys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.LastGC, 10), storage.MetricTypeGauge); err == nil {
-		metricData["lastgc"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.LastGC, 10), storage.MetricTypeGauge, "lastgc"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Lookups, 10), storage.MetricTypeGauge); err == nil {
-		metricData["lookups"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Lookups, 10), storage.MetricTypeGauge, "lookups"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MCacheInuse, 10), storage.MetricTypeGauge); err == nil {
-		metricData["mcacheinuse"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MCacheInuse, 10), storage.MetricTypeGauge, "mcacheinuse"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MCacheSys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["mcachesys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MCacheSys, 10), storage.MetricTypeGauge, "mcachesys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MSpanInuse, 10), storage.MetricTypeGauge); err == nil {
-		metricData["mspaninuse"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MSpanInuse, 10), storage.MetricTypeGauge, "mspaninuse"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MSpanSys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["mspansys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.MSpanSys, 10), storage.MetricTypeGauge, "mspansys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Mallocs, 10), storage.MetricTypeGauge); err == nil {
-		metricData["mallocs"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Mallocs, 10), storage.MetricTypeGauge, "mallocs"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.NextGC, 10), storage.MetricTypeGauge); err == nil {
-		metricData["nextgc"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.NextGC, 10), storage.MetricTypeGauge, "nextgc"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(uint64(rtm.NumForcedGC), 10), storage.MetricTypeGauge); err == nil {
-		metricData["numforcedgc"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(uint64(rtm.NumForcedGC), 10), storage.MetricTypeGauge, "numforcedgc"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(uint64(rtm.NumGC), 10), storage.MetricTypeGauge); err == nil {
-		metricData["numgc"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(uint64(rtm.NumGC), 10), storage.MetricTypeGauge, "numgc"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.OtherSys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["othersys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.OtherSys, 10), storage.MetricTypeGauge, "othersys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.PauseTotalNs, 10), storage.MetricTypeGauge); err == nil {
-		metricData["pausetotalns"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.PauseTotalNs, 10), storage.MetricTypeGauge, "pausetotalns"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.StackInuse, 10), storage.MetricTypeGauge); err == nil {
-		metricData["stackinuse"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.StackInuse, 10), storage.MetricTypeGauge, "stackinuse"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.StackSys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["stacksys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.StackSys, 10), storage.MetricTypeGauge, "stacksys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Sys, 10), storage.MetricTypeGauge); err == nil {
-		metricData["sys"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Sys, 10), storage.MetricTypeGauge, "sys"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Mallocs, 10), storage.MetricTypeGauge); err == nil {
-		metricData["mallocs"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Mallocs, 10), storage.MetricTypeGauge, "mallocs"); err == nil {
+		metricData = append(metricData, val)
 	}
-	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Frees, 10), storage.MetricTypeGauge); err == nil {
-		metricData["frees"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Frees, 10), storage.MetricTypeGauge, "frees"); err == nil {
+		metricData = append(metricData, val)
 	}
 
-	if val, err := storage.NewMetric(strconv.FormatUint(rand.Uint64(), 10), storage.MetricTypeGauge); err == nil {
-		metricData["randomvalue"] = val
+	if val, err := storage.NewMetric(strconv.FormatUint(rand.Uint64(), 10), storage.MetricTypeGauge, "randomvalue"); err == nil {
+		metricData = append(metricData, val)
 	}
 
 	return metricData

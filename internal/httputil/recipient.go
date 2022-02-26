@@ -260,7 +260,7 @@ func setMiddlewares(router *chi.Mux) {
 	router.Use(logs.NewStructuredLogger(logrus.StandardLogger()))
 	router.Use(middleware.Recoverer)
 
-	//router.Use(middleware.SetHeader("Content-Type", "application/json"), )
+	router.Use(middleware.SetHeader("Content-Type", "application/json"))
 	router.Use(middleware.NoCache)
 	//router.Use(middleware.AllowContentType("application/json"))
 	router.Use(middleware.Timeout(60 * time.Second))

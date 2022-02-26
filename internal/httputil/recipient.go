@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -53,7 +52,7 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update/", postJsonMetric)
+	apiRouter.Post("/update/", postJSONMetric)
 	apiRouter.Post("/value/", postValueMetric)
 	apiRouter.Post("/update/"+gauge+"/{gauge}/{value}", postGaugeMetric)
 	apiRouter.Post("/update/"+counter+"/{counter}/{value}", postCounterMetric)
@@ -73,25 +72,25 @@ func service() http.Handler {
 
 	return apiRouter
 }
-func postJsonMetric(w http.ResponseWriter, r *http.Request) {
+func postJSONMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	logrus.Info("Url request: " + r.RequestURI)
 
 	if r.Header.Get("Content-Type") != "application/json" {
 
-		http.Error(w, getJsonError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
+		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
 	}
 	defer r.Body.Close()
 
 	var m storage.Metric
 	err := json.NewDecoder(r.Body).Decode(&m)
 	if err != nil {
-		http.Error(w, getJsonError("Fail on parse request"), http.StatusBadRequest)
+		http.Error(w, getJSONError("Fail on parse request"), http.StatusBadRequest)
 		return
 	}
 
 	if m.ID == "" || m.MType == "" {
-		http.Error(w, getJsonError("ID or MType is empty"), http.StatusBadRequest)
+		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
 	var valueMetric, found = metricData[m.ID]
@@ -101,21 +100,20 @@ func postJsonMetric(w http.ResponseWriter, r *http.Request) {
 			metricData[m.ID] = updatedValueMetric
 			logrus.Info("Update data")
 		} else {
-			http.Error(w, getJsonError("Data is empty"), http.StatusBadRequest)
+			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 		}
 	} else {
 		if m.Delta != nil || m.Value != nil {
 			metricData[m.ID] = m
 			logrus.Info("Add data")
 		} else {
-			http.Error(w, getJsonError("Data is empty"), http.StatusBadRequest)
+			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 		}
 	}
 
 	logrus.Info(w.Header().Get("Content-Type"))
 	logrus.Info(r.Body)
 	logrus.Info(r.Header)
-	return
 }
 
 func postValueMetric(w http.ResponseWriter, r *http.Request) {
@@ -123,19 +121,19 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
 	if r.Header.Get("Content-Type") != "application/json" {
-		http.Error(w, getJsonError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
+		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
 	}
 	defer r.Body.Close()
 
 	var m storage.Metric
 	err := json.NewDecoder(r.Body).Decode(&m)
 	if err != nil {
-		http.Error(w, getJsonError("Fail on parse request"), http.StatusBadRequest)
+		http.Error(w, getJSONError("Fail on parse request"), http.StatusBadRequest)
 		return
 	}
 
 	if m.ID == "" || m.MType == "" {
-		http.Error(w, getJsonError("ID or MType is empty"), http.StatusBadRequest)
+		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
 	var valueMetric, found = metricData[m.ID]
@@ -143,13 +141,12 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, &valueMetric)
 		logrus.Info("Send data")
 	} else {
-		http.Error(w, getJsonError("Data Not Found"), http.StatusNotFound)
+		http.Error(w, getJSONError("Data Not Found"), http.StatusNotFound)
 	}
 
 	logrus.Info(w.Header().Get("Content-Type"))
 	logrus.Info(r.Body)
 	logrus.Info(r.Header)
-	return
 }
 
 func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +163,7 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		updatedValueMetric, err := storage.UpdateMetric(strings.ToLower(metricValue), valueMetric)
+		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric)
 		if err != nil {
 			http.Error(w, "Fail on update metric", http.StatusBadRequest)
 			return
@@ -174,13 +171,12 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 		metricData[metricName] = updatedValueMetric
 		logrus.Info("Updated data")
 	} else {
-		metric, _ := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(gauge), metricName)
+		metric, _ := storage.NewMetric(metricValue, gauge, metricName)
 		metricData[metricName] = metric
 		logrus.Info("Added data")
 	}
 
 	logrus.Info(r.RequestURI)
-	return
 }
 
 func postCounterMetric(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +192,7 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 
 	var valueMetric, found = metricData[metricName]
 	if found {
-		updatedValueMetric, err := storage.UpdateMetric(strings.ToLower(metricValue), valueMetric)
+		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric)
 		if err != nil {
 			http.Error(w, "Fail on update metric", http.StatusBadRequest)
 			return
@@ -204,7 +200,7 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 		metricData[metricName] = updatedValueMetric
 		logrus.Info("Updated data")
 	} else {
-		metric, err := storage.NewMetric(strings.ToLower(metricValue), strings.ToLower(counter), metricName)
+		metric, err := storage.NewMetric(metricValue, counter, metricName)
 		if err != nil {
 			http.Error(w, "Fail on add new metric", http.StatusBadRequest)
 			return
@@ -269,6 +265,6 @@ func setMiddlewares(router *chi.Mux) {
 	router.Use(middleware.Timeout(60 * time.Second))
 }
 
-func getJsonError(errorText string) string {
+func getJSONError(errorText string) string {
 	return "{ \"error\" : \"" + errorText + "\"}"
 }

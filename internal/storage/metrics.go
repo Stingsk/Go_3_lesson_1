@@ -2,19 +2,20 @@ package storage
 
 import (
 	"strconv"
+	"strings"
 )
 
 func NewMetric(value string, metricType string, name string) (Metric, error) {
 	var u Metric
 	u.MType = metricType
 	u.ID = name
-	if metricType == MetricTypeGauge {
+	if strings.ToLower(metricType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return Metric{}, err
 		}
 		u.Value = &v
-	} else if u.MType == MetricTypeCounter {
+	} else if strings.ToLower(u.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return Metric{}, err
@@ -30,13 +31,13 @@ func NewMetric(value string, metricType string, name string) (Metric, error) {
 }
 
 func UpdateMetric(value string, u Metric) (Metric, error) {
-	if u.MType == MetricTypeGauge {
+	if strings.ToLower(u.MType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return Metric{}, err
 		}
 		u.Value = &v
-	} else if u.MType == MetricTypeCounter {
+	} else if strings.ToLower(u.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return Metric{}, err
@@ -52,9 +53,9 @@ func UpdateMetric(value string, u Metric) (Metric, error) {
 }
 
 func Update(newMetric Metric, u Metric) Metric {
-	if newMetric.MType == MetricTypeGauge {
+	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
 		return newMetric
-	} else if newMetric.MType == MetricTypeCounter {
+	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
 		newMetric.Delta = getAdress(*u.Delta + *newMetric.Delta)
 	}
 	return newMetric
@@ -64,12 +65,12 @@ func (u *Metric) GetMetricType() string {
 	return u.MType
 }
 func (u *Metric) GetValue() string {
-	if u.MType == MetricTypeGauge {
+	if strings.ToLower(u.MType) == MetricTypeGauge {
 		if u.Value == nil {
 			return ""
 		}
 		return strconv.FormatFloat(*u.Value, 'f', 3, 64)
-	} else if u.MType == MetricTypeCounter {
+	} else if strings.ToLower(u.MType) == MetricTypeCounter {
 		if u.Delta == nil {
 			return ""
 		}

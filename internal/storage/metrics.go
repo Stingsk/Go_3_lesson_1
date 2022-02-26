@@ -25,7 +25,7 @@ func NewMetric(value string, metricType string, name string) (Metric, error) {
 		if u.Delta != nil {
 			delta = *u.Delta
 		}
-		u.Delta = getAdress(delta + newValue)
+		u.Delta = SumInt(delta, newValue)
 	}
 	return u, nil
 }
@@ -47,7 +47,7 @@ func UpdateMetric(value string, u Metric) (Metric, error) {
 		if u.Delta != nil {
 			delta = *u.Delta
 		}
-		u.Delta = getAdress(delta + newValue)
+		u.Delta = SumInt(delta, newValue)
 	}
 	return u, nil
 }
@@ -56,7 +56,7 @@ func Update(newMetric Metric, u Metric) Metric {
 	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
 		return newMetric
 	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
-		newMetric.Delta = getAdress(*u.Delta + *newMetric.Delta)
+		newMetric.Delta = SumInt(*u.Delta, *newMetric.Delta)
 	}
 	return newMetric
 }
@@ -80,6 +80,7 @@ func (u *Metric) GetValue() string {
 	return ""
 }
 
-func getAdress[T any](t T) *T {
-	return &t
+func SumInt(first int64, second int64) *int64 {
+	helper := first + second
+	return &helper
 }

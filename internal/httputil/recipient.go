@@ -97,7 +97,7 @@ func postJsonMetric(w http.ResponseWriter, r *http.Request) {
 			metricData[m.ID] = updatedValueMetric
 			logrus.Info("Update data")
 		} else {
-			http.Error(w, "Data is empty", http.StatusBadRequest)
+			http.Error(w, "{}", http.StatusBadRequest)
 		}
 	} else {
 		metricData[m.ID] = m
@@ -122,7 +122,7 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 	var m storage.Metric
 	err := json.NewDecoder(r.Body).Decode(&m)
 	if err != nil {
-		http.Error(w, "Fail on parse request", http.StatusBadRequest)
+		http.Error(w, "{}", http.StatusBadRequest)
 		return
 	}
 
@@ -132,8 +132,10 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 			render.JSON(w, r, &valueMetric)
 			logrus.Info("Send data")
 		} else {
-			http.Error(w, "Data Not Found", http.StatusNotFound)
+			http.Error(w, "{}", http.StatusNotFound)
 		}
+	} else {
+		http.Error(w, "{}", http.StatusNotFound)
 	}
 
 	logrus.Info(w.Header().Get("Content-Type"))

@@ -142,6 +142,9 @@ func getMetrics(count int) []storage.Metric {
 	if val, err := storage.NewMetric(strconv.FormatUint(rtm.Frees, 10), storage.MetricTypeGauge, "frees"); err == nil {
 		metricData = append(metricData, val)
 	}
+	if val, err := storage.NewMetric(strconv.FormatUint(rtm.TotalAlloc, 10), storage.MetricTypeGauge, "totalalloc"); err == nil {
+		metricData = append(metricData, val)
+	}
 
 	if val, err := storage.NewMetric(strconv.FormatUint(rand.Uint64(), 10), storage.MetricTypeGauge, "randomvalue"); err == nil {
 		metricData = append(metricData, val)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -93,18 +94,18 @@ func postJSONMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, found = metricData[m.ID]
+	var valueMetric, found = metricData[strings.ToLower(m.ID)]
 	if found {
 		if m.Delta != nil || m.Value != nil {
 			updatedValueMetric := storage.Update(m, valueMetric)
-			metricData[m.ID] = updatedValueMetric
+			metricData[strings.ToLower(m.ID)] = updatedValueMetric
 			logrus.Info("Update data")
 		} else {
 			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 		}
 	} else {
 		if m.Delta != nil || m.Value != nil {
-			metricData[m.ID] = m
+			metricData[strings.ToLower(m.ID)] = m
 			logrus.Info("Add data")
 		} else {
 			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
@@ -136,7 +137,7 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, found = metricData[m.ID]
+	var valueMetric, found = metricData[strings.ToLower(m.ID)]
 	if found && m.Delta == nil && m.Value == nil {
 		render.JSON(w, r, &valueMetric)
 		logrus.Info("Send data")
@@ -152,8 +153,8 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
-	metricName := chi.URLParam(r, gauge)
-	metricValue := chi.URLParam(r, "value")
+	metricName := strings.ToLower(chi.URLParam(r, gauge))
+	metricValue := strings.ToLower(chi.URLParam(r, "value"))
 
 	_, err := strconv.ParseFloat(metricValue, 64)
 	if err != nil {
@@ -182,8 +183,8 @@ func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
 func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
-	metricName := chi.URLParam(r, counter)
-	metricValue := chi.URLParam(r, "value")
+	metricName := strings.ToLower(chi.URLParam(r, counter))
+	metricValue := strings.ToLower(chi.URLParam(r, "value"))
 
 	if _, err := strconv.ParseFloat(metricValue, 64); err != nil {
 		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
@@ -214,8 +215,8 @@ func postCounterMetric(w http.ResponseWriter, r *http.Request) {
 
 func getMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
-	metricType := chi.URLParam(r, "type")
-	metricName := chi.URLParam(r, "name")
+	metricType := strings.ToLower(chi.URLParam(r, "type"))
+	metricName := strings.ToLower(chi.URLParam(r, "name"))
 
 	if metricType == "" {
 		http.Error(w, "MetricType NotImplemented!", http.StatusNotFound)

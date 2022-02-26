@@ -7,8 +7,8 @@ import (
 
 func NewMetric(value string, metricType string, name string) (Metric, error) {
 	var u Metric
-	u.MType = metricType
-	u.ID = name
+	u.MType = strings.ToLower(metricType)
+	u.ID = strings.ToLower(name)
 	if strings.ToLower(metricType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {

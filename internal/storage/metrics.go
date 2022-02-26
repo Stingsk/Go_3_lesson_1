@@ -25,7 +25,7 @@ func NewMetric(value string, metricType string, name string) (Metric, error) {
 		if u.Delta != nil {
 			delta = *u.Delta
 		}
-		u.Delta = SumInt(delta, newValue)
+		u.Delta = sumInt(delta, newValue)
 	}
 	return u, nil
 }
@@ -47,7 +47,7 @@ func UpdateMetric(value string, u Metric) (Metric, error) {
 		if u.Delta != nil {
 			delta = *u.Delta
 		}
-		u.Delta = SumInt(delta, newValue)
+		u.Delta = sumInt(delta, newValue)
 	}
 	return u, nil
 }
@@ -56,7 +56,7 @@ func Update(newMetric Metric, u Metric) Metric {
 	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
 		return newMetric
 	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
-		newMetric.Delta = SumInt(*u.Delta, *newMetric.Delta)
+		newMetric.Delta = sumInt(*u.Delta, *newMetric.Delta)
 	}
 	return newMetric
 }
@@ -80,7 +80,11 @@ func (u *Metric) GetValue() string {
 	return ""
 }
 
-func SumInt(first int64, second int64) *int64 {
+func sumInt(first int64, second int64) *int64 {
+	helper := first + second
+	return &helper
+}
+func sumFloat(first float64, second float64) *float64 {
 	helper := first + second
 	return &helper
 }

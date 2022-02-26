@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMetricUpdateMetric(t *testing.T) {
@@ -35,7 +36,7 @@ func TestMetricUpdateMetric(t *testing.T) {
 			},
 			want: Metric{
 				MType: "counter",
-				Delta: getAdress[int64](25),
+				Delta: sumInt(24, 1),
 				Value: nil,
 				ID:    "testCounter",
 			},
@@ -53,7 +54,7 @@ func TestMetricUpdateMetric(t *testing.T) {
 			},
 			want: Metric{
 				MType: "gauge",
-				Value: getAdress[float64](13),
+				Value: sumFloat(12, 1),
 			},
 		},
 		{

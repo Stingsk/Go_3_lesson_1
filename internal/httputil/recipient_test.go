@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -16,6 +17,7 @@ func TestRunRecipient(t *testing.T) {
 	type args struct {
 		wg      *sync.WaitGroup
 		sigChan chan os.Signal
+		metrics map[string]storage.Metric
 	}
 	tests := []struct {
 		name string
@@ -25,7 +27,7 @@ func TestRunRecipient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			RunServer(tt.args.wg, tt.args.sigChan, "localhost:8080")
+			RunServer(tt.args.wg, tt.args.sigChan, "localhost:8080", tt.args.metrics, "", 300)
 		})
 	}
 }

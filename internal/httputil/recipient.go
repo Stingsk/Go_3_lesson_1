@@ -33,12 +33,12 @@ func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string, metrics 
 
 	go func() {
 		<-sigChan
+		file.WriteMetrics(storeFile, metricData)
+		logrus.Info("Save data before Shutdown")
 		err := server.Shutdown(ctx)
 		if err != nil {
 			logrus.Fatal(err)
 		}
-
-		file.WriteMetrics(storeFile, metricData)
 		cancel()
 	}()
 	go func() {

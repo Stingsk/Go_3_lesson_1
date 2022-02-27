@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -272,5 +273,7 @@ func getJSONError(errorText string) string {
 }
 
 func getHost(host string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(host, "http://", ""), "https://", "")
+	re := regexp.MustCompile("[0-9]+")
+	port := re.FindAllString(host, 1)
+	return ":" + port[0]
 }

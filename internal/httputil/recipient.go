@@ -99,6 +99,7 @@ func postJSONMetric(w http.ResponseWriter, r *http.Request) {
 		if m.Delta != nil || m.Value != nil {
 			updatedValueMetric := storage.Update(m, valueMetric)
 			metricData[strings.ToLower(m.ID)] = updatedValueMetric
+			render.JSON(w, r, &updatedValueMetric)
 			logrus.Info("Update data")
 		} else {
 			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)

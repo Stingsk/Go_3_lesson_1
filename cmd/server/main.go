@@ -5,7 +5,10 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/Stingsk/Go_3_lesson_1/internal/file"
+	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/caarlos0/env/v6"
 	"github.com/sirupsen/logrus"
 
@@ -14,7 +17,10 @@ import (
 )
 
 type config struct {
-	Address string `env:"ADDRESS" envDefault:"localhost:8080"`
+	Address       string        `env:"ADDRESS" envDefault:"localhost:8080"`
+	StoreInterval time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
+	StoreFile     string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
+	Restore       bool          `env:"RESTORE" envDefault:"true"`
 }
 
 func main() {
@@ -22,6 +28,10 @@ func main() {
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		logrus.Error(err)
+	}
+	var metricData = make(map[string]storage.Metric)
+	if cfg.Restore {
+		metricData, _ = file.ReadMetrics(cfg.StoreFile)
 	}
 	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)
@@ -32,7 +42,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go httputil.RunServer(&wg, sigChan, cfg.Address)
+	go httputil.RunServer(&wg, sigChan, cfg.Address, metricData, cfg.StoreFile, cfg.StoreInterval)
 
 	wg.Wait()
 

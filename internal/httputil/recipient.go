@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Stingsk/Go_3_lesson_1/internal/file"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -24,7 +25,8 @@ var metricData = make(map[string]storage.Metric)
 const gauge string = "gauge"
 const counter string = "counter"
 
-func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string) {
+func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string, metrics map[string]storage.Metric, storeFile string, storeInterval time.Duration) {
+	metricData = metrics
 	defer wg.Done()
 	server := &http.Server{Addr: getHost(host), Handler: service()}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -36,7 +38,17 @@ func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string) {
 			logrus.Fatal(err)
 		}
 
+		file.WriteMetrics(storeFile, metricData)
 		cancel()
+	}()
+	go func() {
+		ticker := time.NewTicker(storeInterval)
+		for {
+			select {
+			case <-ticker.C:
+				file.WriteMetrics(storeFile, metricData)
+			}
+		}
 	}()
 
 	// Run the server

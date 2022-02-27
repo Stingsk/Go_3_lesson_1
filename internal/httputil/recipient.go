@@ -25,7 +25,7 @@ const counter string = "counter"
 
 func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string) {
 	defer wg.Done()
-	server := &http.Server{Addr: host, Handler: service()}
+	server := &http.Server{Addr: getHost(host), Handler: service()}
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
@@ -269,4 +269,8 @@ func setMiddlewares(router *chi.Mux) {
 
 func getJSONError(errorText string) string {
 	return "{ \"error\" : \"" + errorText + "\"}"
+}
+
+func getHost(host string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(host, "http://", ""), "https://", "")
 }

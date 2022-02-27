@@ -26,7 +26,7 @@ func main() {
 
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		logrus.Error("%+v\n", err)
+		logrus.Error(err)
 	}
 	logrus.Debug("Start agent")
 	sigChan := make(chan os.Signal, 1)

@@ -21,7 +21,7 @@ func main() {
 	logs.Init()
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		logrus.Error("%+v\n", err)
+		logrus.Error(err)
 	}
 	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)

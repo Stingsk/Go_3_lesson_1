@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -34,7 +35,7 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 }
 
 func send(send string, host string) {
-	endpoint := protocol + host + "/update/" + send
+	endpoint := getHostSend(host) + "/update/" + send
 	client := resty.New()
 
 	response, err := client.R().
@@ -53,7 +54,7 @@ func send(send string, host string) {
 }
 
 func sendPost(metric storage.Metric, host string) {
-	endpoint := protocol + host + "/update/"
+	endpoint := getHostSend(host) + "/update/"
 	client := resty.New()
 
 	m, err := json.Marshal(metric)
@@ -74,4 +75,12 @@ func sendPost(metric storage.Metric, host string) {
 	logrus.Info("Status code ", response.StatusCode())
 	// и печатаем его
 	logrus.Info(string(response.Body()))
+}
+
+func getHostSend(host string) string {
+	if strings.Contains(host, protocol) {
+		return host
+	}
+
+	return protocol + host
 }

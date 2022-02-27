@@ -107,6 +107,7 @@ func postJSONMetric(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if m.Delta != nil || m.Value != nil {
 			metricData[strings.ToLower(m.ID)] = m
+			render.JSON(w, r, &m)
 			logrus.Info("Add data")
 		} else {
 			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)

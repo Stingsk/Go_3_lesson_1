@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
 )
@@ -11,7 +12,7 @@ import (
 func TestRunSender(t *testing.T) {
 	type args struct {
 		ctx      context.Context
-		duration int
+		duration time.Duration
 		messages *metrics.SensorData
 		wg       *sync.WaitGroup
 	}

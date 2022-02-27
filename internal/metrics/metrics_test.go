@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestNewMonitor(t *testing.T) {
@@ -13,7 +14,7 @@ func TestNewMonitor(t *testing.T) {
 func TestRunGetMetrics(t *testing.T) {
 	type args struct {
 		ctx      context.Context
-		duration int
+		duration time.Duration
 		messages *SensorData
 		wg       *sync.WaitGroup
 	}

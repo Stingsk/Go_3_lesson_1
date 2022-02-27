@@ -14,14 +14,14 @@ import (
 )
 
 type config struct {
-	Address string `env:"ADDRESS" envDefault:"http://localhost:8080"`
+	Address string `env:"ADDRESS" envDefault:"localhost:8080"`
 }
 
 func main() {
 	logs.Init()
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
-		logrus.Error(err)
+		logrus.Error("%+v\n", err)
 	}
 	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)

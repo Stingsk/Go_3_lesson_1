@@ -31,7 +31,10 @@ func main() {
 	}
 	var metricData = make(map[string]storage.Metric)
 	if cfg.Restore {
+		logrus.Info("Load data from " + cfg.StoreFile)
 		metricData, _ = file.ReadMetrics(cfg.StoreFile)
+	} else {
+		logrus.Info("Load data is Off ")
 	}
 	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)

@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"sync"
 	"time"
+
+	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
 	"github.com/go-resty/resty/v2"
@@ -16,7 +17,7 @@ import (
 
 const protocol string = "http://"
 
-func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup) error {
+func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup, host string) error {
 	defer wg.Done()
 	ticker := time.NewTicker(time.Duration(duration) * time.Second)
 	for {
@@ -24,7 +25,7 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 		case <-ticker.C:
 			messagesFromChan := messages.Get()
 			for _, mes := range messagesFromChan {
-				sendPost(mes)
+				sendPost(mes, host)
 			}
 		case <-ctx.Done():
 			return errors.New("crash agent")
@@ -32,7 +33,7 @@ func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, 
 	}
 }
 
-func send(send string) {
+func send(send string, host string) {
 	endpoint := protocol + host + "/update/" + send
 	client := resty.New()
 
@@ -51,7 +52,7 @@ func send(send string) {
 	logrus.Info(string(response.Body()))
 }
 
-func sendPost(metric storage.Metric) {
+func sendPost(metric storage.Metric, host string) {
 	endpoint := protocol + host + "/update/"
 	client := resty.New()
 

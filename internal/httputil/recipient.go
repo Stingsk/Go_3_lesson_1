@@ -22,9 +22,8 @@ var metricData = make(map[string]storage.Metric)
 
 const gauge string = "gauge"
 const counter string = "counter"
-const host string = "localhost:8080"
 
-func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal) {
+func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string) {
 	defer wg.Done()
 	server := &http.Server{Addr: host, Handler: service()}
 	ctx, cancel := context.WithCancel(context.Background())

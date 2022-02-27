@@ -273,7 +273,7 @@ func getJSONError(errorText string) string {
 }
 
 func getHost(host string) string {
-	re := regexp.MustCompile("[0-9]+")
+	re := regexp.MustCompile(":[0-9]+")
 	port := re.FindAllString(host, 1)
-	return ":" + port[0]
+	return port[0]
 }

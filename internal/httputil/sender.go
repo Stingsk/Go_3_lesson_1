@@ -18,9 +18,9 @@ import (
 
 const protocol string = "http://"
 
-func RunSender(ctx context.Context, duration int, messages *metrics.SensorData, wg *sync.WaitGroup, host string) error {
+func RunSender(ctx context.Context, duration time.Duration, messages *metrics.SensorData, wg *sync.WaitGroup, host string) error {
 	defer wg.Done()
-	ticker := time.NewTicker(time.Duration(duration) * time.Second)
+	ticker := time.NewTicker(duration)
 	for {
 		select {
 		case <-ticker.C:

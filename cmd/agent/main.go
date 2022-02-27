@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/sirupsen/logrus"
@@ -16,14 +17,13 @@ import (
 )
 
 type config struct {
-	Address        string `env:"ADDRESS" envDefault:"localhost:8080"`
-	ReportInterval int    `env:"REPORT_INTERVAL" envDefault:"10"`
-	PollInterval   int    `env:"POLL_INTERVAL" envDefault:"2"`
+	Address        string        `env:"ADDRESS" envDefault:"localhost:8080"`
+	ReportInterval time.Duration `env:"REPORT_INTERVAL" envDefault:"10s"`
+	PollInterval   time.Duration `env:"POLL_INTERVAL" envDefault:"2s"`
 }
 
 func main() {
 	logs.Init()
-
 	cfg := config{}
 	if err := env.Parse(&cfg); err != nil {
 		logrus.Error(err)

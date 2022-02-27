@@ -31,8 +31,8 @@ func (d *SensorData) Get() []storage.Metric {
 	return d.last
 }
 
-func RunGetMetrics(ctx context.Context, duration int, messages *SensorData, wg *sync.WaitGroup) error {
-	ticker := time.NewTicker(time.Duration(duration) * time.Second)
+func RunGetMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) error {
+	ticker := time.NewTicker(duration)
 	count := 0
 	for {
 		select {

@@ -41,15 +41,16 @@ func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string, metrics 
 		}
 		cancel()
 	}()
-	go func() {
-		ticker := time.NewTicker(storeInterval)
-		for {
-			select {
-			case <-ticker.C:
+
+	if storeInterval > 0 {
+		go func() {
+			ticker := time.NewTicker(storeInterval)
+			for {
+				<-ticker.C
 				file.WriteMetrics(storeFile, metricData)
 			}
-		}
-	}()
+		}()
+	}
 
 	// Run the server
 	err := server.ListenAndServe()

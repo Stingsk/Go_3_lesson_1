@@ -21,6 +21,7 @@ import (
 )
 
 var metricData = make(map[string]storage.Metric)
+var syncWrite = true
 
 const gauge string = "gauge"
 const counter string = "counter"
@@ -50,6 +51,7 @@ func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string, metrics 
 				file.WriteMetrics(storeFile, metricData)
 			}
 		}()
+		syncWrite = false
 	}
 
 	// Run the server
@@ -66,10 +68,9 @@ func service() http.Handler {
 
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update/", postJSONMetric)
-	apiRouter.Post("/value/", postValueMetric)
-	apiRouter.Post("/update/"+gauge+"/{gauge}/{value}", postGaugeMetric)
-	apiRouter.Post("/update/"+counter+"/{counter}/{value}", postCounterMetric)
+	apiRouter.Post("/update/", savePostMetric)
+	apiRouter.Post("/value/", getValueMetric)
+	apiRouter.Post("/update/{type}/{name}/{value}", saveMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
 	apiRouter.Get("/", getAllMetrics)
 	apiRouter.Post("/update/"+gauge+"*", func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +87,7 @@ func service() http.Handler {
 
 	return apiRouter
 }
-func postJSONMetric(w http.ResponseWriter, r *http.Request) {
+func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	logrus.Info("Url request: " + r.RequestURI)
 
@@ -127,12 +128,47 @@ func postJSONMetric(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	logrus.Info(w.Header().Get("Content-Type"))
-	logrus.Info(r.Body)
-	logrus.Info(r.Header)
+	if syncWrite {
+		metric := make(chan storage.Metric)
+		valueMetric, _ = metricData[strings.ToLower(m.ID)]
+		metric <- valueMetric
+	}
+
+	logrus.Info(r.RequestURI)
 }
 
-func postValueMetric(w http.ResponseWriter, r *http.Request) {
+func saveMetric(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Url request: " + r.RequestURI)
+
+	metricName := strings.ToLower(chi.URLParam(r, "name"))
+	metricType := strings.ToLower(chi.URLParam(r, "type"))
+	metricValue := strings.ToLower(chi.URLParam(r, "value"))
+
+	_, err := strconv.ParseFloat(metricValue, 64)
+	if err != nil {
+		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
+		return
+	}
+
+	var valueMetric, found = metricData[metricName]
+	if found {
+		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric)
+		if err != nil {
+			http.Error(w, "Fail on update metric", http.StatusBadRequest)
+			return
+		}
+		metricData[metricName] = updatedValueMetric
+		logrus.Info("Updated data")
+	} else {
+		metric, _ := storage.NewMetric(metricValue, metricType, metricName)
+		metricData[metricName] = metric
+		logrus.Info("Added data")
+	}
+
+	logrus.Info(r.RequestURI)
+}
+
+func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	logrus.Info("Url request: " + r.RequestURI)
 
@@ -163,69 +199,6 @@ func postValueMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info(w.Header().Get("Content-Type"))
 	logrus.Info(r.Body)
 	logrus.Info(r.Header)
-}
-
-func postGaugeMetric(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("Url request: " + r.RequestURI)
-
-	metricName := strings.ToLower(chi.URLParam(r, gauge))
-	metricValue := strings.ToLower(chi.URLParam(r, "value"))
-
-	_, err := strconv.ParseFloat(metricValue, 64)
-	if err != nil {
-		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
-		return
-	}
-
-	var valueMetric, found = metricData[metricName]
-	if found {
-		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric)
-		if err != nil {
-			http.Error(w, "Fail on update metric", http.StatusBadRequest)
-			return
-		}
-		metricData[metricName] = updatedValueMetric
-		logrus.Info("Updated data")
-	} else {
-		metric, _ := storage.NewMetric(metricValue, gauge, metricName)
-		metricData[metricName] = metric
-		logrus.Info("Added data")
-	}
-
-	logrus.Info(r.RequestURI)
-}
-
-func postCounterMetric(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("Url request: " + r.RequestURI)
-
-	metricName := strings.ToLower(chi.URLParam(r, counter))
-	metricValue := strings.ToLower(chi.URLParam(r, "value"))
-
-	if _, err := strconv.ParseFloat(metricValue, 64); err != nil {
-		http.Error(w, "Only Numbers  params in request are allowed!", http.StatusBadRequest)
-		return
-	}
-
-	var valueMetric, found = metricData[metricName]
-	if found {
-		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric)
-		if err != nil {
-			http.Error(w, "Fail on update metric", http.StatusBadRequest)
-			return
-		}
-		metricData[metricName] = updatedValueMetric
-		logrus.Info("Updated data")
-	} else {
-		metric, err := storage.NewMetric(metricValue, counter, metricName)
-		if err != nil {
-			http.Error(w, "Fail on add new metric", http.StatusBadRequest)
-			return
-		}
-		metricData[metricName] = metric
-		logrus.Info("Added data")
-	}
-
-	logrus.Info(r.RequestURI)
 }
 
 func getMetric(w http.ResponseWriter, r *http.Request) {

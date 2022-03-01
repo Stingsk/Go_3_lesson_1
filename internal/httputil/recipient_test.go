@@ -205,7 +205,7 @@ func TestRecipientPost(t *testing.T) {
 			httptest.NewServer(r)
 
 			r.Route("/update/gauge", func(r chi.Router) {
-				r.Get("/{gauge}/{value}", postGaugeMetric)
+				r.Get("/{gauge}/{value}", saveMetric)
 			})
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -282,7 +282,7 @@ func TestPostJSONMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			postJSONMetric(tt.args.w, tt.args.r)
+			savePostMetric(tt.args.w, tt.args.r)
 		})
 	}
 }
@@ -300,7 +300,7 @@ func TestPostValueMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			postValueMetric(tt.args.w, tt.args.r)
+			getValueMetric(tt.args.w, tt.args.r)
 		})
 	}
 }

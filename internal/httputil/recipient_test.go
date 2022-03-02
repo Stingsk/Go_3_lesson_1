@@ -4,51 +4,16 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"reflect"
-	"sync"
 	"testing"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
 )
 
-func TestRunRecipient(t *testing.T) {
-	type args struct {
-		wg      *sync.WaitGroup
-		sigChan chan os.Signal
-		metrics map[string]storage.Metric
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			RunServer(tt.args.wg, tt.args.sigChan, "localhost:8080", tt.args.metrics, "", 300)
-		})
-	}
-}
-
-func TestGetAllMetrics(t *testing.T) {
-	tests := []struct {
-		name string
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := concatenationMetrics(); got != tt.want {
-				t.Errorf("concatenationMetrics() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestRecipientGet(t *testing.T) {
+	type fields struct {
+		Inner *storage.MetricResourceMap
+	}
 	type want struct {
 		code        int
 		response    string
@@ -59,6 +24,7 @@ func TestRecipientGet(t *testing.T) {
 		method string
 		target string
 		want   want
+		fields fields
 	}{
 		{
 			name:   "negative test #1",
@@ -76,7 +42,7 @@ func TestRecipientGet(t *testing.T) {
 			target: "/value/counter/testSetGet33",
 			want: want{
 				code:        404,
-				response:    "Value NotFound!\n",
+				response:    "404 page not found\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -86,7 +52,7 @@ func TestRecipientGet(t *testing.T) {
 			target: "/value/gauge/Alloc",
 			want: want{
 				code:        404,
-				response:    "Value NotFound!\n",
+				response:    "404 page not found\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -95,9 +61,12 @@ func TestRecipientGet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
 			httptest.NewServer(r)
+			metrics := &MyMetric{
+				Inner: tt.fields.Inner,
+			}
 
 			r.Route("/value", func(r chi.Router) {
-				r.Get("/{type}/{name}", getMetric)
+				r.Get("/{type}/{name}/{value}", metrics.getMetric)
 			})
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -128,25 +97,10 @@ func TestRecipientGet(t *testing.T) {
 	}
 }
 
-func TestRecipientGetAllMetrics(t *testing.T) {
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			getAllMetrics(tt.args.w, tt.args.r)
-		})
-	}
-}
-
 func TestRecipientPost(t *testing.T) {
+	type fields struct {
+		Inner *storage.MetricResourceMap
+	}
 	type want struct {
 		code        int
 		response    string
@@ -157,6 +111,7 @@ func TestRecipientPost(t *testing.T) {
 		method string
 		target string
 		want   want
+		fields fields
 	}{
 		{
 			name:   "negative test #1",
@@ -203,9 +158,11 @@ func TestRecipientPost(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
 			httptest.NewServer(r)
-
+			metrics := &MyMetric{
+				Inner: tt.fields.Inner,
+			}
 			r.Route("/update/gauge", func(r chi.Router) {
-				r.Get("/{gauge}/{value}", saveMetric)
+				r.Get("/{gauge}/{value}", metrics.saveMetric)
 			})
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -236,71 +193,27 @@ func TestRecipientPost(t *testing.T) {
 	}
 }
 
-func TestService(t *testing.T) {
+func TestMyMetric_savePostMetric(t *testing.T) {
+	type fields struct {
+		Inner *storage.MetricResourceMap
+	}
+	type args struct {
+		w http.ResponseWriter
+		r *http.Request
+	}
 	tests := []struct {
-		name string
-		want http.Handler
+		name   string
+		fields fields
+		args   args
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := service(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("service() = %v, want %v", got, tt.want)
+			metrics := &MyMetric{
+				Inner: tt.fields.Inner,
 			}
-		})
-	}
-}
-
-func TestSetMiddlewares(t *testing.T) {
-	type args struct {
-		router *chi.Mux
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			setMiddlewares(tt.args.router)
-		})
-	}
-}
-
-func TestPostJSONMetric(t *testing.T) {
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			savePostMetric(tt.args.w, tt.args.r)
-		})
-	}
-}
-
-func TestPostValueMetric(t *testing.T) {
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			getValueMetric(tt.args.w, tt.args.r)
+			metrics.savePostMetric(tt.args.w, tt.args.r)
 		})
 	}
 }

@@ -29,10 +29,11 @@ func main() {
 	if err := env.Parse(&cfg); err != nil {
 		logrus.Error(err)
 	}
-	var metricData = make(map[string]storage.Metric)
+	var metricData storage.MetricResourceMap
 	if cfg.Restore {
 		logrus.Info("Load data from " + cfg.StoreFile)
-		metricData, _ = file.ReadMetrics(cfg.StoreFile)
+		metricRead, _ := file.ReadMetrics(cfg.StoreFile)
+		metricData.Metric = metricRead
 	} else {
 		logrus.Info("Load data is Off ")
 	}
@@ -45,7 +46,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go httputil.RunServer(&wg, sigChan, cfg.Address, metricData, cfg.StoreFile, cfg.StoreInterval)
+	go httputil.RunServer(&wg, sigChan, cfg.Address, &metricData, cfg.StoreFile, cfg.StoreInterval)
 
 	wg.Wait()
 

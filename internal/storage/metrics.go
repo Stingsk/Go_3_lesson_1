@@ -88,3 +88,10 @@ func sumFloat(first float64, second float64) *float64 {
 	helper := first + second
 	return &helper
 }
+
+func NewMetricResource(metric Metric) MetricResource {
+	return MetricResource{
+		Metric:  metric,
+		Updated: false,
+	}
+}

@@ -20,7 +20,7 @@ type producer struct {
 }
 
 func NewProducer(fileName string) (*producer, error) {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0777)
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *consumer) Close() error {
 	return c.file.Close()
 }
 
-func WriteMetrics(fileName string, events map[string]storage.Metric) {
+func WriteMetrics(fileName string, events map[string]storage.MetricResource) {
 	if fileName == "" {
 		return
 	}
@@ -72,21 +72,24 @@ func WriteMetrics(fileName string, events map[string]storage.Metric) {
 	}
 	defer producer.Close()
 	for _, event := range events {
-		eventToWrite := Event{
-			ID:     event.ID,
-			Metric: event,
-		}
-		if err := producer.WriteEvent(&eventToWrite); err != nil {
-			logrus.Fatal(err)
+		if !event.Updated {
+			eventToWrite := Event{
+				ID:     event.Metric.ID,
+				Metric: event.Metric,
+			}
+			if err := producer.WriteEvent(&eventToWrite); err != nil {
+				logrus.Fatal(err)
+			}
+			event.Updated = true
 		}
 	}
 }
 
-func ReadMetrics(fileName string) (map[string]storage.Metric, error) {
+func ReadMetrics(fileName string) (map[string]storage.MetricResource, error) {
 	if fileName == "" {
 		return nil, nil
 	}
-	var metricData = make(map[string]storage.Metric)
+	var metricData = make(map[string]storage.MetricResource)
 	fileRead, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		logrus.Fatal(err)
@@ -101,7 +104,7 @@ func ReadMetrics(fileName string) (map[string]storage.Metric, error) {
 	for scanner.Scan() {
 		event := &Event{}
 		json.Unmarshal(scanner.Bytes(), &event)
-		metricData[event.ID] = event.Metric
+		metricData[event.ID] = storage.NewMetricResource(event.Metric)
 	}
 
 	return metricData, nil

@@ -20,21 +20,36 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var metricData = make(map[string]storage.Metric)
 var syncWrite = true
 
 const gauge string = "gauge"
 const counter string = "counter"
 
-func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string, metrics map[string]storage.Metric, storeFile string, storeInterval time.Duration) {
-	metricData = metrics
-	defer wg.Done()
-	server := &http.Server{Addr: getHost(host), Handler: service()}
-	ctx, cancel := context.WithCancel(context.Background())
+type MyMetric struct {
+	Inner    *storage.MetricResourceMap
+	FilePath string
+}
 
+func NewMyMetric(metric *storage.MetricResourceMap, filePath string) MyMetric {
+	return MyMetric{
+		Inner:    metric,
+		FilePath: filePath,
+	}
+}
+
+func RunServer(wg *sync.WaitGroup,
+	sigChan chan os.Signal,
+	host string,
+	metrics *storage.MetricResourceMap,
+	storeFile string,
+	storeInterval time.Duration) {
+	defer wg.Done()
+	r := NewMyMetric(metrics, storeFile)
+	server := &http.Server{Addr: getHost(host), Handler: service(&r)}
+	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-sigChan
-		file.WriteMetrics(storeFile, metricData)
+		file.WriteMetrics(storeFile, r.Inner.Metric)
 		logrus.Info("Save data before Shutdown to " + storeFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
@@ -48,7 +63,7 @@ func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string, metrics 
 			ticker := time.NewTicker(storeInterval)
 			for {
 				<-ticker.C
-				file.WriteMetrics(storeFile, metricData)
+				file.WriteMetrics(storeFile, r.Inner.Metric)
 			}
 		}()
 		syncWrite = false
@@ -64,15 +79,14 @@ func RunServer(wg *sync.WaitGroup, sigChan chan os.Signal, host string, metrics 
 	<-ctx.Done()
 }
 
-func service() http.Handler {
-
+func service(metrics *MyMetric) http.Handler {
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
-	apiRouter.Post("/update/", savePostMetric)
-	apiRouter.Post("/value/", getValueMetric)
-	apiRouter.Post("/update/{type}/{name}/{value}", saveMetric)
-	apiRouter.Get("/value/{type}/{name}", getMetric)
-	apiRouter.Get("/", getAllMetrics)
+	apiRouter.Post("/update/", metrics.savePostMetric)
+	apiRouter.Post("/value/", metrics.getValueMetric)
+	apiRouter.Post("/update/{type}/{name}/{value}", metrics.saveMetric)
+	apiRouter.Get("/value/{type}/{name}", metrics.getMetric)
+	apiRouter.Get("/", metrics.getAllMetrics)
 	apiRouter.Post("/update/"+gauge+"*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method NotImplemented!", http.StatusNotFound)
 	})
@@ -87,7 +101,8 @@ func service() http.Handler {
 
 	return apiRouter
 }
-func savePostMetric(w http.ResponseWriter, r *http.Request) {
+
+func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	logrus.Info("Url request: " + r.RequestURI)
 
@@ -108,19 +123,19 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, found = metricData[strings.ToLower(m.ID)]
+	var valueMetric, found = metrics.Inner.Metric[strings.ToLower(m.ID)]
 	if found {
 		if m.Delta != nil || m.Value != nil {
-			updatedValueMetric := storage.Update(m, valueMetric)
-			metricData[strings.ToLower(m.ID)] = updatedValueMetric
-			render.JSON(w, r, &updatedValueMetric)
+			updatedValueMetric := storage.NewMetricResource(storage.Update(m, valueMetric.Metric))
+			metrics.Inner.Metric[strings.ToLower(m.ID)] = updatedValueMetric
+			render.JSON(w, r, &updatedValueMetric.Metric)
 			logrus.Info("Update data")
 		} else {
 			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 		}
 	} else {
 		if m.Delta != nil || m.Value != nil {
-			metricData[strings.ToLower(m.ID)] = m
+			metrics.Inner.Metric[strings.ToLower(m.ID)] = storage.NewMetricResource(m)
 			render.JSON(w, r, &m)
 			logrus.Info("Add data")
 		} else {
@@ -129,15 +144,12 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if syncWrite {
-		metric := make(chan storage.Metric)
-		valueMetric, _ = metricData[strings.ToLower(m.ID)]
-		metric <- valueMetric
+		file.WriteMetrics(metrics.FilePath, metrics.Inner.Metric)
 	}
-
 	logrus.Info(r.RequestURI)
 }
 
-func saveMetric(w http.ResponseWriter, r *http.Request) {
+func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
 	metricName := strings.ToLower(chi.URLParam(r, "name"))
@@ -150,25 +162,28 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var valueMetric, found = metricData[metricName]
+	var valueMetric, found = metrics.Inner.Metric[metricName]
 	if found {
-		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric)
+		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric.Metric)
 		if err != nil {
 			http.Error(w, "Fail on update metric", http.StatusBadRequest)
 			return
 		}
-		metricData[metricName] = updatedValueMetric
+		metrics.Inner.Metric[metricName] = storage.NewMetricResource(updatedValueMetric)
 		logrus.Info("Updated data")
 	} else {
 		metric, _ := storage.NewMetric(metricValue, metricType, metricName)
-		metricData[metricName] = metric
+		metrics.Inner.Metric[metricName] = storage.NewMetricResource(metric)
 		logrus.Info("Added data")
 	}
 
+	if syncWrite {
+		file.WriteMetrics(metrics.FilePath, metrics.Inner.Metric)
+	}
 	logrus.Info(r.RequestURI)
 }
 
-func getValueMetric(w http.ResponseWriter, r *http.Request) {
+func (metrics *MyMetric) getValueMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	logrus.Info("Url request: " + r.RequestURI)
 
@@ -188,7 +203,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, found = metricData[strings.ToLower(m.ID)]
+	var valueMetric, found = metrics.Inner.Metric[strings.ToLower(m.ID)]
 	if found && m.Delta == nil && m.Value == nil {
 		render.JSON(w, r, &valueMetric)
 		logrus.Info("Send data")
@@ -201,7 +216,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info(r.Header)
 }
 
-func getMetric(w http.ResponseWriter, r *http.Request) {
+func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
 	metricName := strings.ToLower(chi.URLParam(r, "name"))
@@ -214,29 +229,29 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotFound)
 		return
 	}
-	var valueMetric, found = metricData[metricName]
-	if found && valueMetric.GetMetricType() == metricType {
-		logrus.Info("Data received: " + valueMetric.GetValue())
-		w.Write([]byte(valueMetric.GetValue()))
+	var valueMetric, found = metrics.Inner.Metric[metricName]
+	if found && valueMetric.Metric.GetMetricType() == metricType {
+		logrus.Info("Data received: " + valueMetric.Metric.GetValue())
+		w.Write([]byte(valueMetric.Metric.GetValue()))
 	} else {
 		http.Error(w, "Value NotFound!", http.StatusNotFound)
 		return
 	}
 }
 
-func getAllMetrics(w http.ResponseWriter, r *http.Request) {
+func (metrics *MyMetric) getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
-	metrics := concatenationMetrics()
-	logrus.Info("Data received: " + metrics)
-	w.Write([]byte(metrics))
+	metricsString := concatenationMetrics(metrics.Inner.Metric)
+	logrus.Info("Data received: " + metricsString)
+	w.Write([]byte(metricsString))
 
 	logrus.Info(r.RequestURI)
 }
 
-func concatenationMetrics() string {
+func concatenationMetrics(metrics map[string]storage.MetricResource) string {
 	s := ""
-	for name, element := range metricData {
-		s += name + ": " + element.GetValue() + "\r"
+	for name, element := range metrics {
+		s += name + ": " + element.Metric.GetValue() + "\r"
 	}
 
 	return s

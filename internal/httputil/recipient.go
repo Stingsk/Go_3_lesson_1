@@ -88,7 +88,7 @@ func service(metrics *MyMetric) http.Handler {
 	apiRouter.Get("/value/{type}/{name}", metrics.getMetric)
 	apiRouter.Get("/", metrics.getAllMetrics)
 	apiRouter.Post("/update/*", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Method NotImplemented!", http.StatusNotImplemented)
+		http.Error(w, getJSONError("Method NotFound!"), http.StatusNotFound)
 	})
 
 	logrus.Info("Starting HTTP server")
@@ -199,7 +199,7 @@ func (metrics *MyMetric) getValueMetric(w http.ResponseWriter, r *http.Request) 
 
 	var valueMetric, found = metrics.Inner.Metric[strings.ToLower(m.ID)]
 	if found && m.Delta == nil && m.Value == nil {
-		render.JSON(w, r, &valueMetric)
+		render.JSON(w, r, &valueMetric.Metric)
 		logrus.Info("Send data")
 	} else {
 		http.Error(w, getJSONError("Data Not Found"), http.StatusNotFound)

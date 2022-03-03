@@ -23,6 +23,7 @@ func main() {
 	if err := env.Parse(&cfg); err != nil {
 		logrus.Error(err)
 	}
+
 	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,

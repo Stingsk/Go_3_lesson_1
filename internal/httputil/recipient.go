@@ -49,7 +49,7 @@ func RunServer(wg *sync.WaitGroup,
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-sigChan
-		file.WriteMetrics(storeFile, r.Inner.Metric)
+		file.WriteMetrics(storeFile, &r.Inner.Metric)
 		logrus.Info("Save data before Shutdown to " + storeFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
@@ -63,7 +63,7 @@ func RunServer(wg *sync.WaitGroup,
 			ticker := time.NewTicker(storeInterval)
 			for {
 				<-ticker.C
-				file.WriteMetrics(storeFile, r.Inner.Metric)
+				file.WriteMetrics(storeFile, &r.Inner.Metric)
 			}
 		}()
 		syncWrite = false
@@ -138,7 +138,7 @@ func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if syncWrite {
-		file.WriteMetrics(metrics.FilePath, metrics.Inner.Metric)
+		file.WriteMetrics(metrics.FilePath, &metrics.Inner.Metric)
 	}
 	logrus.Info(r.RequestURI)
 }
@@ -175,7 +175,7 @@ func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if syncWrite {
-		file.WriteMetrics(metrics.FilePath, metrics.Inner.Metric)
+		file.WriteMetrics(metrics.FilePath, &metrics.Inner.Metric)
 	}
 	logrus.Info(r.RequestURI)
 }

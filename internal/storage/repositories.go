@@ -19,7 +19,7 @@ type Metric struct {
 
 type MetricResource struct {
 	Metric  Metric
-	Updated bool
+	Updated *bool
 }
 
 type MetricResourceMap struct {

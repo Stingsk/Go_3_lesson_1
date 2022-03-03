@@ -1,3 +1,30 @@
+POST http://localhost:8080/update/gauge/testGauge/100
+Content-Type: application/json
+
+{}
+
+###
+
+POST http://localhost:8080/update/counter/testSetGet33/527
+Content-Type: application/json
+
+###
+
+POST http://localhost:8080/update/counter/testSetGet33/527
+Content-Type: application/json
+
+###
+
+POST http://localhost:8080/update/counter/testSetGet33/527
+Content-Type: application/json
+
+###
+
+POST http://localhost:8080/update/counter/testSetGet33/527
+Content-Type: application/json
+
+###
+
 POST http://localhost:8080/update/counter/testSetGet33/527
 Content-Type: application/json
 
@@ -355,55 +382,6 @@ Content-Type: application/json
 }
 
 <> 2022-03-03T021956.200.json
-
-###
-
-POST http://localhost:8080/update/gauge/alloc/40
-Content-Type: application/json
-
-{}
-
-<> 2022-03-03T021949.404.txt
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "TestCounterHandlers",
-  "type" : "counter",
-  "delta" : 40
-}
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "TestCounterHandlers",
-  "type" : "counter",
-  "delta" : 40
-}
-
-###
-
-POST http://localhost:8080/update/gauge/alloc/40
-Content-Type: application/json
-
-{}
-
-<> 2022-03-03T021740.404.txt
-
-###
-
-POST http://localhost:8080/update/gauge/alloc/40
-Content-Type: application/json
-
-{}
-
-<> 2022-03-03T021644.404.txt
 
 ###
 

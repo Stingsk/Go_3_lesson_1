@@ -90,8 +90,9 @@ func sumFloat(first float64, second float64) *float64 {
 }
 
 func NewMetricResource(metric Metric) MetricResource {
+	falseValue := false
 	return MetricResource{
 		Metric:  metric,
-		Updated: false,
+		Updated: &falseValue,
 	}
 }

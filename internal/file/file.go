@@ -62,7 +62,7 @@ func (c *consumer) Close() error {
 	return c.file.Close()
 }
 
-func WriteMetrics(fileName string, events map[string]storage.MetricResource) {
+func WriteMetrics(fileName string, events *map[string]storage.MetricResource) {
 	if fileName == "" {
 		return
 	}
@@ -71,8 +71,8 @@ func WriteMetrics(fileName string, events map[string]storage.MetricResource) {
 		logrus.Fatal(err)
 	}
 	defer producer.Close()
-	for _, event := range events {
-		if !event.Updated {
+	for _, event := range *events {
+		if !*event.Updated {
 			eventToWrite := Event{
 				ID:     event.Metric.ID,
 				Metric: event.Metric,
@@ -80,7 +80,7 @@ func WriteMetrics(fileName string, events map[string]storage.MetricResource) {
 			if err := producer.WriteEvent(&eventToWrite); err != nil {
 				logrus.Fatal(err)
 			}
-			event.Updated = true
+			*event.Updated = true
 		}
 	}
 }

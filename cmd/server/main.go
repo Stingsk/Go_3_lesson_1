@@ -18,9 +18,9 @@ import (
 
 type config struct {
 	Address       string        `env:"ADDRESS" envDefault:"localhost:8080"`
-	StoreInterval time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
+	StoreInterval time.Duration `env:"STORE_INTERVAL" envDefault:"0s"`
 	StoreFile     string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
-	Restore       bool          `env:"RESTORE" envDefault:"true"`
+	Restore       bool          `env:"RESTORE" envDefault:"false"`
 }
 
 func main() {
@@ -39,6 +39,7 @@ func main() {
 		metricData.Metric = make(map[string]storage.MetricResource)
 		logrus.Info("Load data is Off ")
 	}
+	os.Remove(cfg.StoreFile)
 	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,

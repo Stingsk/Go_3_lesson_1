@@ -30,6 +30,7 @@ func main() {
 		logrus.Error(err)
 	}
 	var metricData storage.MetricResourceMap
+
 	if cfg.Restore {
 		logrus.Info("Load data from " + cfg.StoreFile)
 		metricRead, _ := file.ReadMetrics(cfg.StoreFile)

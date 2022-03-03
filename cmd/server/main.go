@@ -36,6 +36,7 @@ func main() {
 		metricRead, _ := file.ReadMetrics(cfg.StoreFile)
 		metricData.Metric = metricRead
 	} else {
+		metricData.Metric = make(map[string]storage.MetricResource)
 		logrus.Info("Load data is Off ")
 	}
 	logrus.Debug("Start server")

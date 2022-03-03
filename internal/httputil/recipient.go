@@ -147,7 +147,7 @@ func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
 
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
-	if metricType != gauge || metricType != counter {
+	if metricType != gauge && metricType != counter {
 		http.Error(w, "Only metricType  gauge and counter in request are allowed!", http.StatusNotImplemented)
 	}
 	metricName := strings.ToLower(chi.URLParam(r, "name"))

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
+	"strings"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/sirupsen/logrus"
@@ -65,7 +66,7 @@ func WriteMetrics(fileName string, events *map[string]storage.MetricResource) {
 		if *event.Updated {
 			event.Mutex.Lock()
 			eventToWrite := Event{
-				ID:     event.Metric.ID,
+				ID:     strings.ToLower(event.Metric.ID),
 				Metric: *event.Metric,
 			}
 			if err := producer.WriteEvent(&eventToWrite); err != nil {
@@ -96,7 +97,7 @@ func ReadMetrics(fileName string) (map[string]storage.MetricResource, error) {
 	for scanner.Scan() {
 		event := &Event{}
 		json.Unmarshal(scanner.Bytes(), &event)
-		metricData[event.ID] = storage.NewMetricResource(event.Metric)
+		metricData[strings.ToLower(event.ID)] = storage.NewMetricResource(event.Metric)
 	}
 
 	return metricData, nil

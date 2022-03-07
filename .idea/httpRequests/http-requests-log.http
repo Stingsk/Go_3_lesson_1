@@ -7,6 +7,32 @@ Content-Type: application/json
   "delta" : 40
 }
 
+<> 2022-03-08T025142.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-03-08T025108.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
 <> 2022-03-08T024055.200.json
 
 ###
@@ -378,16 +404,6 @@ Content-Type: application/json
 ###
 
 POST http://localhost:8080/update/counter/testSetGet33/527
-Content-Type: application/json
-
-###
-
-POST http://localhost:8080/update/counter/testCounter/100
-Content-Type: application/json
-
-###
-
-POST http://localhost:8080/update/counter/testCounter/100
 Content-Type: application/json
 
 ###

@@ -41,16 +41,6 @@ type consumer struct {
 	decoder *json.Decoder
 }
 
-func NewConsumer(fileName string) (*consumer, error) {
-	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
-	if err != nil {
-		return nil, err
-	}
-	return &consumer{
-		file:    file,
-		decoder: json.NewDecoder(file),
-	}, nil
-}
 func (c *consumer) ReadEvent() (*Event, error) {
 	event := &Event{}
 	if err := c.decoder.Decode(&event); err != nil {
@@ -72,15 +62,17 @@ func WriteMetrics(fileName string, events *map[string]storage.MetricResource) {
 	}
 	defer producer.Close()
 	for _, event := range *events {
-		if !*event.Updated {
+		if *event.Updated {
+			event.Mutex.TryLock()
 			eventToWrite := Event{
 				ID:     event.Metric.ID,
-				Metric: event.Metric,
+				Metric: *event.Metric,
 			}
 			if err := producer.WriteEvent(&eventToWrite); err != nil {
 				logrus.Fatal(err)
 			}
-			*event.Updated = true
+			*event.Updated = false
+			event.Mutex.Unlock()
 		}
 	}
 }

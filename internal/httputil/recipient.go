@@ -120,9 +120,9 @@ func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) 
 	var valueMetric, found = metrics.Inner.Metric[strings.ToLower(m.ID)]
 	if found {
 		if m.Delta != nil || m.Value != nil {
-			updatedValueMetric := storage.NewMetricResource(storage.Update(m, valueMetric.Metric))
-			metrics.Inner.Metric[strings.ToLower(m.ID)] = updatedValueMetric
-			render.JSON(w, r, &updatedValueMetric.Metric)
+			valueMetric.Update(m)
+			//metrics.Inner.Metric[strings.ToLower(m.ID)] = valueMetric
+			render.JSON(w, r, &valueMetric.Metric)
 			logrus.Info("Update data")
 		} else {
 			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
@@ -161,16 +161,16 @@ func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
 
 	var valueMetric, found = metrics.Inner.Metric[metricName]
 	if found {
-		updatedValueMetric, err := storage.UpdateMetric(metricValue, valueMetric.Metric)
+		err := valueMetric.UpdateMetricResource(metricValue)
 		if err != nil {
 			http.Error(w, "Fail on update metric", http.StatusBadRequest)
 			return
 		}
-		metrics.Inner.Metric[metricName] = storage.NewMetricResource(updatedValueMetric)
+		//metrics.Inner.Metric[metricName] = valueMetric
 		logrus.Info("Updated data")
 	} else {
-		metric, _ := storage.NewMetric(metricValue, metricType, metricName)
-		metrics.Inner.Metric[metricName] = storage.NewMetricResource(metric)
+		metric, _ := storage.NewMetricResourceFromParams(metricValue, metricType, metricName)
+		metrics.Inner.Metric[metricName] = metric
 		logrus.Info("Added data")
 	}
 
@@ -227,9 +227,9 @@ func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var valueMetric, found = metrics.Inner.Metric[metricName]
-	if found && valueMetric.Metric.GetMetricType() == metricType {
-		logrus.Info("Data received: " + valueMetric.Metric.GetValue())
-		w.Write([]byte(valueMetric.Metric.GetValue()))
+	if found && valueMetric.GetMetricType() == metricType {
+		logrus.Info("Data received: " + valueMetric.GetValue())
+		w.Write([]byte(valueMetric.GetValue()))
 	} else {
 		http.Error(w, "Value NotFound!", http.StatusNotFound)
 		return
@@ -248,7 +248,7 @@ func (metrics *MyMetric) getAllMetrics(w http.ResponseWriter, r *http.Request) {
 func concatenationMetrics(metrics map[string]storage.MetricResource) string {
 	s := ""
 	for name, element := range metrics {
-		s += name + ": " + element.Metric.GetValue() + "\r"
+		s += name + ": " + element.GetValue() + "\r"
 	}
 
 	return s

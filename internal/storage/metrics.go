@@ -5,76 +5,98 @@ import (
 	"strings"
 )
 
-func NewMetric(value string, metricType string, name string) (Metric, error) {
-	var u Metric
-	u.MType = strings.ToLower(metricType)
-	u.ID = strings.ToLower(name)
+func NewMetricResourceFromParams(value string, metricType string, name string) (MetricResource, error) {
+	var u MetricResource
+	u.Mutex.TryLock()
+	defer u.Mutex.Unlock()
+
+	u.Metric = &Metric{
+		ID:    strings.ToLower(metricType),
+		MType: strings.ToLower(name),
+		Delta: nil,
+		Value: nil,
+	}
 	if strings.ToLower(metricType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return Metric{}, err
+			return MetricResource{}, err
 		}
-		u.Value = &v
-	} else if strings.ToLower(u.MType) == MetricTypeCounter {
+		u.Metric.Value = &v
+	} else if strings.ToLower(u.Metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return Metric{}, err
+			return MetricResource{}, err
 		}
 
 		delta := int64(0)
-		if u.Delta != nil {
-			delta = *u.Delta
+		if u.Metric.Delta != nil {
+			delta = *u.Metric.Delta
 		}
-		u.Delta = sumInt(delta, newValue)
+		u.Metric.Delta = sumInt(delta, newValue)
 	}
+	updated := true
+	u.Updated = &updated
+
 	return u, nil
 }
 
-func UpdateMetric(value string, u Metric) (Metric, error) {
-	if strings.ToLower(u.MType) == MetricTypeGauge {
+func (u *MetricResource) UpdateMetricResource(value string) error {
+	u.Mutex.TryLock()
+	defer u.Mutex.Unlock()
+
+	if strings.ToLower(u.Metric.MType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
-		u.Value = &v
-	} else if strings.ToLower(u.MType) == MetricTypeCounter {
+		u.Metric.Value = &v
+	} else if strings.ToLower(u.Metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
 
 		delta := int64(0)
-		if u.Delta != nil {
-			delta = *u.Delta
+		if u.Metric.Delta != nil {
+			delta = *u.Metric.Delta
 		}
-		u.Delta = sumInt(delta, newValue)
+		u.Metric.Delta = sumInt(delta, newValue)
 	}
-	return u, nil
+	updated := true
+	u.Updated = &updated
+
+	return nil
 }
 
-func Update(newMetric Metric, u Metric) Metric {
+func (u *MetricResource) Update(newMetric Metric) {
+	u.Mutex.TryLock()
 	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
-		return newMetric
 	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
-		newMetric.Delta = sumInt(*u.Delta, *newMetric.Delta)
+		newMetric.Delta = sumInt(*u.Metric.Delta, *newMetric.Delta)
 	}
-	return newMetric
+
+	u.Metric = &newMetric
+	updated := true
+	u.Updated = &updated
+	u.Mutex.Unlock()
 }
 
-func (u *Metric) GetMetricType() string {
-	return u.MType
+func (u *MetricResource) GetMetricType() string {
+	return u.Metric.MType
 }
-func (u *Metric) GetValue() string {
-	if strings.ToLower(u.MType) == MetricTypeGauge {
-		if u.Value == nil {
+func (u *MetricResource) GetValue() string {
+	u.Mutex.TryLock()
+	defer u.Mutex.Unlock()
+	if strings.ToLower(u.Metric.MType) == MetricTypeGauge {
+		if u.Metric.Value == nil {
 			return ""
 		}
-		return strconv.FormatFloat(*u.Value, 'f', 3, 64)
-	} else if strings.ToLower(u.MType) == MetricTypeCounter {
-		if u.Delta == nil {
+		return strconv.FormatFloat(*u.Metric.Value, 'f', 3, 64)
+	} else if strings.ToLower(u.Metric.MType) == MetricTypeCounter {
+		if u.Metric.Delta == nil {
 			return ""
 		}
-		return strconv.FormatInt(*u.Delta, 10)
+		return strconv.FormatInt(*u.Metric.Delta, 10)
 	}
 
 	return ""
@@ -90,9 +112,9 @@ func sumFloat(first float64, second float64) *float64 {
 }
 
 func NewMetricResource(metric Metric) MetricResource {
-	falseValue := false
+	falseValue := true
 	return MetricResource{
-		Metric:  metric,
+		Metric:  &metric,
 		Updated: &falseValue,
 	}
 }

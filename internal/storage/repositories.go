@@ -1,5 +1,7 @@
 package storage
 
+import "sync"
+
 const (
 	MetricTypeGauge   string = "gauge"
 	MetricTypeCounter string = "counter"
@@ -18,8 +20,9 @@ type Metric struct {
 }
 
 type MetricResource struct {
-	Metric  Metric
+	Metric  *Metric
 	Updated *bool
+	Mutex   sync.Mutex
 }
 
 type MetricResourceMap struct {

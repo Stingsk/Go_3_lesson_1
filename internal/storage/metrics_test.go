@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,7 +42,6 @@ func TestMetricUpdateMetric(t *testing.T) {
 					ID:    "testCounter",
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			},
 		},
 		{
@@ -63,7 +61,6 @@ func TestMetricUpdateMetric(t *testing.T) {
 					Value: sumFloat(12, 1),
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			},
 		},
 		{
@@ -83,7 +80,6 @@ func TestMetricUpdateMetric(t *testing.T) {
 					Value: sumFloat(11, 1),
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			},
 		},
 	}
@@ -96,7 +92,6 @@ func TestMetricUpdateMetric(t *testing.T) {
 					Delta: &tt.fields.valueCounter,
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			}
 
 			got.UpdateMetricResource(tt.args.value)
@@ -139,7 +134,6 @@ func TestMetric_UpdateMetric(t *testing.T) {
 					Delta: nil,
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			},
 			wantErr: false,
 		},
@@ -153,7 +147,6 @@ func TestMetric_UpdateMetric(t *testing.T) {
 					Delta: &tt.fields.valueCounter,
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			}
 			err := got.UpdateMetricResource(tt.args.value)
 			if (err != nil) != tt.wantErr {
@@ -215,7 +208,6 @@ func TestMetric_GetValue(t *testing.T) {
 					Delta: &tt.fields.valueCounter,
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			}
 			if got := u.GetValue(); got != tt.want {
 				t.Errorf("GetValue() = %v, want %v", got, tt.want)
@@ -272,7 +264,6 @@ func TestMetric_GetMetricType(t *testing.T) {
 					Delta: &tt.fields.valueCounter,
 				},
 				Updated: nil,
-				Mutex:   sync.Mutex{},
 			}
 			if got := u.GetMetricType(); got != tt.want {
 				t.Errorf("GetMetricType() = %v, want %v", got, tt.want)

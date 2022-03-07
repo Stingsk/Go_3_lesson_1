@@ -83,8 +83,6 @@ func (u *MetricResource) GetMetricType() string {
 	return u.Metric.MType
 }
 func (u *MetricResource) GetValue() string {
-	u.Mutex.Lock()
-	defer u.Mutex.Unlock()
 	if strings.ToLower(u.Metric.MType) == MetricTypeGauge {
 		if u.Metric.Value == nil {
 			return ""

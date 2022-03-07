@@ -34,9 +34,10 @@ func main() {
 	if cfg.Restore {
 		logrus.Info("Load data from " + cfg.StoreFile)
 		metricRead, _ := file.ReadMetrics(cfg.StoreFile)
-		metricData.Metric = metricRead
+		metricData.Metric = &metricRead
 	} else {
-		metricData.Metric = make(map[string]storage.MetricResource)
+		metricResource := make(map[string]storage.MetricResource)
+		metricData.Metric = &metricResource
 		logrus.Info("Load data is Off ")
 	}
 	os.Remove(cfg.StoreFile)

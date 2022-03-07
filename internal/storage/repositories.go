@@ -26,5 +26,5 @@ type MetricResource struct {
 }
 
 type MetricResourceMap struct {
-	Metric map[string]MetricResource
+	Metric *map[string]MetricResource
 }

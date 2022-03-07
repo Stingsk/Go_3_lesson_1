@@ -1,3 +1,98 @@
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-03-08T024055.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-03-08T024046.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-03-08T024039.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "testCounterHandlers",
+"type" : "counter"
+}
+
+<> 2022-03-08T023812.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "testCounterHandlers",
+"type" : "counter"
+}
+
+<> 2022-03-08T023808.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-03-08T023758.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-03-08T023733.200.json
+
+###
+
 POST http://localhost:8080/value/
 Accept: application/json
 Content-Type: application/json
@@ -299,64 +394,6 @@ Content-Type: application/json
 
 POST http://localhost:8080/update/counter/testCounter/100
 Content-Type: application/json
-
-###
-
-POST http://localhost:8080/value/
-Accept: application/json
-Content-Type: application/json
-
-{
-"id" : "testGauge",
-"type" : "gauge"
-}
-
-<> 2022-03-03T191616.200.json
-
-###
-
-GET http://localhost:8080/value/gauge/testGauge
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-03-03T191549.200.json
-
-###
-
-GET http://localhost:8080/value/counter/testCounter
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-03-03T191521.200.json
-
-###
-
-GET http://localhost:8080/value/gauge/testCounter
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-03-03T191501.404.txt
-
-###
-
-POST http://localhost:8080/update/gauge/testGauge/100
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/counter/testCounter/100
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/counter/testCounter/100
-Content-Type: application/json
-
-{}
 
 ###
 

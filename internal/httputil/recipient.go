@@ -49,7 +49,7 @@ func RunServer(wg *sync.WaitGroup,
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-sigChan
-		file.WriteMetrics(storeFile, &r.Inner.Metric)
+		file.WriteMetrics(storeFile, r.Inner.Metric)
 		logrus.Info("Save data before Shutdown to " + storeFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
@@ -63,7 +63,7 @@ func RunServer(wg *sync.WaitGroup,
 			ticker := time.NewTicker(storeInterval)
 			for {
 				<-ticker.C
-				file.WriteMetrics(storeFile, &r.Inner.Metric)
+				file.WriteMetrics(storeFile, r.Inner.Metric)
 			}
 		}()
 		syncWrite = false
@@ -117,18 +117,19 @@ func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, found = metrics.Inner.Metric[strings.ToLower(m.ID)]
+	var valueMetric, found = (*metrics.Inner.Metric)[strings.ToLower(m.ID)]
 	if found {
 		if m.Delta != nil || m.Value != nil {
 			valueMetric.Update(m)
-			render.JSON(w, r, &valueMetric.Metric)
+			(*metrics.Inner.Metric)[strings.ToLower(m.ID)] = valueMetric
+			render.JSON(w, r, valueMetric.Metric)
 			logrus.Info("Update data")
 		} else {
 			http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 		}
 	} else {
 		if m.Delta != nil || m.Value != nil {
-			metrics.Inner.Metric[strings.ToLower(m.ID)] = storage.NewMetricResource(m)
+			(*metrics.Inner.Metric)[strings.ToLower(m.ID)] = storage.NewMetricResource(m)
 			render.JSON(w, r, &m)
 			logrus.Info("Add data")
 		} else {
@@ -137,7 +138,7 @@ func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if syncWrite {
-		file.WriteMetrics(metrics.FilePath, &metrics.Inner.Metric)
+		file.WriteMetrics(metrics.FilePath, metrics.Inner.Metric)
 	}
 	logrus.Info(r.RequestURI)
 }
@@ -158,9 +159,10 @@ func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var valueMetric, found = metrics.Inner.Metric[metricName]
+	var valueMetric, found = (*metrics.Inner.Metric)[metricName]
 	if found {
 		err := valueMetric.UpdateMetricResource(metricValue)
+		(*metrics.Inner.Metric)[strings.ToLower(metricName)] = valueMetric
 		if err != nil {
 			http.Error(w, "Fail on update metric", http.StatusBadRequest)
 			return
@@ -168,12 +170,12 @@ func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
 		logrus.Info("Updated data")
 	} else {
 		metric, _ := storage.NewMetricResourceFromParams(metricValue, metricType, metricName)
-		metrics.Inner.Metric[metricName] = metric
+		(*metrics.Inner.Metric)[metricName] = metric
 		logrus.Info("Added data")
 	}
 
 	if syncWrite {
-		file.WriteMetrics(metrics.FilePath, &metrics.Inner.Metric)
+		file.WriteMetrics(metrics.FilePath, metrics.Inner.Metric)
 	}
 	logrus.Info(r.RequestURI)
 }
@@ -198,7 +200,7 @@ func (metrics *MyMetric) getValueMetric(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, found = metrics.Inner.Metric[strings.ToLower(m.ID)]
+	var valueMetric, found = (*metrics.Inner.Metric)[strings.ToLower(m.ID)]
 	if found && m.Delta == nil && m.Value == nil {
 		render.JSON(w, r, &valueMetric.Metric)
 		logrus.Info("Send data")
@@ -224,7 +226,7 @@ func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotFound)
 		return
 	}
-	var valueMetric, found = metrics.Inner.Metric[metricName]
+	var valueMetric, found = (*metrics.Inner.Metric)[metricName]
 	if found && valueMetric.GetMetricType() == metricType {
 		logrus.Info("Data received: " + valueMetric.GetValue())
 		w.Write([]byte(valueMetric.GetValue()))
@@ -236,7 +238,7 @@ func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
 
 func (metrics *MyMetric) getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("Url request: " + r.RequestURI)
-	metricsString := concatenationMetrics(metrics.Inner.Metric)
+	metricsString := concatenationMetrics(*metrics.Inner.Metric)
 	logrus.Info("Data received: " + metricsString)
 	w.Write([]byte(metricsString))
 

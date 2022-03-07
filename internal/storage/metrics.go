@@ -7,12 +7,10 @@ import (
 
 func NewMetricResourceFromParams(value string, metricType string, name string) (MetricResource, error) {
 	var u MetricResource
-	u.Mutex.TryLock()
-	defer u.Mutex.Unlock()
 
 	u.Metric = &Metric{
-		ID:    strings.ToLower(metricType),
-		MType: strings.ToLower(name),
+		ID:    strings.ToLower(name),
+		MType: strings.ToLower(metricType),
 		Delta: nil,
 		Value: nil,
 	}
@@ -41,7 +39,7 @@ func NewMetricResourceFromParams(value string, metricType string, name string) (
 }
 
 func (u *MetricResource) UpdateMetricResource(value string) error {
-	u.Mutex.TryLock()
+	u.Mutex.Lock()
 	defer u.Mutex.Unlock()
 
 	if strings.ToLower(u.Metric.MType) == MetricTypeGauge {
@@ -69,7 +67,7 @@ func (u *MetricResource) UpdateMetricResource(value string) error {
 }
 
 func (u *MetricResource) Update(newMetric Metric) {
-	u.Mutex.TryLock()
+	u.Mutex.Lock()
 	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
 	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
 		newMetric.Delta = sumInt(*u.Metric.Delta, *newMetric.Delta)
@@ -85,7 +83,7 @@ func (u *MetricResource) GetMetricType() string {
 	return u.Metric.MType
 }
 func (u *MetricResource) GetValue() string {
-	u.Mutex.TryLock()
+	u.Mutex.Lock()
 	defer u.Mutex.Unlock()
 	if strings.ToLower(u.Metric.MType) == MetricTypeGauge {
 		if u.Metric.Value == nil {

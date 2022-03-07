@@ -63,7 +63,7 @@ func WriteMetrics(fileName string, events *map[string]storage.MetricResource) {
 	defer producer.Close()
 	for _, event := range *events {
 		if *event.Updated {
-			event.Mutex.TryLock()
+			event.Mutex.Lock()
 			eventToWrite := Event{
 				ID:     event.Metric.ID,
 				Metric: *event.Metric,

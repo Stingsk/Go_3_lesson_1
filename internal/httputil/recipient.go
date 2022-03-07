@@ -121,7 +121,6 @@ func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) 
 	if found {
 		if m.Delta != nil || m.Value != nil {
 			valueMetric.Update(m)
-			//metrics.Inner.Metric[strings.ToLower(m.ID)] = valueMetric
 			render.JSON(w, r, &valueMetric.Metric)
 			logrus.Info("Update data")
 		} else {
@@ -166,7 +165,6 @@ func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Fail on update metric", http.StatusBadRequest)
 			return
 		}
-		//metrics.Inner.Metric[metricName] = valueMetric
 		logrus.Info("Updated data")
 	} else {
 		metric, _ := storage.NewMetricResourceFromParams(metricValue, metricType, metricName)

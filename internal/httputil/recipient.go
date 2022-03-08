@@ -1,6 +1,7 @@
 package httputil
 
 import (
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -24,6 +25,11 @@ var syncWrite = true
 
 const gauge string = "gauge"
 const counter string = "counter"
+
+type gzipResponseWriter struct {
+	Writer *gzip.Writer
+	http.ResponseWriter
+}
 
 type MyMetric struct {
 	Inner    *storage.MetricResourceMap
@@ -262,8 +268,8 @@ func setMiddlewares(router *chi.Mux) {
 
 	router.Use(middleware.SetHeader("Content-Type", "application/json"))
 	router.Use(middleware.NoCache)
-	//router.Use(middleware.AllowContentType("application/json"))
 	router.Use(middleware.Timeout(60 * time.Second))
+	router.Use(gzipResponse)
 }
 
 func getJSONError(errorText string) string {
@@ -274,4 +280,24 @@ func getHost(host string) string {
 	re := regexp.MustCompile(":[0-9]+")
 	port := re.FindAllString(host, 1)
 	return port[0]
+}
+
+func (w gzipResponseWriter) Write(b []byte) (int, error) {
+	// w.Writer будет отвечать за gzip-сжатие, поэтому пишем в него
+	return w.Writer.Write(b)
+}
+
+func gzipResponse(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		defer gz.Close()
+		next.ServeHTTP(gzipResponseWriter{Writer: gz, ResponseWriter: w}, r)
+	}
+
+	return http.HandlerFunc(fn)
 }

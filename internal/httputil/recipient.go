@@ -150,7 +150,7 @@ func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) 
 }
 
 func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "html/text")
+	w.Header().Set("Content-Type", "text/plain")
 	logrus.Info("Url request: " + r.RequestURI)
 
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
@@ -221,7 +221,7 @@ func (metrics *MyMetric) getValueMetric(w http.ResponseWriter, r *http.Request) 
 }
 
 func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "html/text")
+	w.Header().Set("Content-Type", "text/plain")
 	logrus.Info("Url request: " + r.RequestURI)
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
 	metricName := strings.ToLower(chi.URLParam(r, "name"))
@@ -245,7 +245,7 @@ func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func (metrics *MyMetric) getAllMetrics(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "html/text")
+	w.Header().Set("Content-Type", "text/html")
 	logrus.Info("Url request: " + r.RequestURI)
 	metricsString := concatenationMetrics(*metrics.Inner.Metric)
 	logrus.Info("Data received: " + metricsString)

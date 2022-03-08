@@ -3,6 +3,7 @@ package storage
 import (
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func NewMetricResourceFromParams(value string, metricType string, name string) (MetricResource, error) {
@@ -39,6 +40,9 @@ func NewMetricResourceFromParams(value string, metricType string, name string) (
 }
 
 func (u *MetricResource) UpdateMetricResource(value string) error {
+	if u.Mutex == nil {
+		u.Mutex = new(sync.Mutex)
+	}
 	u.Mutex.Lock()
 	defer u.Mutex.Unlock()
 
@@ -67,6 +71,9 @@ func (u *MetricResource) UpdateMetricResource(value string) error {
 }
 
 func (u *MetricResource) Update(newMetric Metric) {
+	if u.Mutex == nil {
+		u.Mutex = new(sync.Mutex)
+	}
 	u.Mutex.Lock()
 	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
 	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {

@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"errors"
 	"math/rand"
 	"runtime"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
+	"github.com/sirupsen/logrus"
 )
 
 type SensorData struct {
@@ -31,7 +31,7 @@ func (d *SensorData) Get() []storage.MetricResource {
 	return d.last
 }
 
-func RunGetMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) error {
+func RunGetMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) {
 	ticker := time.NewTicker(duration)
 	count := 0
 	for {
@@ -42,7 +42,8 @@ func RunGetMetrics(ctx context.Context, duration time.Duration, messages *Sensor
 			count++
 		case <-ctx.Done():
 			wg.Done()
-			return errors.New("crash shutdown")
+			logrus.Error("crash shutdown")
+			return
 		}
 	}
 }

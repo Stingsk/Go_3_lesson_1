@@ -3,7 +3,6 @@ package httputil
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -18,7 +17,7 @@ import (
 
 const protocol string = "http://"
 
-func RunSender(ctx context.Context, duration time.Duration, messages *metrics.SensorData, wg *sync.WaitGroup, host string) error {
+func RunSender(ctx context.Context, duration time.Duration, messages *metrics.SensorData, wg *sync.WaitGroup, host string) {
 	defer wg.Done()
 	ticker := time.NewTicker(duration)
 	for {
@@ -29,7 +28,8 @@ func RunSender(ctx context.Context, duration time.Duration, messages *metrics.Se
 				sendPost(*mes.Metric, host)
 			}
 		case <-ctx.Done():
-			return errors.New("crash agent")
+			logrus.Error("crash agent")
+			return
 		}
 	}
 }

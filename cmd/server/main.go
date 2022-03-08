@@ -18,6 +18,18 @@ import (
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 )
 
+var (
+	rootCmd = &cobra.Command{
+		Use:   "server",
+		Short: "Metrics for Server",
+		Long:  "Metrics for Server",
+	}
+	Address       string
+	Restore       bool
+	StoreInterval time.Duration
+	StoreFile     string
+)
+
 const (
 	defaultServerAddress = "localhost:8080"
 	defaultStoreFile     = "/tmp/devops-metrics-db.json"
@@ -68,35 +80,42 @@ func main() {
 	logrus.Debug("Shutdown server")
 }
 
+func init() {
+	rootCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
+		"Pair of host:port to listen on")
+
+	rootCmd.Flags().BoolVarP(&Restore, "restore", "r", true,
+		"Flag to load initial metrics from storage ")
+
+	rootCmd.Flags().StringVarP(&StoreFile, "file", "f", defaultStoreFile,
+		"Path to save metrics")
+
+	rootCmd.Flags().DurationVarP(&StoreInterval, "interval", "i", defaultStoreInterval,
+		"Seconds to periodically save metrics if 0 save immediately")
+}
+
 func getConfig() config {
 	cfg := config{}
 	configEVN := configFromEVN{}
 	if err := env.Parse(&configEVN); err != nil {
 		logrus.Error(err)
 	}
-	rootCmd := &cobra.Command{
-		Use:   "server",
-		Short: "Metrics for Server",
-		Long:  "Metrics for Server",
-	}
+	rootCmd.Execute()
 
 	if configEVN.Address == "notset" {
-		rootCmd.Flags().StringVarP(&cfg.Address, "address", "a", defaultServerAddress,
-			"Pair of host:port to listen on")
+		cfg.Address = Address
 	} else {
 		cfg.Address = configEVN.Address
 	}
 
 	if configEVN.StoreFile == "notset" {
-		rootCmd.Flags().StringVarP(&cfg.StoreFile, "file", "f", defaultStoreFile,
-			"Path to save metrics")
+		cfg.StoreFile = StoreFile
 	} else {
 		cfg.StoreFile = configEVN.StoreFile
 	}
 
 	if configEVN.Restore == "notset" {
-		rootCmd.Flags().BoolVarP(&cfg.Restore, "restore", "r", true,
-			"Flag to load initial metrics from storage ")
+		cfg.Restore = Restore
 	} else {
 		var err error
 		cfg.Restore, err = strconv.ParseBool(configEVN.Restore)
@@ -106,8 +125,7 @@ func getConfig() config {
 	}
 
 	if configEVN.StoreInterval == "notset" {
-		rootCmd.Flags().DurationVarP(&cfg.StoreInterval, "interval", "i", defaultStoreInterval,
-			"Seconds to periodically save metrics if 0 save immediately")
+		cfg.StoreInterval = StoreInterval
 	} else {
 		var err error
 		cfg.StoreInterval, err = time.ParseDuration(configEVN.StoreInterval)

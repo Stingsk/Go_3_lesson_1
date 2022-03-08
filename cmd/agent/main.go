@@ -17,6 +17,18 @@ import (
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
 )
 
+var (
+	rootCmd = &cobra.Command{
+		Use:   "agent",
+		Short: "Metrics for Agent",
+		Long:  "Metrics for Agent",
+	}
+
+	Address        string
+	ReportInterval time.Duration
+	PollInterval   time.Duration
+)
+
 const (
 	defaultServerAddress  = "localhost:8080"
 	defaultReportInterval = 10 * time.Second
@@ -65,28 +77,31 @@ func main() {
 	logrus.Debug("Shutdown agent")
 }
 
+func init() {
+	rootCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
+		"Pair of host:port to send data")
+	rootCmd.Flags().DurationVarP(&ReportInterval, "reportInterval", "r", defaultReportInterval,
+		"Seconds to periodically save metrics")
+	rootCmd.Flags().DurationVarP(&PollInterval, "pollInterval", "p", defaultPollInterval,
+		"Seconds to periodically send metrics to server")
+}
+
 func getConfig() config {
 	cfg := config{}
 	configEVN := configFromEVN{}
 	if err := env.Parse(&configEVN); err != nil {
 		logrus.Error(err)
 	}
-	rootCmd := &cobra.Command{
-		Use:   "agent",
-		Short: "Metrics for Agent",
-		Long:  "Metrics for Agent",
-	}
 
+	rootCmd.Execute()
 	if configEVN.Address == "notset" {
-		rootCmd.Flags().StringVarP(&cfg.Address, "address", "a", defaultServerAddress,
-			"Pair of host:port to send data")
+		cfg.Address = Address
 	} else {
 		cfg.Address = configEVN.Address
 	}
 
 	if configEVN.ReportInterval == "notset" {
-		rootCmd.Flags().DurationVarP(&cfg.ReportInterval, "reportInterval", "r", defaultReportInterval,
-			"Seconds to periodically save metrics")
+		cfg.ReportInterval = ReportInterval
 	} else {
 		var err error
 		cfg.ReportInterval, err = time.ParseDuration(configEVN.ReportInterval)
@@ -96,8 +111,7 @@ func getConfig() config {
 	}
 
 	if configEVN.PollInterval == "notset" {
-		rootCmd.Flags().DurationVarP(&cfg.PollInterval, "pollInterval", "p", defaultPollInterval,
-			"Seconds to periodically send metrics to server")
+		cfg.PollInterval = PollInterval
 	} else {
 		var err error
 		cfg.PollInterval, err = time.ParseDuration(configEVN.PollInterval)

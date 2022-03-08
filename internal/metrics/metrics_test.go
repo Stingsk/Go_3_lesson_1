@@ -45,9 +45,7 @@ func TestRunGetMetrics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cancel()
-			if err := RunGetMetrics(tt.args.ctx, tt.args.duration, tt.args.messages, tt.args.wg); (err != nil) != tt.wantErr {
-				t.Errorf("RunGetMetrics() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			RunGetMetrics(tt.args.ctx, tt.args.duration, tt.args.messages, tt.args.wg)
 		})
 	}
 }

@@ -22,7 +22,7 @@ type Metric struct {
 type MetricResource struct {
 	Metric  *Metric
 	Updated *bool
-	Mutex   sync.Mutex
+	Mutex   *sync.Mutex
 }
 
 type MetricResourceMap struct {

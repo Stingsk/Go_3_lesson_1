@@ -150,6 +150,7 @@ func (metrics *MyMetric) savePostMetric(w http.ResponseWriter, r *http.Request) 
 }
 
 func (metrics *MyMetric) saveMetric(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "html/text")
 	logrus.Info("Url request: " + r.RequestURI)
 
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
@@ -220,6 +221,7 @@ func (metrics *MyMetric) getValueMetric(w http.ResponseWriter, r *http.Request) 
 }
 
 func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "html/text")
 	logrus.Info("Url request: " + r.RequestURI)
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
 	metricName := strings.ToLower(chi.URLParam(r, "name"))
@@ -243,6 +245,7 @@ func (metrics *MyMetric) getMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func (metrics *MyMetric) getAllMetrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "html/text")
 	logrus.Info("Url request: " + r.RequestURI)
 	metricsString := concatenationMetrics(*metrics.Inner.Metric)
 	logrus.Info("Data received: " + metricsString)
@@ -265,8 +268,6 @@ func setMiddlewares(router *chi.Mux) {
 	router.Use(middleware.RealIP)
 	router.Use(logs.NewStructuredLogger(logrus.StandardLogger()))
 	router.Use(middleware.Recoverer)
-
-	router.Use(middleware.SetHeader("Content-Type", "application/json"))
 	router.Use(middleware.NoCache)
 	router.Use(middleware.Timeout(60 * time.Second))
 	router.Use(gzipResponse)

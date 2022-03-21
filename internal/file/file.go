@@ -1,102 +1,55 @@
 package file
 
 import (
-	"bufio"
 	"encoding/json"
-	"os"
-	"strings"
-
+	"errors"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
 )
 
-type Event struct {
-	ID     string         `json:"Id"`
-	Metric storage.Metric `json:"Metric"`
-}
+func WriteMetrics(fileName string, metricResourceMap *storage.MetricResourceMap) error {
+	if fileName == "" {
+		return errors.New("empty filename")
+	}
 
-type producer struct {
-	file    *os.File
-	encoder *json.Encoder
-}
-
-func NewProducer(fileName string) (*producer, error) {
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &producer{
-		file:    file,
-		encoder: json.NewEncoder(file),
-	}, nil
-}
-func (p *producer) WriteEvent(event *Event) error {
-	return p.encoder.Encode(&event)
-}
-func (p *producer) Close() error {
-	return p.file.Close()
-}
 
-type consumer struct {
-	file    *os.File
-	decoder *json.Decoder
-}
-
-func (c *consumer) ReadEvent() (*Event, error) {
-	event := &Event{}
-	if err := c.decoder.Decode(&event); err != nil {
-		return nil, err
-	}
-	return event, nil
-}
-func (c *consumer) Close() error {
-	return c.file.Close()
-}
-
-func WriteMetrics(fileName string, events *map[string]storage.MetricResource) {
-	if fileName == "" {
-		return
-	}
-	producer, err := NewProducer(fileName)
+	metricResourceMap.Mutex.Lock()
+	defer metricResourceMap.Mutex.Unlock()
+	marshalMetric, err := json.Marshal(metricResourceMap.Metric)
 	if err != nil {
-		logrus.Fatal(err)
+		return err
 	}
-	defer producer.Close()
-	for _, event := range *events {
-		if *event.Updated {
-			eventToWrite := Event{
-				ID:     strings.ToLower(event.Metric.ID),
-				Metric: *event.Metric,
-			}
-			if err := producer.WriteEvent(&eventToWrite); err != nil {
-				logrus.Fatal(err)
-			}
-			*event.Updated = false
-		}
-	}
+	file.Write(marshalMetric)
+	file.Close()
+
+	return nil
 }
 
-func ReadMetrics(fileName string) (map[string]storage.MetricResource, error) {
+func ReadMetrics(fileName string) (map[string]storage.Metric, error) {
 	if fileName == "" {
 		return nil, nil
 	}
-	var metricData = make(map[string]storage.MetricResource)
+	var metricData = make(map[string]storage.Metric)
 	fileRead, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		logrus.Fatal(err)
 		return nil, err
 	}
 
-	reader := bufio.NewReader(fileRead)
-	scanner := bufio.NewScanner(reader)
-	scanner.Buffer(make([]byte, 100*1024*1024), 100*1024*1024) // читаем большие файлы
 	defer fileRead.Close()
 
-	for scanner.Scan() {
-		event := &Event{}
-		json.Unmarshal(scanner.Bytes(), &event)
-		metricData[strings.ToLower(event.ID)] = storage.NewMetricResource(event.Metric)
+	data, err := ioutil.ReadAll(fileRead)
+	if err != nil {
+		logrus.Fatal(err)
+		return nil, err
 	}
+	json.Unmarshal(data, &metricData)
 
 	return metricData, nil
 }

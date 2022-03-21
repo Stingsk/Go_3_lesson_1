@@ -25,7 +25,7 @@ func RunSender(ctx context.Context, duration time.Duration, messages *metrics.Se
 		case <-ticker.C:
 			messagesFromChan := messages.Get()
 			for _, mes := range messagesFromChan {
-				sendPost(*mes.Metric, host)
+				sendPost(mes, host)
 			}
 		case <-ctx.Done():
 			logrus.Error("crash agent")

@@ -61,12 +61,9 @@ func TestRecipientGet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
 			httptest.NewServer(r)
-			metrics := &MyMetric{
-				Inner: tt.fields.Inner,
-			}
 
 			r.Route("/value", func(r chi.Router) {
-				r.Get("/{type}/{name}/{value}", metrics.getMetric)
+				r.Get("/{type}/{name}/{value}", getMetric)
 			})
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -158,11 +155,8 @@ func TestRecipientPost(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := chi.NewRouter()
 			httptest.NewServer(r)
-			metrics := &MyMetric{
-				Inner: tt.fields.Inner,
-			}
 			r.Route("/update/gauge", func(r chi.Router) {
-				r.Get("/{gauge}/{value}", metrics.saveMetric)
+				r.Get("/{gauge}/{value}", saveMetric)
 			})
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -210,10 +204,7 @@ func TestMyMetric_savePostMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			metrics := &MyMetric{
-				Inner: tt.fields.Inner,
-			}
-			metrics.savePostMetric(tt.args.w, tt.args.r)
+			savePostMetric(tt.args.w, tt.args.r)
 		})
 	}
 }

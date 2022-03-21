@@ -1,15 +1,15 @@
 package storage
 
 import (
+	"errors"
 	"strconv"
 	"strings"
-	"sync"
 )
 
-func NewMetricResourceFromParams(value string, metricType string, name string) (MetricResource, error) {
-	var u MetricResource
+func NewMetric(value string, metricType string, name string) (Metric, error) {
+	var metric Metric
 
-	u.Metric = &Metric{
+	metric = Metric{
 		ID:    strings.ToLower(name),
 		MType: strings.ToLower(metricType),
 		Delta: nil,
@@ -18,88 +18,71 @@ func NewMetricResourceFromParams(value string, metricType string, name string) (
 	if strings.ToLower(metricType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return MetricResource{}, err
+			return Metric{}, err
 		}
-		u.Metric.Value = &v
-	} else if strings.ToLower(u.Metric.MType) == MetricTypeCounter {
+		metric.Value = &v
+	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return MetricResource{}, err
+			return Metric{}, err
 		}
 
 		delta := int64(0)
-		if u.Metric.Delta != nil {
-			delta = *u.Metric.Delta
+		if metric.Delta != nil {
+			delta = *metric.Delta
 		}
-		u.Metric.Delta = sumInt(delta, newValue)
+		metric.Delta = sumInt(delta, newValue)
 	}
-	updated := true
-	u.Updated = &updated
 
-	return u, nil
+	return metric, nil
 }
 
-func (u *MetricResource) UpdateMetricResource(value string) error {
-	if u.Mutex == nil {
-		u.Mutex = new(sync.Mutex)
-	}
-	u.Mutex.Lock()
-	defer u.Mutex.Unlock()
-
-	if strings.ToLower(u.Metric.MType) == MetricTypeGauge {
+func (m *Metric) UpdateMetricResource(value string) error {
+	if strings.ToLower(m.MType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
-		u.Metric.Value = &v
-	} else if strings.ToLower(u.Metric.MType) == MetricTypeCounter {
+		m.Value = &v
+	} else if strings.ToLower(m.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return err
 		}
 
 		delta := int64(0)
-		if u.Metric.Delta != nil {
-			delta = *u.Metric.Delta
+		if m.Delta != nil {
+			delta = *m.Delta
 		}
-		u.Metric.Delta = sumInt(delta, newValue)
+		m.Delta = sumInt(delta, newValue)
 	}
-	updated := true
-	u.Updated = &updated
 
 	return nil
 }
 
-func (u *MetricResource) Update(newMetric Metric) {
-	if u.Mutex == nil {
-		u.Mutex = new(sync.Mutex)
-	}
-	u.Mutex.Lock()
+func (m *Metric) Update(newMetric Metric) {
 	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
+		m.Value = newMetric.Value
 	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
-		newMetric.Delta = sumInt(*u.Metric.Delta, *newMetric.Delta)
+		m.Delta = sumInt(*m.Delta, *newMetric.Delta)
 	}
-
-	u.Metric = &newMetric
-	updated := true
-	u.Updated = &updated
-	u.Mutex.Unlock()
 }
 
-func (u *MetricResource) GetMetricType() string {
-	return u.Metric.MType
+func (m *Metric) GetMetricType() string {
+	return m.MType
 }
-func (u *MetricResource) GetValue() string {
-	if strings.ToLower(u.Metric.MType) == MetricTypeGauge {
-		if u.Metric.Value == nil {
+
+func (m *Metric) GetValue() string {
+	if strings.ToLower(m.MType) == MetricTypeGauge {
+		if m.Value == nil {
 			return ""
 		}
-		return strconv.FormatFloat(*u.Metric.Value, 'f', 3, 64)
-	} else if strings.ToLower(u.Metric.MType) == MetricTypeCounter {
-		if u.Metric.Delta == nil {
+		return strconv.FormatFloat(*m.Value, 'f', 3, 64)
+	} else if strings.ToLower(m.MType) == MetricTypeCounter {
+		if m.Delta == nil {
 			return ""
 		}
-		return strconv.FormatInt(*u.Metric.Delta, 10)
+		return strconv.FormatInt(*m.Delta, 10)
 	}
 
 	return ""
@@ -114,10 +97,51 @@ func sumFloat(first float64, second float64) *float64 {
 	return &helper
 }
 
-func NewMetricResource(metric Metric) MetricResource {
-	falseValue := true
-	return MetricResource{
-		Metric:  &metric,
-		Updated: &falseValue,
+func UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error) {
+	metricResourceMap.Mutex.Lock()
+	defer metricResourceMap.Mutex.Unlock()
+
+	var valueMetric = metricResourceMap.Metric[strings.ToLower(metric.ID)]
+	if valueMetric.GetValue() != "" {
+		if metric.Delta != nil || metric.Value != nil {
+			valueMetric.Update(metric)
+			metricResourceMap.Metric[strings.ToLower(metric.ID)] = valueMetric
+			return valueMetric, nil
+		} else {
+			return Metric{}, errors.New("data is empty")
+		}
+	} else {
+		if metric.Delta != nil || metric.Value != nil {
+			metricResourceMap.Metric[strings.ToLower(metric.ID)] = metric
+			return metric, nil
+		} else {
+			return Metric{}, errors.New("data is empty")
+		}
+	}
+}
+
+func UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error) {
+	metricResourceMap.Mutex.Lock()
+	defer metricResourceMap.Mutex.Unlock()
+	_, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return Metric{}, errors.New("only numbers  params in request are allowed!")
+	}
+
+	var valueMetric, found = metricResourceMap.Metric[metricName]
+	if found {
+		err := valueMetric.UpdateMetricResource(value)
+		metricResourceMap.Metric[strings.ToLower(metricName)] = valueMetric
+		if err != nil {
+			return Metric{}, err
+		}
+		return valueMetric, nil
+	} else {
+		metric, err := NewMetric(value, metricType, metricName)
+		if err != nil {
+			return Metric{}, err
+		}
+		metricResourceMap.Metric[metricName] = metric
+		return metric, nil
 	}
 }

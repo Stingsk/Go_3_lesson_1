@@ -21,7 +21,7 @@ func TestMetricUpdateMetric(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   MetricResource
+		want   Metric
 	}{
 		{
 			name: "Update counter",
@@ -34,14 +34,11 @@ func TestMetricUpdateMetric(t *testing.T) {
 				value:      "13",
 				metricType: "counter",
 			},
-			want: MetricResource{
-				Metric: &Metric{
-					MType: "counter",
-					Delta: sumInt(24, 1),
-					Value: nil,
-					ID:    "testCounter",
-				},
-				Updated: nil,
+			want: Metric{
+				MType: "counter",
+				Delta: sumInt(24, 1),
+				Value: nil,
+				ID:    "testCounter",
 			},
 		},
 		{
@@ -55,12 +52,9 @@ func TestMetricUpdateMetric(t *testing.T) {
 				value:      "13",
 				metricType: "gauge",
 			},
-			want: MetricResource{
-				Metric: &Metric{
-					MType: "gauge",
-					Value: sumFloat(12, 1),
-				},
-				Updated: nil,
+			want: Metric{
+				MType: "gauge",
+				Value: sumFloat(12, 1),
 			},
 		},
 		{
@@ -74,24 +68,18 @@ func TestMetricUpdateMetric(t *testing.T) {
 				value:      "12",
 				metricType: "failType",
 			},
-			want: MetricResource{
-				Metric: &Metric{
-					MType: "gauge",
-					Value: sumFloat(11, 1),
-				},
-				Updated: nil,
+			want: Metric{
+				MType: "gauge",
+				Value: sumFloat(11, 1),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := &MetricResource{
-				Metric: &Metric{
-					MType: tt.fields.metricType,
-					Value: &tt.fields.valueGauge,
-					Delta: &tt.fields.valueCounter,
-				},
-				Updated: nil,
+			got := Metric{
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
 
 			got.UpdateMetricResource(tt.args.value)
@@ -114,7 +102,7 @@ func TestMetric_UpdateMetric(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    MetricResource
+		want    Metric
 		wantErr bool
 	}{
 		{
@@ -127,26 +115,20 @@ func TestMetric_UpdateMetric(t *testing.T) {
 			args: args{
 				value: "",
 			},
-			want: MetricResource{
-				Metric: &Metric{
-					MType: "",
-					Value: nil,
-					Delta: nil,
-				},
-				Updated: nil,
+			want: Metric{
+				MType: "",
+				Value: nil,
+				Delta: nil,
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := MetricResource{
-				Metric: &Metric{
-					MType: tt.fields.metricType,
-					Value: &tt.fields.valueGauge,
-					Delta: &tt.fields.valueCounter,
-				},
-				Updated: nil,
+			got := Metric{
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
 			err := got.UpdateMetricResource(tt.args.value)
 			if (err != nil) != tt.wantErr {
@@ -201,13 +183,10 @@ func TestMetric_GetValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := MetricResource{
-				Metric: &Metric{
-					MType: tt.fields.metricType,
-					Value: &tt.fields.valueGauge,
-					Delta: &tt.fields.valueCounter,
-				},
-				Updated: nil,
+			u := Metric{
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
 			if got := u.GetValue(); got != tt.want {
 				t.Errorf("GetValue() = %v, want %v", got, tt.want)
@@ -257,13 +236,10 @@ func TestMetric_GetMetricType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := MetricResource{
-				Metric: &Metric{
-					MType: tt.fields.metricType,
-					Value: &tt.fields.valueGauge,
-					Delta: &tt.fields.valueCounter,
-				},
-				Updated: nil,
+			u := Metric{
+				MType: tt.fields.metricType,
+				Value: &tt.fields.valueGauge,
+				Delta: &tt.fields.valueCounter,
 			}
 			if got := u.GetMetricType(); got != tt.want {
 				t.Errorf("GetMetricType() = %v, want %v", got, tt.want)

@@ -8,8 +8,9 @@ const (
 )
 
 type Repository interface {
-	NewMetric(metricName string, metricType string, value string) error
-	UpdateMetric(value string) (Metric, error)
+	NewMetric(value string, metricType string, name string) (Metric, error)
+	UpdateMetric(metricResourceMap *MetricResourceMap, metric *Metric) (Metric, error)
+	UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error)
 }
 
 type Metric struct {
@@ -19,12 +20,7 @@ type Metric struct {
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }
 
-type MetricResource struct {
-	Metric  *Metric
-	Updated *bool
-	Mutex   *sync.Mutex
-}
-
 type MetricResourceMap struct {
-	Metric *map[string]MetricResource
+	Metric map[string]Metric
+	Mutex  sync.Mutex
 }

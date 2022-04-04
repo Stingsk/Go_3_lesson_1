@@ -34,10 +34,6 @@ func RunServer(wg *sync.WaitGroup,
 	storeFile string,
 	storeInterval time.Duration) {
 	StoreFile = storeFile
-	metricLocal := &storage.MetricResourceMap{
-		Metric: nil,
-		Mutex:  sync.Mutex{},
-	}
 	metricLocal.Metric = metrics
 	defer wg.Done()
 	server := &http.Server{Addr: getHost(host), Handler: service()}

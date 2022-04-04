@@ -7,7 +7,9 @@ import (
 )
 
 func NewMetric(value string, metricType string, name string) (Metric, error) {
-	metric := Metric{
+	var metric Metric
+
+	metric = Metric{
 		ID:    strings.ToLower(name),
 		MType: strings.ToLower(metricType),
 		Delta: nil,
@@ -123,7 +125,7 @@ func UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName s
 	defer metricResourceMap.Mutex.Unlock()
 	_, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		return Metric{}, errors.New("only numbers  params in request are allowed")
+		return Metric{}, errors.New("only numbers  params in request are allowed!")
 	}
 
 	var valueMetric, found = metricResourceMap.Metric[metricName]

@@ -16,15 +16,20 @@ import (
 
 func main() {
 	logs.Init()
-	metricData := make(map[string]storage.Metric)
+	var metricData storage.MetricResourceMap
 	cfg := config.GetConfig()
 	if cfg.Restore {
 		logrus.Info("Load data from " + cfg.StoreFile)
-		metricRead, err := file.ReadMetrics(cfg.StoreFile)
-		if err != nil {
-			logrus.Info("fail to restore data")
-		}
-		metricData = metricRead
+		metricRead, _ := file.ReadMetrics(cfg.StoreFile)
+		metricData.Metric = &metricRead
+	} else {
+		metricResource := make(map[string]storage.MetricResource)
+		metricData.Metric = &metricResource
+		logrus.Info("Load data is Off ")
+	}
+	err := os.Remove(cfg.StoreFile)
+	if err != nil {
+		logrus.Error(err)
 	}
 
 	logrus.Debug("Start server")
@@ -36,7 +41,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go httputil.RunServer(&wg, sigChan, cfg.Address, metricData, cfg.StoreFile, cfg.StoreInterval)
+	go httputil.RunServer(&wg, sigChan, cfg.Address, &metricData, cfg.StoreFile, cfg.StoreInterval)
 
 	wg.Wait()
 

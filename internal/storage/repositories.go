@@ -25,6 +25,3 @@ type MetricResourceMap struct {
 	Mutex      sync.Mutex
 	Repository Repository
 }
-
-type MemoryStorage struct {
-}

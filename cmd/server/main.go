@@ -36,7 +36,15 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go httputil.RunServer(&wg, sigChan, cfg.Address, metricData, cfg.StoreFile, cfg.StoreInterval)
+	var serverConfig = &httputil.ServerConfig{
+		WaitGroup:     &wg,
+		SigChan:       sigChan,
+		Host:          cfg.Address,
+		Metrics:       metricData,
+		StoreFile:     cfg.StoreFile,
+		StoreInterval: cfg.StoreInterval,
+	}
+	go httputil.RunServer(*serverConfig)
 
 	wg.Wait()
 

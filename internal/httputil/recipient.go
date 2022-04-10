@@ -29,35 +29,33 @@ type gzipResponseWriter struct {
 	Writer *gzip.Writer
 	http.ResponseWriter
 }
-
-type MyMetric struct {
-	Inner    *storage.MetricResourceMap
-	FilePath string
+type ServerConfig struct {
+	WaitGroup     *sync.WaitGroup
+	SigChan       chan os.Signal
+	Host          string
+	Metrics       map[string]storage.Metric
+	StoreFile     string
+	StoreInterval time.Duration
 }
 
 var MetricLocal *storage.MetricResourceMap
 var StoreFile string
 
-func RunServer(wg *sync.WaitGroup,
-	sigChan chan os.Signal,
-	host string,
-	metrics map[string]storage.Metric,
-	storeFile string,
-	storeInterval time.Duration) {
-	StoreFile = storeFile
+func RunServer(serverConfig ServerConfig) {
+	StoreFile = serverConfig.StoreFile
 	MetricLocal = &storage.MetricResourceMap{
 		Metric:     nil,
 		Mutex:      sync.Mutex{},
 		Repository: &storage.MemoryStorage{},
 	}
-	MetricLocal.Metric = metrics
-	defer wg.Done()
-	server := &http.Server{Addr: getHost(host), Handler: service()}
+	MetricLocal.Metric = serverConfig.Metrics
+	defer serverConfig.WaitGroup.Done()
+	server := &http.Server{Addr: getHost(serverConfig.Host), Handler: service()}
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		<-sigChan
-		file.WriteMetrics(storeFile, MetricLocal)
-		logrus.Info("Save data before Shutdown to " + storeFile)
+		<-serverConfig.SigChan
+		file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+		logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
 			logrus.Fatal(err)
@@ -65,12 +63,12 @@ func RunServer(wg *sync.WaitGroup,
 		cancel()
 	}()
 
-	if storeInterval > 0 {
+	if serverConfig.StoreInterval > 0 {
 		go func() {
-			ticker := time.NewTicker(storeInterval)
+			ticker := time.NewTicker(serverConfig.StoreInterval)
 			for {
 				<-ticker.C
-				file.WriteMetrics(storeFile, MetricLocal)
+				file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
 			}
 		}()
 		syncWrite = false

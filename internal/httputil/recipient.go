@@ -46,8 +46,9 @@ func RunServer(wg *sync.WaitGroup,
 	storeInterval time.Duration) {
 	StoreFile = storeFile
 	MetricLocal = &storage.MetricResourceMap{
-		Metric: nil,
-		Mutex:  sync.Mutex{},
+		Metric:     nil,
+		Mutex:      sync.Mutex{},
+		Repository: &storage.MemoryStorage{},
 	}
 	MetricLocal.Metric = metrics
 	defer wg.Done()
@@ -123,7 +124,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, err = storage.UpdateMetric(MetricLocal, m)
+	var valueMetric, err = MetricLocal.Repository.UpdateMetric(MetricLocal, m)
 	if err != nil {
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 	}
@@ -147,7 +148,7 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 	metricName := strings.ToLower(chi.URLParam(r, "name"))
 	metricValue := strings.ToLower(chi.URLParam(r, "value"))
 
-	var _, err = storage.UpdateMetricByParameters(MetricLocal, metricName, metricType, metricValue)
+	var _, err = MetricLocal.Repository.UpdateMetricByParameters(MetricLocal, metricName, metricType, metricValue)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}

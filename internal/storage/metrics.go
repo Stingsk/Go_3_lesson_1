@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func NewMetric(value string, metricType string, name string) (Metric, error) {
+func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
 	metric := Metric{
 		ID:    strings.ToLower(name),
 		MType: strings.ToLower(metricType),
@@ -95,7 +95,7 @@ func sumFloat(first float64, second float64) *float64 {
 	return &helper
 }
 
-func UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error) {
+func (m *MemoryStorage) UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error) {
 	metricResourceMap.Mutex.Lock()
 	defer metricResourceMap.Mutex.Unlock()
 
@@ -118,7 +118,7 @@ func UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, 
 	}
 }
 
-func UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error) {
+func (m *MemoryStorage) UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error) {
 	metricResourceMap.Mutex.Lock()
 	defer metricResourceMap.Mutex.Unlock()
 	_, err := strconv.ParseFloat(value, 64)
@@ -135,7 +135,7 @@ func UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName s
 		}
 		return valueMetric, nil
 	} else {
-		metric, err := NewMetric(value, metricType, metricName)
+		metric, err := m.NewMetric(value, metricType, metricName)
 		if err != nil {
 			return Metric{}, err
 		}

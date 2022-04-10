@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 )
@@ -14,11 +13,13 @@ func WriteMetrics(fileName string, metricResourceMap *storage.MetricResourceMap)
 		return errors.New("empty filename")
 	}
 
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	file, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
-
+	if metricResourceMap == nil {
+		return nil
+	}
 	metricResourceMap.Mutex.Lock()
 	defer metricResourceMap.Mutex.Unlock()
 	marshalMetric, err := json.Marshal(metricResourceMap.Metric)
@@ -35,21 +36,23 @@ func ReadMetrics(fileName string) (map[string]storage.Metric, error) {
 	if fileName == "" {
 		return nil, nil
 	}
-	var metricData = make(map[string]storage.Metric)
+	metricData := make(map[string]storage.Metric)
 	fileRead, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
-		logrus.Fatal(err)
-		return nil, err
+		return metricData, err
 	}
 
 	defer fileRead.Close()
 
 	data, err := ioutil.ReadAll(fileRead)
 	if err != nil {
-		logrus.Fatal(err)
-		return nil, err
+		return metricData, err
 	}
-	json.Unmarshal(data, &metricData)
+	err = json.Unmarshal(data, &metricData)
+
+	if err != nil {
+		return metricData, err
+	}
 
 	return metricData, nil
 }

@@ -35,7 +35,7 @@ type MyMetric struct {
 	FilePath string
 }
 
-var metricLocal *storage.MetricResourceMap
+var MetricLocal *storage.MetricResourceMap
 var StoreFile string
 
 func RunServer(wg *sync.WaitGroup,
@@ -45,17 +45,17 @@ func RunServer(wg *sync.WaitGroup,
 	storeFile string,
 	storeInterval time.Duration) {
 	StoreFile = storeFile
-	metricLocal := &storage.MetricResourceMap{
+	MetricLocal = &storage.MetricResourceMap{
 		Metric: nil,
 		Mutex:  sync.Mutex{},
 	}
-	metricLocal.Metric = metrics
+	MetricLocal.Metric = metrics
 	defer wg.Done()
 	server := &http.Server{Addr: getHost(host), Handler: service()}
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-sigChan
-		file.WriteMetrics(storeFile, metricLocal)
+		file.WriteMetrics(storeFile, MetricLocal)
 		logrus.Info("Save data before Shutdown to " + storeFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
@@ -69,7 +69,7 @@ func RunServer(wg *sync.WaitGroup,
 			ticker := time.NewTicker(storeInterval)
 			for {
 				<-ticker.C
-				file.WriteMetrics(storeFile, metricLocal)
+				file.WriteMetrics(storeFile, MetricLocal)
 			}
 		}()
 		syncWrite = false
@@ -123,7 +123,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, err = storage.UpdateMetric(metricLocal, m)
+	var valueMetric, err = storage.UpdateMetric(MetricLocal, m)
 	if err != nil {
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 	}
@@ -131,7 +131,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, valueMetric)
 
 	if syncWrite {
-		file.WriteMetrics(StoreFile, metricLocal)
+		file.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
 }
@@ -147,13 +147,13 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 	metricName := strings.ToLower(chi.URLParam(r, "name"))
 	metricValue := strings.ToLower(chi.URLParam(r, "value"))
 
-	var _, err = storage.UpdateMetricByParameters(metricLocal, metricName, metricType, metricValue)
+	var _, err = storage.UpdateMetricByParameters(MetricLocal, metricName, metricType, metricValue)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	if syncWrite {
-		file.WriteMetrics(StoreFile, metricLocal)
+		file.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
 }
@@ -178,7 +178,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, found = metricLocal.Metric[strings.ToLower(m.ID)]
+	var valueMetric, found = MetricLocal.Metric[strings.ToLower(m.ID)]
 	if found && m.Delta == nil && m.Value == nil {
 		render.JSON(w, r, &valueMetric)
 		logrus.Info("Send data")
@@ -205,7 +205,7 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotFound)
 		return
 	}
-	var valueMetric, found = metricLocal.Metric[metricName]
+	var valueMetric, found = MetricLocal.Metric[metricName]
 	if found && valueMetric.GetMetricType() == metricType {
 		logrus.Info("Data received: " + valueMetric.GetValue())
 		w.Write([]byte(valueMetric.GetValue()))
@@ -218,7 +218,7 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	logrus.Info("Url request: " + r.RequestURI)
-	metricsString := concatenationMetrics(metricLocal.Metric)
+	metricsString := concatenationMetrics(MetricLocal.Metric)
 	logrus.Info("Data received: " + metricsString)
 	w.Write([]byte(metricsString))
 

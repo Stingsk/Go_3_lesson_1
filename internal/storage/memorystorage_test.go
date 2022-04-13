@@ -118,6 +118,66 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 			},
 			wantErr: assert.NoError,
 		},
+		{
+			name: "positive test 2#",
+			args: args{
+				metricResourceMap: &MetricResourceMap{
+					Metric: map[string]Metric{
+						"counter": Metric{
+							ID:    "counter",
+							MType: "counter",
+							Delta: sumInt(9, 1),
+							Value: nil,
+						},
+					},
+					Mutex:      sync.Mutex{},
+					Repository: &MemoryStorage{},
+				},
+				metric: Metric{
+					ID:    "counter",
+					MType: "counter",
+					Delta: sumInt(9, 1),
+					Value: nil,
+				},
+			},
+			want: Metric{
+				ID:    "counter",
+				MType: "counter",
+				Delta: sumInt(19, 1),
+				Value: nil,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "negative test 1#",
+			args: args{
+				metricResourceMap: &MetricResourceMap{
+					Metric: map[string]Metric{
+						"gauge": Metric{
+							ID:    "123",
+							MType: "counter",
+							Delta: sumInt(9, 1),
+							Value: nil,
+						},
+					},
+					Mutex:      sync.Mutex{},
+					Repository: &MemoryStorage{},
+				},
+				metric: Metric{
+					ID:    "345",
+					MType: "766",
+					Delta: nil,
+					Value: nil,
+				},
+			},
+			want: Metric{
+				ID:    "",
+				MType: "",
+				Delta: nil,
+				Value: nil,
+			},
+			wantErr: assert.Error,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -144,7 +204,87 @@ func TestMemoryStorage_UpdateMetricByParameters(t *testing.T) {
 		want    Metric
 		wantErr assert.ErrorAssertionFunc
 	}{
-		// TODO: Add test cases.
+		{
+			name: "positive test 1#",
+			args: args{
+				metricResourceMap: &MetricResourceMap{
+					Metric: map[string]Metric{
+						"gauge": Metric{
+							ID:    "gauge",
+							MType: "gauge",
+							Delta: nil,
+							Value: sumFloat(9, 1),
+						},
+					},
+					Mutex:      sync.Mutex{},
+					Repository: &MemoryStorage{},
+				},
+				metricName: "gauge",
+				metricType: "gauge",
+				value:      "9",
+			},
+			want: Metric{
+				ID:    "gauge",
+				MType: "gauge",
+				Delta: nil,
+				Value: sumFloat(8, 1),
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "positive test 2#",
+			args: args{
+				metricResourceMap: &MetricResourceMap{
+					Metric: map[string]Metric{
+						"counter": Metric{
+							ID:    "counter",
+							MType: "counter",
+							Delta: sumInt(9, 1),
+							Value: nil,
+						},
+					},
+					Mutex:      sync.Mutex{},
+					Repository: &MemoryStorage{},
+				},
+				metricName: "counter",
+				metricType: "counter",
+				value:      "9",
+			},
+			want: Metric{
+				ID:    "counter",
+				MType: "counter",
+				Delta: sumInt(18, 1),
+				Value: nil,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "negative test 1#",
+			args: args{
+				metricResourceMap: &MetricResourceMap{
+					Metric: map[string]Metric{
+						"counter": Metric{
+							ID:    "counter",
+							MType: "counter",
+							Delta: sumInt(9, 1),
+							Value: nil,
+						},
+					},
+					Mutex:      sync.Mutex{},
+					Repository: &MemoryStorage{},
+				},
+				metricName: "counter",
+				metricType: "counter",
+				value:      "fdgf",
+			},
+			want: Metric{
+				ID:    "",
+				MType: "",
+				Delta: nil,
+				Value: nil,
+			},
+			wantErr: assert.Error,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

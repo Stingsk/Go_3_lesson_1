@@ -55,7 +55,7 @@ func init() {
 		"Seconds to periodically save metrics if 0 save immediately")
 }
 
-func GetConfig() Config {
+func GetServerConfig() Config {
 	cfg := Config{}
 	configEVN := configFromEVN{}
 	if err := env.Parse(&configEVN); err != nil {

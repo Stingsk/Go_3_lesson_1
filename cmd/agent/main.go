@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/Stingsk/Go_3_lesson_1/internal/config"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
-	"github.com/Stingsk/Go_3_lesson_1/cmd/agent/config"
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
@@ -16,7 +16,7 @@ import (
 
 func main() {
 	logs.Init()
-	cfg := config.GetConfig()
+	cfg := config.GetAgentConfig()
 	logrus.Debug("Start agent")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/Stingsk/Go_3_lesson_1/internal/config"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
-	"github.com/Stingsk/Go_3_lesson_1/cmd/server/config"
 	"github.com/Stingsk/Go_3_lesson_1/internal/file"
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
@@ -17,7 +17,7 @@ import (
 func main() {
 	logs.Init()
 	metricData := make(map[string]storage.Metric)
-	cfg := config.GetConfig()
+	cfg := config.GetServerConfig()
 	if cfg.Restore {
 		logrus.Info("Load data from " + cfg.StoreFile)
 		metricRead, err := file.ReadMetrics(cfg.StoreFile)

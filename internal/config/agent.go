@@ -9,52 +9,49 @@ import (
 )
 
 var (
-	rootCmd = &cobra.Command{
+	rootAgentCmd = &cobra.Command{
 		Use:   "agent",
 		Short: "Metrics for Agent",
 		Long:  "Metrics for Agent",
 	}
-
-	Address        string
 	ReportInterval time.Duration
 	PollInterval   time.Duration
 )
 
 const (
-	defaultServerAddress  = "localhost:8080"
 	defaultReportInterval = 10 * time.Second
 	defaultPollInterval   = 2 * time.Second
 )
 
-type Config struct {
+type AgentConfig struct {
 	Address        string
 	ReportInterval time.Duration
 	PollInterval   time.Duration
 }
 
-type configFromEVN struct {
+type configAgentFromEVN struct {
 	Address        string `env:"ADDRESS" envDefault:"notset"`
 	ReportInterval string `env:"REPORT_INTERVAL" envDefault:"notset"`
 	PollInterval   string `env:"POLL_INTERVAL" envDefault:"notset"`
 }
 
 func init() {
-	rootCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
+	rootAgentCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
 		"Pair of host:port to send data")
-	rootCmd.Flags().DurationVarP(&ReportInterval, "reportInterval", "r", defaultReportInterval,
+	rootAgentCmd.Flags().DurationVarP(&ReportInterval, "reportInterval", "r", defaultReportInterval,
 		"Seconds to periodically save metrics")
-	rootCmd.Flags().DurationVarP(&PollInterval, "pollInterval", "p", defaultPollInterval,
+	rootAgentCmd.Flags().DurationVarP(&PollInterval, "pollInterval", "p", defaultPollInterval,
 		"Seconds to periodically send metrics to server")
 }
 
-func GetConfig() Config {
-	cfg := Config{}
-	configEVN := configFromEVN{}
+func GetAgentConfig() AgentConfig {
+	cfg := AgentConfig{}
+	configEVN := configAgentFromEVN{}
 	if err := env.Parse(&configEVN); err != nil {
 		logrus.Error(err)
 	}
 
-	err := rootCmd.Execute()
+	err := rootAgentCmd.Execute()
 	if err != nil {
 		logrus.Error(err)
 	}

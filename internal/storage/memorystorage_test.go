@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 )
 
@@ -18,7 +19,51 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 		want    Metric
 		wantErr assert.ErrorAssertionFunc
 	}{
-		// TODO: Add test cases.
+		{
+			name: "positive test 1#",
+			args: args{
+				value:      "10",
+				metricType: "counter",
+				name:       "counter",
+			},
+			want: Metric{
+				ID:    "counter",
+				MType: "counter",
+				Delta: sumInt(9, 1),
+				Value: nil,
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "positive test 2#",
+			args: args{
+				value:      "10",
+				metricType: "gauge",
+				name:       "counter",
+			},
+			want: Metric{
+				ID:    "counter",
+				MType: "gauge",
+				Delta: nil,
+				Value: sumFloat(9, 1),
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "negative test 1#",
+			args: args{
+				value:      "ert",
+				metricType: "gauge",
+				name:       "counter",
+			},
+			want: Metric{
+				ID:    "",
+				MType: "",
+				Delta: nil,
+				Value: nil,
+			},
+			wantErr: assert.Error,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -43,7 +88,36 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 		want    Metric
 		wantErr assert.ErrorAssertionFunc
 	}{
-		// TODO: Add test cases.
+		{
+			name: "positive test 1#",
+			args: args{
+				metricResourceMap: &MetricResourceMap{
+					Metric: map[string]Metric{
+						"gauge": Metric{
+							ID:    "gauge",
+							MType: "gauge",
+							Delta: nil,
+							Value: sumFloat(9, 1),
+						},
+					},
+					Mutex:      sync.Mutex{},
+					Repository: &MemoryStorage{},
+				},
+				metric: Metric{
+					ID:    "gauge",
+					MType: "gauge",
+					Delta: nil,
+					Value: sumFloat(19, 1),
+				},
+			},
+			want: Metric{
+				ID:    "gauge",
+				MType: "gauge",
+				Delta: nil,
+				Value: sumFloat(19, 1),
+			},
+			wantErr: assert.NoError,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

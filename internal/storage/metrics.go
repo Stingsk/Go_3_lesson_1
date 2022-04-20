@@ -1,6 +1,10 @@
 package storage
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -54,6 +58,20 @@ func (m *Metric) GetValue() string {
 	}
 
 	return ""
+}
+func (m *Metric) GetHash(key string) string {
+	var metricString string
+	switch {
+	case m.MType == MetricTypeGauge:
+		metricString = fmt.Sprintf("%s:%s:%f", MetricTypeGauge, m.ID, *(m.Value))
+	case m.MType == MetricTypeCounter:
+		metricString = fmt.Sprintf("%s:%s:%d", MetricTypeCounter, m.ID, *(m.Delta))
+	}
+
+	h := hmac.New(sha256.New, []byte(key))
+	h.Write([]byte(metricString))
+
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 func sumInt(first int64, second int64) *int64 {

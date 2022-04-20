@@ -33,7 +33,15 @@ func main() {
 	go metrics.RunGetMetrics(ctx, cfg.PollInterval, &sensorData, wg)
 
 	wg.Add(1)
-	go httputil.RunSender(ctx, cfg.ReportInterval, &sensorData, wg, cfg.Address)
+	var agentConfig = &httputil.AgentConfig{
+		Context:   ctx,
+		Duration:  cfg.ReportInterval,
+		Messages:  &sensorData,
+		WaitGroup: wg,
+		Host:      cfg.Address,
+		SignKey:   cfg.SignKey,
+	}
+	go httputil.RunSender(*agentConfig)
 
 	go func() {
 		<-sigChan

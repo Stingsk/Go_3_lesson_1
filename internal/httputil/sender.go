@@ -17,17 +17,27 @@ import (
 
 const protocol string = "http://"
 
-func RunSender(ctx context.Context, duration time.Duration, messages *metrics.SensorData, wg *sync.WaitGroup, host string) {
-	defer wg.Done()
-	ticker := time.NewTicker(duration)
+type AgentConfig struct {
+	Context   context.Context
+	Duration  time.Duration
+	Messages  *metrics.SensorData
+	WaitGroup *sync.WaitGroup
+	Host      string
+	SignKey   string
+}
+
+func RunSender(agentConfig AgentConfig) {
+	defer agentConfig.WaitGroup.Done()
+	SignKey = agentConfig.SignKey
+	ticker := time.NewTicker(agentConfig.Duration)
 	for {
 		select {
 		case <-ticker.C:
-			messagesFromChan := messages.Get()
+			messagesFromChan := agentConfig.Messages.Get()
 			for _, mes := range messagesFromChan {
-				sendPost(mes, host)
+				sendPost(mes, agentConfig.Host)
 			}
-		case <-ctx.Done():
+		case <-agentConfig.Context.Done():
 			logrus.Error("crash agent")
 			return
 		}
@@ -57,6 +67,9 @@ func sendPost(metric storage.Metric, host string) {
 	endpoint := getHostSend(host) + "/update/"
 	client := resty.New()
 
+	if SignKey != "" {
+		metric.Hash = metric.GetHash(SignKey)
+	}
 	m, err := json.Marshal(metric)
 	if err != nil {
 		logrus.Error(err)

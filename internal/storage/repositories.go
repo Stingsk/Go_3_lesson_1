@@ -9,7 +9,7 @@ const (
 
 type Repository interface {
 	NewMetric(value string, metricType string, name string) (Metric, error)
-	UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error)
+	UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric, singKey string) (Metric, error)
 	UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error)
 }
 
@@ -18,6 +18,7 @@ type Metric struct {
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
 	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+	Hash  string   `json:"hash,omitempty"`  // Значение хеш-функции
 }
 
 type MetricResourceMap struct {

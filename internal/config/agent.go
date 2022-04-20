@@ -27,19 +27,26 @@ type AgentConfig struct {
 	Address        string
 	ReportInterval time.Duration
 	PollInterval   time.Duration
+	SignKey        string
 }
 
 type configAgentFromEVN struct {
-	Address        string `env:"ADDRESS" envDefault:"notset"`
-	ReportInterval string `env:"REPORT_INTERVAL" envDefault:"notset"`
-	PollInterval   string `env:"POLL_INTERVAL" envDefault:"notset"`
+	Address        string `env:"ADDRESS"`
+	ReportInterval string `env:"REPORT_INTERVAL"`
+	PollInterval   string `env:"POLL_INTERVAL"`
+	SignKey        string `env:"KEY"`
 }
 
 func init() {
 	rootAgentCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
 		"Pair of host:port to send data")
+
+	/*rootAgentCmd.Flags().StringVarP(&SignKey, "key", "k", "",
+	"Key for generate hash")*/
+
 	rootAgentCmd.Flags().DurationVarP(&ReportInterval, "reportInterval", "r", defaultReportInterval,
 		"Seconds to periodically save metrics")
+
 	rootAgentCmd.Flags().DurationVarP(&PollInterval, "pollInterval", "p", defaultPollInterval,
 		"Seconds to periodically send metrics to server")
 }
@@ -56,13 +63,19 @@ func GetAgentConfig() AgentConfig {
 		logrus.Error(err)
 	}
 
-	if configEVN.Address == "notset" {
+	if configEVN.Address == "" {
 		cfg.Address = Address
 	} else {
 		cfg.Address = configEVN.Address
 	}
 
-	if configEVN.ReportInterval == "notset" {
+	if configEVN.SignKey == "" {
+		cfg.SignKey = SignKey
+	} else {
+		cfg.SignKey = configEVN.SignKey
+	}
+
+	if configEVN.ReportInterval == "" {
 		cfg.ReportInterval = ReportInterval
 	} else {
 		var err error
@@ -72,7 +85,7 @@ func GetAgentConfig() AgentConfig {
 		}
 	}
 
-	if configEVN.PollInterval == "notset" {
+	if configEVN.PollInterval == "" {
 		cfg.PollInterval = PollInterval
 	} else {
 		var err error

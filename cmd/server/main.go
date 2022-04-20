@@ -43,6 +43,7 @@ func main() {
 		Metrics:       metricData,
 		StoreFile:     cfg.StoreFile,
 		StoreInterval: cfg.StoreInterval,
+		SignKey:       cfg.SignKey,
 	}
 	go httputil.RunServer(*serverConfig)
 

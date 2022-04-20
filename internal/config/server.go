@@ -19,6 +19,7 @@ var (
 	Restore       bool
 	StoreInterval time.Duration
 	StoreFile     string
+	SignKey       string
 )
 
 const (
@@ -28,22 +29,27 @@ const (
 )
 
 type Config struct {
-	Address       string        `env:"ADDRESS"`
-	StoreInterval time.Duration `env:"STORE_INTERVAL"`
-	StoreFile     string        `env:"STORE_FILE"`
-	Restore       bool          `env:"RESTORE"`
+	Address       string
+	StoreInterval time.Duration
+	StoreFile     string
+	Restore       bool
+	SignKey       string
 }
 
 type configFromEVN struct {
-	Address       string `env:"ADDRESS" envDefault:"notset"`
-	StoreInterval string `env:"STORE_INTERVAL" envDefault:"notset"`
-	StoreFile     string `env:"STORE_FILE" envDefault:"notset"`
-	Restore       string `env:"RESTORE" envDefault:"notset"`
+	Address       string `env:"ADDRESS"`
+	StoreInterval string `env:"STORE_INTERVAL"`
+	StoreFile     string `env:"STORE_FILE"`
+	Restore       string `env:"RESTORE"`
+	SignKey       string `env:"KEY"`
 }
 
 func init() {
 	rootCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
 		"Pair of host:port to listen on")
+
+	rootAgentCmd.Flags().StringVarP(&SignKey, "key", "k", "",
+		"Key for generate hash")
 
 	rootCmd.Flags().BoolVarP(&Restore, "restore", "r", true,
 		"Flag to load initial metrics from storage ")
@@ -66,19 +72,25 @@ func GetServerConfig() Config {
 		logrus.Error(err)
 	}
 
-	if configEVN.Address == "notset" {
+	if configEVN.Address == "" {
 		cfg.Address = Address
 	} else {
 		cfg.Address = configEVN.Address
 	}
 
-	if configEVN.StoreFile == "notset" {
+	if configEVN.SignKey == "" {
+		cfg.SignKey = SignKey
+	} else {
+		cfg.SignKey = configEVN.SignKey
+	}
+
+	if configEVN.StoreFile == "" {
 		cfg.StoreFile = StoreFile
 	} else {
 		cfg.StoreFile = configEVN.StoreFile
 	}
 
-	if configEVN.Restore == "notset" {
+	if configEVN.Restore == "" {
 		cfg.Restore = Restore
 	} else {
 		var err error
@@ -88,7 +100,7 @@ func GetServerConfig() Config {
 		}
 	}
 
-	if configEVN.StoreInterval == "notset" {
+	if configEVN.StoreInterval == "" {
 		cfg.StoreInterval = StoreInterval
 	} else {
 		var err error

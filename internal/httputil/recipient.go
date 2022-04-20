@@ -36,13 +36,16 @@ type ServerConfig struct {
 	Metrics       map[string]storage.Metric
 	StoreFile     string
 	StoreInterval time.Duration
+	SignKey       string
 }
 
 var MetricLocal *storage.MetricResourceMap
 var StoreFile string
+var SignKey string
 
 func RunServer(serverConfig ServerConfig) {
 	StoreFile = serverConfig.StoreFile
+	SignKey = serverConfig.SignKey
 	MetricLocal = &storage.MetricResourceMap{
 		Metric:     nil,
 		Mutex:      sync.Mutex{},
@@ -122,7 +125,11 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	var valueMetric, err = MetricLocal.Repository.UpdateMetric(MetricLocal, m)
+	if SignKey != "" && m.Hash != "" && m.Hash != m.GetHash(SignKey) {
+		http.Error(w, getJSONError("Hash is invalid"), http.StatusBadRequest)
+	}
+
+	var valueMetric, err = MetricLocal.Repository.UpdateMetric(MetricLocal, m, SignKey)
 	if err != nil {
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 	}

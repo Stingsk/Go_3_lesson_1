@@ -1,3 +1,8 @@
+POST http://localhost:8080/update/counter/testSetGet33/527
+Content-Type: application/json
+
+###
+
 GET http://localhost:8080/value/counter/testSetGet33
 Accept: application/json
 Content-Type: application/json
@@ -385,13 +390,6 @@ Content-Type: application/json
 
 POST http://localhost:8080/update/counter/testSetGet33/527
 Content-Type: application/json
-
-###
-
-POST http://localhost:8080/update/gauge/testGauge/100
-Content-Type: application/json
-
-{}
 
 ###
 

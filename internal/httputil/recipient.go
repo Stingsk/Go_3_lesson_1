@@ -185,7 +185,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var valueMetric, found = MetricLocal.Metric[strings.ToLower(m.ID)]
-	m.SetHash(SignKey)
+	valueMetric.SetHash(SignKey)
 	if found && m.Delta == nil && m.Value == nil {
 		render.JSON(w, r, &valueMetric)
 		logrus.Info("Send data")

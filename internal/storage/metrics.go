@@ -63,9 +63,9 @@ func (m *Metric) GetHash(key string) string {
 	var metricString string
 	switch {
 	case m.MType == MetricTypeGauge:
-		metricString = fmt.Sprintf("%s:%s:%f", MetricTypeGauge, m.ID, *(m.Value))
+		metricString = fmt.Sprintf("%s:%s:%f", m.ID, MetricTypeGauge, *(m.Value))
 	case m.MType == MetricTypeCounter:
-		metricString = fmt.Sprintf("%s:%s:%d", MetricTypeCounter, m.ID, *(m.Delta))
+		metricString = fmt.Sprintf("%s:%s:%d", m.ID, MetricTypeCounter, *(m.Delta))
 	}
 
 	h := hmac.New(sha256.New, []byte(key))

@@ -74,6 +74,20 @@ func (m *Metric) GetHash(key string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+func (m *Metric) IsHashValid(key string) bool {
+	if key == "" {
+		return true
+	}
+
+	return m.Hash == m.GetHash(key)
+}
+
+func (m *Metric) SetHash(key string) {
+	if key != "" {
+		m.Hash = m.GetHash(key)
+	}
+}
+
 func sumInt(first int64, second int64) *int64 {
 	helper := first + second
 	return &helper

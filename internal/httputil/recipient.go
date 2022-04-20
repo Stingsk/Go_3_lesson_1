@@ -125,11 +125,11 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
 	}
 
-	if SignKey != "" && m.Hash != "" && m.Hash != m.GetHash(SignKey) {
+	if !m.IsHashValid(SignKey) {
 		http.Error(w, getJSONError("Hash is invalid"), http.StatusBadRequest)
 	}
 
-	var valueMetric, err = MetricLocal.Repository.UpdateMetric(MetricLocal, m, SignKey)
+	var valueMetric, err = MetricLocal.Repository.UpdateMetric(MetricLocal, m)
 	if err != nil {
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 	}
@@ -185,6 +185,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var valueMetric, found = MetricLocal.Metric[strings.ToLower(m.ID)]
+	m.SetHash(SignKey)
 	if found && m.Delta == nil && m.Value == nil {
 		render.JSON(w, r, &valueMetric)
 		logrus.Info("Send data")

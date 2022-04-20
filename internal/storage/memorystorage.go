@@ -38,13 +38,9 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 	return metric, nil
 }
 
-func (m *MemoryStorage) UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric, singKey string) (Metric, error) {
+func (m *MemoryStorage) UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error) {
 	metricResourceMap.Mutex.Lock()
 	defer metricResourceMap.Mutex.Unlock()
-
-	if singKey == "" {
-		metric.Hash = metric.GetHash(singKey)
-	}
 	var valueMetric = metricResourceMap.Metric[strings.ToLower(metric.ID)]
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
@@ -88,20 +84,4 @@ func (m *MemoryStorage) UpdateMetricByParameters(metricResourceMap *MetricResour
 		metricResourceMap.Metric[metricName] = metric
 		return metric, nil
 	}
-}
-
-func (m *MemoryStorage) SetHash(metric Metric, key string) Metric {
-	if key != "" {
-		metric.Hash = metric.GetHash(key)
-	}
-
-	return metric
-}
-
-func (m *MemoryStorage) IsHashValid(metric Metric, key string) bool {
-	if key == "" {
-		return true
-	}
-
-	return metric.Hash == metric.GetHash(key)
 }

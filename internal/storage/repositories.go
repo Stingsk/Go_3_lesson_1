@@ -9,7 +9,7 @@ const (
 
 type Repository interface {
 	NewMetric(value string, metricType string, name string) (Metric, error)
-	UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric, singKey string) (Metric, error)
+	UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error)
 	UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error)
 }
 

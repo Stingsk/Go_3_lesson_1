@@ -41,8 +41,8 @@ func init() {
 	rootAgentCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
 		"Pair of host:port to send data")
 
-	/*rootAgentCmd.Flags().StringVarP(&SignKey, "key", "k", "",
-	"Key for generate hash")*/
+	rootAgentCmd.Flags().StringVarP(&SignKey, "key", "k", "",
+		"Key for generate hash")
 
 	rootAgentCmd.Flags().DurationVarP(&ReportInterval, "reportInterval", "r", defaultReportInterval,
 		"Seconds to periodically save metrics")

@@ -48,7 +48,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
 		"Pair of host:port to listen on")
 
-	rootAgentCmd.Flags().StringVarP(&SignKey, "key", "k", "",
+	rootCmd.Flags().StringVarP(&SignKey, "key", "k", "",
 		"Key for generate hash")
 
 	rootCmd.Flags().BoolVarP(&Restore, "restore", "r", true,

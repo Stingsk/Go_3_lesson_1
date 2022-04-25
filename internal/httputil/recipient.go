@@ -66,11 +66,7 @@ func RunServer(serverConfig ServerConfig) {
 	server := &http.Server{Addr: getHost(serverConfig.Host), Handler: service()}
 	go func() {
 		<-serverConfig.SigChan
-		if serverConfig.DataBaseConnection != "" {
-
-		} else {
-			file.WriteMetrics(StoreFile, MetricLocal)
-		}
+		file.WriteMetrics(StoreFile, MetricLocal)
 		logrus.Info("Save data before Shutdown to " + StoreFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
@@ -85,11 +81,7 @@ func RunServer(serverConfig ServerConfig) {
 			ticker := time.NewTicker(serverConfig.StoreInterval)
 			for {
 				<-ticker.C
-				if serverConfig.DataBaseConnection != "" {
-
-				} else {
-					file.WriteMetrics(StoreFile, MetricLocal)
-				}
+				file.WriteMetrics(StoreFile, MetricLocal)
 			}
 		}()
 	}

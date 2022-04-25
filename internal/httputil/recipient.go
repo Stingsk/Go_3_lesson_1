@@ -43,7 +43,7 @@ type ServerConfig struct {
 var MetricLocal *storage.MetricResourceMap
 var StoreFile string
 var SignKey string
-var DbStore storage.DBStore
+var DbStore *storage.DBStore
 
 func RunServer(serverConfig ServerConfig) {
 	StoreFile = serverConfig.StoreFile
@@ -58,7 +58,7 @@ func RunServer(serverConfig ServerConfig) {
 	if err != nil {
 		logrus.Info(err)
 	} else {
-		DbStore = *dbStore
+		DbStore = dbStore
 	}
 	MetricLocal.Metric = serverConfig.Metrics
 	defer serverConfig.WaitGroup.Done()

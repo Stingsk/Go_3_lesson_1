@@ -20,7 +20,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/sirupsen/logrus"
 
-	_ "github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 var syncWrite = true

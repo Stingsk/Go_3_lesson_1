@@ -55,9 +55,6 @@ func RunServer(serverConfig ServerConfig) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	dbStore, err := storage.NewDBStore(ctx, serverConfig.DataBaseConnection)
-	if serverConfig.DataBaseConnection != "" {
-		syncWrite = false
-	}
 	if err != nil {
 		logrus.Info(err)
 	} else {
@@ -82,6 +79,7 @@ func RunServer(serverConfig ServerConfig) {
 	}()
 
 	if serverConfig.StoreInterval > 0 {
+		syncWrite = false
 		go func() {
 			ticker := time.NewTicker(serverConfig.StoreInterval)
 			for {
@@ -93,7 +91,6 @@ func RunServer(serverConfig ServerConfig) {
 				}
 			}
 		}()
-		syncWrite = false
 	}
 
 	// Run the server

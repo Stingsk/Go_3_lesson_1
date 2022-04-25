@@ -15,11 +15,12 @@ var (
 		Short: "Metrics for Server",
 		Long:  "Metrics for Server",
 	}
-	Address       string
-	Restore       bool
-	StoreInterval time.Duration
-	StoreFile     string
-	SignKey       string
+	Address            string
+	Restore            bool
+	StoreInterval      time.Duration
+	StoreFile          string
+	SignKey            string
+	DataBaseConnection string
 )
 
 const (
@@ -29,19 +30,21 @@ const (
 )
 
 type Config struct {
-	Address       string
-	StoreInterval time.Duration
-	StoreFile     string
-	Restore       bool
-	SignKey       string
+	Address            string
+	StoreInterval      time.Duration
+	StoreFile          string
+	Restore            bool
+	SignKey            string
+	DataBaseConnection string
 }
 
 type configFromEVN struct {
-	Address       string `env:"ADDRESS"`
-	StoreInterval string `env:"STORE_INTERVAL"`
-	StoreFile     string `env:"STORE_FILE"`
-	Restore       string `env:"RESTORE"`
-	SignKey       string `env:"KEY"`
+	Address            string `env:"ADDRESS"`
+	StoreInterval      string `env:"STORE_INTERVAL"`
+	StoreFile          string `env:"STORE_FILE"`
+	Restore            string `env:"RESTORE"`
+	SignKey            string `env:"KEY"`
+	DataBaseConnection string `env:"DATABASE_DSN"`
 }
 
 func init() {
@@ -49,6 +52,9 @@ func init() {
 		"Pair of host:port to listen on")
 
 	rootCmd.Flags().StringVarP(&SignKey, "key", "k", "",
+		"Key for generate hash")
+
+	rootCmd.Flags().StringVarP(&DataBaseConnection, "database-connection", "d", "",
 		"Key for generate hash")
 
 	rootCmd.Flags().BoolVarP(&Restore, "restore", "r", true,
@@ -82,6 +88,12 @@ func GetServerConfig() Config {
 		cfg.SignKey = SignKey
 	} else {
 		cfg.SignKey = configEVN.SignKey
+	}
+
+	if configEVN.DataBaseConnection == "" {
+		cfg.DataBaseConnection = DataBaseConnection
+	} else {
+		cfg.DataBaseConnection = configEVN.DataBaseConnection
 	}
 
 	if configEVN.StoreFile == "" {

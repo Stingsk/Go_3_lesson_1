@@ -3,6 +3,7 @@ package httputil
 import (
 	"compress/gzip"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -18,6 +19,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/sirupsen/logrus"
+
+	_ "github.com/jackc/pgx/v4"
 )
 
 var syncWrite = true
@@ -30,18 +33,20 @@ type gzipResponseWriter struct {
 	http.ResponseWriter
 }
 type ServerConfig struct {
-	WaitGroup     *sync.WaitGroup
-	SigChan       chan os.Signal
-	Host          string
-	Metrics       map[string]storage.Metric
-	StoreFile     string
-	StoreInterval time.Duration
-	SignKey       string
+	WaitGroup          *sync.WaitGroup
+	SigChan            chan os.Signal
+	Host               string
+	Metrics            map[string]storage.Metric
+	StoreFile          string
+	StoreInterval      time.Duration
+	SignKey            string
+	DataBaseConnection string
 }
 
 var MetricLocal *storage.MetricResourceMap
 var StoreFile string
 var SignKey string
+var DataBaseConnection string
 
 func RunServer(serverConfig ServerConfig) {
 	StoreFile = serverConfig.StoreFile
@@ -57,7 +62,11 @@ func RunServer(serverConfig ServerConfig) {
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-serverConfig.SigChan
-		file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+		if DataBaseConnection != "" {
+
+		} else {
+			file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+		}
 		logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
@@ -71,7 +80,11 @@ func RunServer(serverConfig ServerConfig) {
 			ticker := time.NewTicker(serverConfig.StoreInterval)
 			for {
 				<-ticker.C
-				file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+				if DataBaseConnection != "" {
+
+				} else {
+					file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+				}
 			}
 		}()
 		syncWrite = false
@@ -94,6 +107,7 @@ func service() http.Handler {
 	apiRouter.Post("/value/", getValueMetric)
 	apiRouter.Post("/update/{type}/{name}/{value}", saveMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
+	apiRouter.Get("/ping/", pingDataBase)
 	apiRouter.Get("/", getAllMetrics)
 	apiRouter.Post("/update/*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("Method NotFound!"), http.StatusNotFound)
@@ -136,7 +150,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 
 	render.JSON(w, r, valueMetric)
 
-	if syncWrite {
+	if syncWrite && DataBaseConnection == "" {
 		file.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
@@ -158,7 +172,7 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	if syncWrite {
+	if syncWrite && DataBaseConnection == "" {
 		file.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
@@ -230,6 +244,25 @@ func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(metricsString))
 
 	logrus.Info(r.RequestURI)
+}
+func pingDataBase(w http.ResponseWriter, r *http.Request) {
+	if DataBaseConnection == "" {
+		http.Error(w, getJSONError("Не указан адрес подключения к базе данных"), http.StatusNotImplemented)
+	}
+
+	db, err := sql.Open("postgres", DataBaseConnection)
+	if err != nil {
+		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)
+	}
+
+	logrus.Info("Ping: DataBase")
+	err = db.Ping()
+	if err != nil {
+		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("{ \"success\" : \"success\"}"))
 }
 
 func concatenationMetrics(metrics map[string]storage.Metric) string {

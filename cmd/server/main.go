@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/Stingsk/Go_3_lesson_1/internal/config"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/Stingsk/Go_3_lesson_1/internal/config"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/file"
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
@@ -37,13 +38,14 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	var serverConfig = &httputil.ServerConfig{
-		WaitGroup:     &wg,
-		SigChan:       sigChan,
-		Host:          cfg.Address,
-		Metrics:       metricData,
-		StoreFile:     cfg.StoreFile,
-		StoreInterval: cfg.StoreInterval,
-		SignKey:       cfg.SignKey,
+		WaitGroup:          &wg,
+		SigChan:            sigChan,
+		Host:               cfg.Address,
+		Metrics:            metricData,
+		StoreFile:          cfg.StoreFile,
+		StoreInterval:      cfg.StoreInterval,
+		SignKey:            cfg.SignKey,
+		DataBaseConnection: cfg.DataBaseConnection,
 	}
 	go httputil.RunServer(*serverConfig)
 

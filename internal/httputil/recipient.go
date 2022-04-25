@@ -71,10 +71,12 @@ func RunServer(serverConfig ServerConfig) {
 			file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
 		}
 		logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
-		err := server.Shutdown(ctx)
+		ctx1, cancel1 := context.WithCancel(context.Background())
+		err := server.Shutdown(ctx1)
 		if err != nil {
 			logrus.Fatal(err)
 		}
+		cancel1()
 		cancel()
 	}()
 

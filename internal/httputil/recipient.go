@@ -256,6 +256,7 @@ func pingDataBase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logrus.Info("Ping: DataBase")
+	logrus.Info("DataBaseConnection: " + DataBaseConnection)
 	err = db.Ping()
 	if err != nil {
 		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)

@@ -3,7 +3,6 @@ package httputil
 import (
 	"compress/gzip"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -19,8 +18,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/sirupsen/logrus"
-
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 var syncWrite = true
@@ -46,7 +43,7 @@ type ServerConfig struct {
 var MetricLocal *storage.MetricResourceMap
 var StoreFile string
 var SignKey string
-var DataBaseConnection string
+var DbStore storage.DBStore
 
 func RunServer(serverConfig ServerConfig) {
 	StoreFile = serverConfig.StoreFile
@@ -56,13 +53,19 @@ func RunServer(serverConfig ServerConfig) {
 		Mutex:      sync.Mutex{},
 		Repository: &storage.MemoryStorage{},
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	dbStore, err := storage.NewDBStore(ctx, serverConfig.DataBaseConnection)
+	if err != nil {
+		logrus.Info(err)
+	} else {
+		DbStore = *dbStore
+	}
 	MetricLocal.Metric = serverConfig.Metrics
 	defer serverConfig.WaitGroup.Done()
 	server := &http.Server{Addr: getHost(serverConfig.Host), Handler: service()}
-	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-serverConfig.SigChan
-		if DataBaseConnection != "" {
+		if serverConfig.DataBaseConnection != "" {
 
 		} else {
 			file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
@@ -80,7 +83,7 @@ func RunServer(serverConfig ServerConfig) {
 			ticker := time.NewTicker(serverConfig.StoreInterval)
 			for {
 				<-ticker.C
-				if DataBaseConnection != "" {
+				if serverConfig.DataBaseConnection != "" {
 
 				} else {
 					file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
@@ -91,7 +94,7 @@ func RunServer(serverConfig ServerConfig) {
 	}
 
 	// Run the server
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		logrus.Fatal(err)
 	}
@@ -150,7 +153,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 
 	render.JSON(w, r, valueMetric)
 
-	if syncWrite && DataBaseConnection == "" {
+	if syncWrite {
 		file.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
@@ -172,7 +175,7 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	if syncWrite && DataBaseConnection == "" {
+	if syncWrite {
 		file.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
@@ -246,18 +249,7 @@ func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	logrus.Info(r.RequestURI)
 }
 func pingDataBase(w http.ResponseWriter, r *http.Request) {
-	if DataBaseConnection == "" {
-		http.Error(w, getJSONError("Не указан адрес подключения к базе данных"), http.StatusNotImplemented)
-	}
-
-	db, err := sql.Open("postgres", DataBaseConnection)
-	if err != nil {
-		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)
-	}
-
-	logrus.Info("Ping: DataBase")
-	logrus.Info("DataBaseConnection: " + DataBaseConnection)
-	err = db.Ping()
+	err := DbStore.Ping()
 	if err != nil {
 		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)
 	}

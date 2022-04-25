@@ -38,6 +38,10 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 	return metric, nil
 }
 
+func (m *MemoryStorage) Ping() error {
+	return nil
+}
+
 func (m *MemoryStorage) UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error) {
 	metricResourceMap.Mutex.Lock()
 	defer metricResourceMap.Mutex.Unlock()

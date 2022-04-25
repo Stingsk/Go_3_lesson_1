@@ -47,6 +47,7 @@ var DBStore *storage.DBStore
 
 func RunServer(serverConfig ServerConfig) {
 	StoreFile = serverConfig.StoreFile
+	logrus.Info("StoreFile: " + StoreFile)
 	SignKey = serverConfig.SignKey
 	MetricLocal = &storage.MetricResourceMap{
 		Metric:     nil,
@@ -68,9 +69,9 @@ func RunServer(serverConfig ServerConfig) {
 		if serverConfig.DataBaseConnection != "" {
 
 		} else {
-			file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+			file.WriteMetrics(StoreFile, MetricLocal)
 		}
-		logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
+		logrus.Info("Save data before Shutdown to " + StoreFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
 			logrus.Fatal(err)
@@ -87,7 +88,7 @@ func RunServer(serverConfig ServerConfig) {
 				if serverConfig.DataBaseConnection != "" {
 
 				} else {
-					file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+					file.WriteMetrics(StoreFile, MetricLocal)
 				}
 			}
 		}()

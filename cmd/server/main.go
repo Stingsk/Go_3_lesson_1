@@ -19,7 +19,7 @@ func main() {
 	logs.Init()
 	metricData := make(map[string]storage.Metric)
 	cfg := config.GetServerConfig()
-	if cfg.Restore {
+	if cfg.Restore && cfg.DataBaseConnection == "" {
 		logrus.Info("Load data from " + cfg.StoreFile)
 		metricRead, err := file.ReadMetrics(cfg.StoreFile)
 		if err != nil {

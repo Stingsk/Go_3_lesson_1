@@ -107,7 +107,7 @@ func service() http.Handler {
 	apiRouter.Post("/value/", getValueMetric)
 	apiRouter.Post("/update/{type}/{name}/{value}", saveMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
-	apiRouter.Get("/ping/", pingDataBase)
+	apiRouter.Get("/ping", pingDataBase)
 	apiRouter.Get("/", getAllMetrics)
 	apiRouter.Post("/update/*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("Method NotFound!"), http.StatusNotFound)

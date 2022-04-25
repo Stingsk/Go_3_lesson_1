@@ -43,7 +43,7 @@ type ServerConfig struct {
 var MetricLocal *storage.MetricResourceMap
 var StoreFile string
 var SignKey string
-var DbStore *storage.DBStore
+var DBStore *storage.DBStore
 
 func RunServer(serverConfig ServerConfig) {
 	StoreFile = serverConfig.StoreFile
@@ -55,10 +55,13 @@ func RunServer(serverConfig ServerConfig) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	dbStore, err := storage.NewDBStore(ctx, serverConfig.DataBaseConnection)
+	if serverConfig.DataBaseConnection != "" {
+		syncWrite = false
+	}
 	if err != nil {
 		logrus.Info(err)
 	} else {
-		DbStore = dbStore
+		DBStore = dbStore
 	}
 	MetricLocal.Metric = serverConfig.Metrics
 	defer serverConfig.WaitGroup.Done()
@@ -71,12 +74,10 @@ func RunServer(serverConfig ServerConfig) {
 			file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
 		}
 		logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
-		ctx1, cancel1 := context.WithCancel(context.Background())
-		err := server.Shutdown(ctx1)
+		err := server.Shutdown(ctx)
 		if err != nil {
 			logrus.Fatal(err)
 		}
-		cancel1()
 		cancel()
 	}()
 
@@ -251,7 +252,7 @@ func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	logrus.Info(r.RequestURI)
 }
 func pingDataBase(w http.ResponseWriter, r *http.Request) {
-	err := DbStore.Ping()
+	err := DBStore.Ping()
 	if err != nil {
 		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)
 	}

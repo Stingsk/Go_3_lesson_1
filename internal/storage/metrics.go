@@ -15,7 +15,7 @@ func (m *Metric) UpdateMetricResource(value string) error {
 		if err != nil {
 			return err
 		}
-		m.Value = &v
+		m.Value = (*Gauge)(&v)
 	} else if strings.ToLower(m.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
@@ -24,9 +24,9 @@ func (m *Metric) UpdateMetricResource(value string) error {
 
 		delta := int64(0)
 		if m.Delta != nil {
-			delta = *m.Delta
+			delta = int64(*m.Delta)
 		}
-		m.Delta = sumInt(delta, newValue)
+		m.Delta = (*Counter)(sumInt(delta, newValue))
 	}
 
 	return nil
@@ -36,7 +36,7 @@ func (m *Metric) Update(newMetric Metric) {
 	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
 		m.Value = newMetric.Value
 	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
-		m.Delta = sumInt(*m.Delta, *newMetric.Delta)
+		m.Delta = (*Counter)(sumInt(int64(*m.Delta), int64(*newMetric.Delta)))
 	}
 }
 
@@ -49,12 +49,12 @@ func (m *Metric) GetValue() string {
 		if m.Value == nil {
 			return ""
 		}
-		return strconv.FormatFloat(*m.Value, 'f', 3, 64)
+		return strconv.FormatFloat(float64(*m.Value), 'f', 3, 64)
 	} else if strings.ToLower(m.MType) == MetricTypeCounter {
 		if m.Delta == nil {
 			return ""
 		}
-		return strconv.FormatInt(*m.Delta, 10)
+		return strconv.FormatInt(int64(*m.Delta), 10)
 	}
 
 	return ""

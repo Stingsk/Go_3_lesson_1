@@ -4,7 +4,7 @@
 // migrations/000001_create_gauge_table.up.sql
 // migrations/000002_create_counter_table.down.sql
 // migrations/000002_create_counter_table.up.sql
-package main
+package migrations
 
 import (
 	"bytes"
@@ -259,11 +259,11 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"migrations": &bintree{nil, map[string]*bintree{
-		"000001_create_gauge_table.down.sql":   &bintree{migrations000001_create_gauge_tableDownSql, map[string]*bintree{}},
-		"000001_create_gauge_table.up.sql":     &bintree{migrations000001_create_gauge_tableUpSql, map[string]*bintree{}},
-		"000002_create_counter_table.down.sql": &bintree{migrations000002_create_counter_tableDownSql, map[string]*bintree{}},
-		"000002_create_counter_table.up.sql":   &bintree{migrations000002_create_counter_tableUpSql, map[string]*bintree{}},
+	"migrations": {nil, map[string]*bintree{
+		"000001_create_gauge_table.down.sql":   {migrations000001_create_gauge_tableDownSql, map[string]*bintree{}},
+		"000001_create_gauge_table.up.sql":     {migrations000001_create_gauge_tableUpSql, map[string]*bintree{}},
+		"000002_create_counter_table.down.sql": {migrations000002_create_counter_tableDownSql, map[string]*bintree{}},
+		"000002_create_counter_table.up.sql":   {migrations000002_create_counter_tableUpSql, map[string]*bintree{}},
 	}},
 }}
 

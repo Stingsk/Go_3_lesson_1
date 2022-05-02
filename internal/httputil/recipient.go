@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stingsk/Go_3_lesson_1/internal/file"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -40,12 +39,26 @@ type ServerConfig struct {
 	DataBaseConnection string
 }
 
-var MetricLocal *storage.MetricResourceMap
-var StoreFile string
 var SignKey string
+var Storage storage.Repository
 var DBStore *storage.DBStore
+var FileStorage *storage.FileStorage
 
 func RunServer(serverConfig ServerConfig) {
+	ctx, cancel := context.WithCancel(context.Background())
+	if serverConfig.DataBaseConnection != "" {
+		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)
+		if err != nil {
+			logrus.Info(err)
+		}
+	} else if serverConfig.StoreFile != "" {
+
+		syncChannel := make(chan struct{}, 1)
+		FileStorage, err := storage.NewFileStorage(serverConfig.StoreFile, syncChannel)
+		if err != nil {
+			logrus.Info(err)
+		}
+	}
 	StoreFile = serverConfig.StoreFile
 	logrus.Info("StoreFile: " + StoreFile)
 	SignKey = serverConfig.SignKey
@@ -54,7 +67,6 @@ func RunServer(serverConfig ServerConfig) {
 		Mutex:      sync.Mutex{},
 		Repository: &storage.MemoryStorage{},
 	}
-	ctx, cancel := context.WithCancel(context.Background())
 	dbStore, err := storage.NewDBStore(ctx, serverConfig.DataBaseConnection)
 	if err != nil {
 		logrus.Info(err)
@@ -66,7 +78,7 @@ func RunServer(serverConfig ServerConfig) {
 	server := &http.Server{Addr: getHost(serverConfig.Host), Handler: service()}
 	go func() {
 		<-serverConfig.SigChan
-		file.WriteMetrics(StoreFile, MetricLocal)
+		storage.WriteMetrics(StoreFile, MetricLocal)
 		logrus.Info("Save data before Shutdown to " + StoreFile)
 		err := server.Shutdown(ctx)
 		if err != nil {
@@ -81,7 +93,7 @@ func RunServer(serverConfig ServerConfig) {
 			ticker := time.NewTicker(serverConfig.StoreInterval)
 			for {
 				<-ticker.C
-				file.WriteMetrics(StoreFile, MetricLocal)
+				storage.WriteMetrics(StoreFile, MetricLocal)
 			}
 		}()
 	}
@@ -147,7 +159,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, valueMetric)
 
 	if syncWrite {
-		file.WriteMetrics(StoreFile, MetricLocal)
+		storage.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
 }
@@ -169,7 +181,7 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if syncWrite {
-		file.WriteMetrics(StoreFile, MetricLocal)
+		storage.WriteMetrics(StoreFile, MetricLocal)
 	}
 	logrus.Info(r.RequestURI)
 }

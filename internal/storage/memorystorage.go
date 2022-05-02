@@ -1,17 +1,107 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type MemoryStorage struct {
+	Metric map[string]*Metric
+	Mutex  sync.Mutex
 }
 
-func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
+func NewMemoryStorage() *MemoryStorage {
+	var m MemoryStorage
+
+	m.Metric = make(map[string]*Metric)
+
+	return &m
+}
+
+func (m *MemoryStorage) UpdateMetric(_ context.Context, metric Metric) error {
+	m.Mutex.Lock()
+	defer m.Mutex.Unlock()
+	var valueMetric = m.Metric[metric.ID]
+	if valueMetric.GetValue() != "" {
+		if metric.Delta != nil || metric.Value != nil {
+			valueMetric.Update(metric)
+			m.Metric[metric.ID] = valueMetric
+			return nil
+		} else {
+			return errors.New("data is empty")
+		}
+	} else {
+		if metric.Delta != nil || metric.Value != nil {
+			m.Metric[metric.ID] = &metric
+			return nil
+		} else {
+			return errors.New("data is empty")
+		}
+	}
+}
+
+func (m *MemoryStorage) UpdateMetricByParameters(_ context.Context, metricName string, metricType string, value string) error {
+	m.Mutex.Lock()
+	defer m.Mutex.Unlock()
+	_, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return errors.New("only numbers  params in request are allowed")
+	}
+
+	var valueMetric, found = m.Metric[metricName]
+	if found {
+		err := valueMetric.UpdateMetricResource(value)
+		m.Metric[metricName] = valueMetric
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		metric, err := m.newMetric(value, metricType, metricName)
+		if err != nil {
+			return err
+		}
+		m.Metric[metricName] = &metric
+
+		return nil
+	}
+}
+
+func (m *MemoryStorage) GetMetric(_ context.Context, name string, _ string) (*Metric, error) {
+	if name == "" {
+		return &Metric{}, errors.New("empty name")
+	}
+	value, ok := m.Metric[name]
+
+	if !ok {
+		return &Metric{}, errors.New("name not found")
+	}
+
+	return value, nil
+}
+func (m *MemoryStorage) GetMetrics(_ context.Context) (map[string]*Metric, error) {
+	return m.Metric, nil
+}
+
+func (m *MemoryStorage) UpdateMetrics(_ context.Context, metricsBatch []*Metric) error {
+	m.Metric = make(map[string]*Metric)
+	for _, mb := range metricsBatch {
+		m.Metric[mb.ID] = mb
+	}
+
+	return nil
+}
+
+func (m *MemoryStorage) Ping() error {
+	return nil
+}
+
+func (m *MemoryStorage) newMetric(value string, metricType string, name string) (Metric, error) {
 	metric := Metric{
-		ID:    strings.ToLower(name),
+		ID:    name,
 		MType: strings.ToLower(metricType),
 		Delta: nil,
 		Value: nil,
@@ -21,7 +111,7 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 		if err != nil {
 			return Metric{}, err
 		}
-		metric.Value = &v
+		metric.Value = (*Gauge)(&v)
 	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
@@ -30,62 +120,10 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 
 		delta := int64(0)
 		if metric.Delta != nil {
-			delta = *metric.Delta
+			delta = int64(*metric.Delta)
 		}
-		metric.Delta = sumInt(delta, newValue)
+		metric.Delta = (*Counter)(sumInt(delta, newValue))
 	}
 
 	return metric, nil
-}
-
-func (m *MemoryStorage) Ping() error {
-	return nil
-}
-
-func (m *MemoryStorage) UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error) {
-	metricResourceMap.Mutex.Lock()
-	defer metricResourceMap.Mutex.Unlock()
-	var valueMetric = metricResourceMap.Metric[strings.ToLower(metric.ID)]
-	if valueMetric.GetValue() != "" {
-		if metric.Delta != nil || metric.Value != nil {
-			valueMetric.Update(metric)
-			metricResourceMap.Metric[strings.ToLower(metric.ID)] = valueMetric
-			return valueMetric, nil
-		} else {
-			return Metric{}, errors.New("data is empty")
-		}
-	} else {
-		if metric.Delta != nil || metric.Value != nil {
-			metricResourceMap.Metric[strings.ToLower(metric.ID)] = metric
-			return metric, nil
-		} else {
-			return Metric{}, errors.New("data is empty")
-		}
-	}
-}
-
-func (m *MemoryStorage) UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error) {
-	metricResourceMap.Mutex.Lock()
-	defer metricResourceMap.Mutex.Unlock()
-	_, err := strconv.ParseFloat(value, 64)
-	if err != nil {
-		return Metric{}, errors.New("only numbers  params in request are allowed")
-	}
-
-	var valueMetric, found = metricResourceMap.Metric[metricName]
-	if found {
-		err := valueMetric.UpdateMetricResource(value)
-		metricResourceMap.Metric[strings.ToLower(metricName)] = valueMetric
-		if err != nil {
-			return Metric{}, err
-		}
-		return valueMetric, nil
-	} else {
-		metric, err := m.NewMetric(value, metricType, metricName)
-		if err != nil {
-			return Metric{}, err
-		}
-		metricResourceMap.Metric[metricName] = metric
-		return metric, nil
-	}
 }

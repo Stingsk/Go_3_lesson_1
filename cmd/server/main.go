@@ -8,7 +8,6 @@ import (
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/config"
 
-	"github.com/Stingsk/Go_3_lesson_1/internal/file"
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
@@ -21,7 +20,7 @@ func main() {
 	cfg := config.GetServerConfig()
 	if cfg.Restore {
 		logrus.Info("Load data from " + cfg.StoreFile)
-		metricRead, err := file.ReadMetrics(cfg.StoreFile)
+		metricRead, err := storage.ReadMetrics(cfg.StoreFile)
 		if err != nil {
 			logrus.Info("fail to restore data")
 		}

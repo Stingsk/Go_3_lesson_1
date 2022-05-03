@@ -163,7 +163,7 @@ func (fs *FileStorage) ReadMetrics() error {
 	return nil
 }
 
-func (fs *FileStorage) Ping() error {
+func (fs *FileStorage) Ping(_ context.Context) error {
 	if fs.filePath == "" {
 		return errors.New("empty filename")
 	}
@@ -198,7 +198,7 @@ func (fs *FileStorage) newMetric(value string, metricType string, name string) (
 		if err != nil {
 			return Metric{}, err
 		}
-		metric.Value = &v
+		metric.Value = (*Gauge)(&v)
 	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
@@ -207,9 +207,9 @@ func (fs *FileStorage) newMetric(value string, metricType string, name string) (
 
 		delta := int64(0)
 		if metric.Delta != nil {
-			delta = *metric.Delta
+			delta = int64(*metric.Delta)
 		}
-		metric.Delta = sumInt(delta, newValue)
+		metric.Delta = (*Counter)(sumInt(delta, newValue))
 	}
 
 	return metric, nil

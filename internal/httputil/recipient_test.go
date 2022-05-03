@@ -12,7 +12,7 @@ import (
 
 func TestRecipientGet(t *testing.T) {
 	type fields struct {
-		Inner *storage.MetricResourceMap
+		Inner *storage.Metric
 	}
 	type want struct {
 		code        int
@@ -96,7 +96,7 @@ func TestRecipientGet(t *testing.T) {
 
 func TestRecipientPost(t *testing.T) {
 	type fields struct {
-		Inner *storage.MetricResourceMap
+		Inner *storage.Metric
 	}
 	type want struct {
 		code        int

@@ -60,7 +60,7 @@ func (m *MemoryStorage) UpdateMetricByParameters(_ context.Context, metricName s
 		}
 		return nil
 	} else {
-		metric, err := m.newMetric(value, metricType, metricName)
+		metric, err := m.NewMetric(value, metricType, metricName)
 		if err != nil {
 			return err
 		}
@@ -95,11 +95,11 @@ func (m *MemoryStorage) UpdateMetrics(_ context.Context, metricsBatch []*Metric)
 	return nil
 }
 
-func (m *MemoryStorage) Ping() error {
+func (m *MemoryStorage) Ping(_ context.Context) error {
 	return nil
 }
 
-func (m *MemoryStorage) newMetric(value string, metricType string, name string) (Metric, error) {
+func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
 	metric := Metric{
 		ID:    name,
 		MType: strings.ToLower(metricType),

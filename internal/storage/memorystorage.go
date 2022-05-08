@@ -25,9 +25,6 @@ func (m *MemoryStorage) UpdateMetric(_ context.Context, metric Metric) error {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
 	var valueMetric = m.Metric[metric.ID]
-	if valueMetric == nil {
-		return errors.New("data not found")
-	}
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
 			valueMetric.Update(metric)

@@ -48,6 +48,7 @@ var Storage storage.Repository
 
 func RunServer(serverConfig ServerConfig) {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	SignKey = serverConfig.SignKey
 
@@ -119,7 +120,6 @@ func RunServer(serverConfig ServerConfig) {
 
 	// Wait for server context to be stopped
 	<-ctx.Done()
-	cancel()
 }
 
 func service() http.Handler {

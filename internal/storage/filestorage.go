@@ -183,7 +183,7 @@ func (fs *FileStorage) Ping(_ context.Context) error {
 }
 
 func (fs *FileStorage) sync() {
-	fs.syncChannel <- struct{}{}
+	//fs.syncChannel <- struct{}{}
 }
 
 func (fs *FileStorage) newMetric(value string, metricType string, name string) (Metric, error) {

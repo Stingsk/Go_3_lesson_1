@@ -68,7 +68,7 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := NewMemoryStorage()
-			err := m.NewMetric(tt.args.value, tt.args.metricType, tt.args.name)
+			_, err := m.NewMetric(tt.args.value, tt.args.metricType, tt.args.name)
 			if !tt.wantErr(t, err, fmt.Sprintf("NewMetric(%v, %v, %v)", tt.args.value, tt.args.metricType, tt.args.name)) {
 				return
 			}

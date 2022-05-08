@@ -25,7 +25,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	var serverConfig = &httputil.ServerConfig{
+	/*var serverConfig = &httputil.ServerConfig{
 		WaitGroup:          &wg,
 		SigChan:            sigChan,
 		Host:               cfg.Address,
@@ -34,6 +34,17 @@ func main() {
 		StoreInterval:      cfg.StoreInterval,
 		SignKey:            cfg.SignKey,
 		DataBaseConnection: cfg.DataBaseConnection,
+	}*/
+
+	var serverConfig = &httputil.ServerConfig{
+		WaitGroup:          &wg,
+		SigChan:            sigChan,
+		Host:               cfg.Address,
+		Restore:            cfg.Restore,
+		StoreFile:          "",
+		StoreInterval:      cfg.StoreInterval,
+		SignKey:            cfg.SignKey,
+		DataBaseConnection: "",
 	}
 	go httputil.RunServer(*serverConfig)
 

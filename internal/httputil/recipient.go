@@ -202,6 +202,7 @@ func savePostMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 	}
 
+	w.Write([]byte("{ \"success\" : \"success\"}"))
 	logrus.Info(r.RequestURI)
 }
 
@@ -213,7 +214,7 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 	if metricType != gauge && metricType != counter {
 		http.Error(w, "Only metricType  gauge and counter in request are allowed!", http.StatusNotImplemented)
 	}
-	metricName := chi.URLParam(r, "name")
+	metricName := strings.ToLower(chi.URLParam(r, "name"))
 	metricValue := chi.URLParam(r, "value")
 
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
@@ -266,7 +267,7 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	logrus.Info("Url request: " + r.RequestURI)
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
-	metricName := chi.URLParam(r, "name")
+	metricName := strings.ToLower(chi.URLParam(r, "name"))
 
 	if metricType == "" {
 		http.Error(w, "MetricType NotImplemented!", http.StatusNotFound)

@@ -1,3 +1,238 @@
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "TestCounterHandlers",
+"type" : "counter"
+}
+
+<> 2022-05-08T220549.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-05-08T220541.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "TestCounterHandlers",
+"type" : "counter"
+}
+
+<> 2022-05-08T220530.404.txt
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "TestCounterHandlers",
+"type" : "counter"
+}
+
+<> 2022-05-08T220358.404.txt
+
+###
+
+GET http://localhost:8080/value/counter/PollCount
+Accept: application/json
+Content-Type: application/json
+
+<> 2022-05-08T220307.200.txt
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+
+{
+"id" : "PollCount",
+"type" : "counter"
+}
+
+<> 2022-05-08T220228.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "PollCount",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-05-08T220222.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+
+{
+"id" : "PollCount",
+"type" : "counter"
+}
+
+<> 2022-05-08T220135.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "PollCount",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-05-08T220108.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "PollCount",
+  "type" : "counter",
+  "Value" : 40
+}
+
+<> 2022-05-08T220047.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+
+{
+"id" : "testGauge",
+"type" : "gauge"
+}
+
+<> 2022-05-08T215934.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "testGauge",
+  "type" : "gauge",
+  "Value" : 40
+}
+
+<> 2022-05-08T215841.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+
+{
+"id" : "testGauge",
+"type" : "gauge"
+}
+
+<> 2022-05-08T192623.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "testGauge",
+  "type" : "gauge",
+  "Value" : 40
+}
+
+<> 2022-05-08T192535.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "testGauge",
+  "type" : "gauge",
+  "delta" : 40
+}
+
+<> 2022-05-08T192435.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+
+{
+"id" : "PollCount",
+"type" : "counter"
+}
+
+<> 2022-05-08T192206.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "PollCount",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-05-08T192021.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "PollCount",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-05-08T191947.200.json
+
+###
+
 GET http://localhost:8080/value/counter/testSetGet33
 Accept: application/json
 Content-Type: application/json
@@ -296,127 +531,6 @@ Content-Type: application/json
 
 POST http://localhost:8080/update/counter/testSetGet33/527
 Content-Type: application/json
-
-###
-
-POST http://localhost:8080/update/counter/testSetGet33/527
-Content-Type: application/json
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
-
-###
-
-GET http://localhost:8080/value/counter/testSetGet33
-Accept: application/json
-Content-Type: application/json
-
-###
-
-GET http://localhost:8080/value/counter/testSetGet33
-Accept: application/json
-Content-Type: application/json
-
-###
-
-GET http://localhost:8080/value/gauge/mspansys
-Accept: application/json
-Content-Type: application/json
-
-###
-
-POST http://localhost:8080/value/
-Accept: application/json
-Content-Type: application/json
-
-{
-"id" : "alloc",
-"type" : "gauge"
-}
-
-###
-
-GET http://localhost:8080/value/gauge/mspansys
-Accept: application/json
-Content-Type: application/json
-
-###
-
-GET http://localhost:8080/value/gauge/mspansys
-Accept: application/json
-Content-Type: application/json
-
-###
-
-GET http://localhost:8080/value/gauge/alloc
-Accept: application/json
-Content-Type: application/json
-
-###
-
-POST http://localhost:8080/update/counter/testSetGet33/527
-Content-Type: application/json
-
-###
-
-GET http://localhost:8080/value/counter/testSetGet33
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-04-10T180914.200.txt
 
 ###
 

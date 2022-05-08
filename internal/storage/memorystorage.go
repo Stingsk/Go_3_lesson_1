@@ -24,7 +24,7 @@ func NewMemoryStorage() *MemoryStorage {
 func (m *MemoryStorage) UpdateMetric(_ context.Context, metric Metric) error {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
-	var valueMetric = m.Metric[metric.ID]
+	var valueMetric = m.Metric[strings.ToLower(metric.ID)]
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
 			valueMetric.Update(metric)
@@ -73,7 +73,7 @@ func (m *MemoryStorage) GetMetric(_ context.Context, name string, _ string) (*Me
 	if name == "" {
 		return &Metric{}, errors.New("empty name")
 	}
-	value, ok := m.Metric[name]
+	value, ok := m.Metric[strings.ToLower(name)]
 
 	if !ok {
 		return &Metric{}, errors.New("name not found")
@@ -99,31 +99,10 @@ func (m *MemoryStorage) Ping(_ context.Context) error {
 }
 
 func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
-	metric := Metric{
-		ID:    name,
-		MType: strings.ToLower(metricType),
-		Delta: nil,
-		Value: nil,
+	metric, err := New(value, metricType, name)
+	if err != nil {
+		return Metric{}, err
 	}
-	if strings.ToLower(metricType) == MetricTypeGauge {
-		v, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return Metric{}, err
-		}
-		metric.Value = &v
-	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
-		newValue, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			return Metric{}, err
-		}
-
-		delta := int64(0)
-		if metric.Delta != nil {
-			delta = *metric.Delta
-		}
-		metric.Delta = sumInt(delta, newValue)
-	}
-
 	m.Metric[name] = &metric
 	return metric, nil
 }

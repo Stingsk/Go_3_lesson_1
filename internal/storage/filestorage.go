@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -186,31 +185,10 @@ func (fs *FileStorage) sync() {
 }
 
 func (fs *FileStorage) newMetric(value string, metricType string, name string) error {
-	metric := Metric{
-		ID:    name,
-		MType: strings.ToLower(metricType),
-		Delta: nil,
-		Value: nil,
-	}
-	if strings.ToLower(metricType) == MetricTypeGauge {
-		v, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return err
-		}
-		metric.Value = &v
-	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
-		newValue, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			return err
-		}
-
-		delta := int64(0)
-		if metric.Delta != nil {
-			delta = *metric.Delta
-		}
-		metric.Delta = sumInt(delta, newValue)
+	metric, err := New(value, metricType, name)
+	if err != nil {
+		return err
 	}
 	fs.metrics[name] = &metric
-
 	return nil
 }

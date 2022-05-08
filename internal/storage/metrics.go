@@ -77,6 +77,34 @@ func (m *Metric) GetHash(key string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+func New(value string, metricType string, name string) (Metric, error) {
+	metric := Metric{
+		ID:    strings.ToLower(name),
+		MType: strings.ToLower(metricType),
+		Delta: nil,
+		Value: nil,
+	}
+	if strings.ToLower(metricType) == MetricTypeGauge {
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return Metric{}, err
+		}
+		metric.Value = &v
+	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
+		newValue, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return Metric{}, err
+		}
+
+		delta := int64(0)
+		if metric.Delta != nil {
+			delta = *metric.Delta
+		}
+		metric.Delta = sumInt(delta, newValue)
+	}
+
+	return metric, nil
+}
 func (m *Metric) IsHashValid(key string) bool {
 	if key == "" {
 		return true

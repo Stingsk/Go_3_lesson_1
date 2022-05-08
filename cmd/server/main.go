@@ -10,23 +10,12 @@ import (
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
-	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	logs.Init()
-	metricData := make(map[string]storage.Metric)
 	cfg := config.GetServerConfig()
-	if cfg.Restore {
-		logrus.Info("Load data from " + cfg.StoreFile)
-		metricRead, err := storage.ReadMetrics(cfg.StoreFile)
-		if err != nil {
-			logrus.Info("fail to restore data")
-		}
-		metricData = metricRead
-	}
-
 	logrus.Debug("Start server")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
@@ -40,7 +29,7 @@ func main() {
 		WaitGroup:          &wg,
 		SigChan:            sigChan,
 		Host:               cfg.Address,
-		Metrics:            metricData,
+		Restore:            cfg.Restore,
 		StoreFile:          cfg.StoreFile,
 		StoreInterval:      cfg.StoreInterval,
 		SignKey:            cfg.SignKey,

@@ -25,6 +25,9 @@ func (m *MemoryStorage) UpdateMetric(_ context.Context, metric Metric) error {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
 	var valueMetric = m.Metric[metric.ID]
+	if valueMetric == nil {
+		return errors.New("data not found")
+	}
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
 			valueMetric.Update(metric)
@@ -111,7 +114,7 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 		if err != nil {
 			return Metric{}, err
 		}
-		metric.Value = (*Gauge)(&v)
+		metric.Value = &v
 	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
@@ -120,9 +123,9 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 
 		delta := int64(0)
 		if metric.Delta != nil {
-			delta = int64(*metric.Delta)
+			delta = *metric.Delta
 		}
-		metric.Delta = (*Counter)(sumInt(delta, newValue))
+		metric.Delta = sumInt(delta, newValue)
 	}
 
 	return metric, nil

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"time"
 
 	migrations "github.com/Stingsk/Go_3_lesson_1/db"
 	"github.com/golang-migrate/migrate/v4"
@@ -18,7 +17,6 @@ import (
 
 const (
 	psqlDriverName      = "pgx"
-	psqlTimeout         = 1 * time.Second
 	migrationSourceName = "go-bindata"
 )
 
@@ -94,7 +92,7 @@ func (db *DBStore) UpdateMetrics(ctx context.Context, metricsBatch []*Metric) er
 				return err
 			}
 		case metric.MType == MetricTypeCounter:
-			var counter Counter
+			var counter int64
 			query := stmtSelectCounter.QueryRow(metric.ID)
 
 			err = query.Scan(&counter)
@@ -136,14 +134,14 @@ func (db *DBStore) UpdateMetricByParameters(ctx context.Context, metricName stri
 		if err != nil {
 			return err
 		}
-		db.updateGaugeMetric(ctx, metricName, Gauge(v))
+		db.updateGaugeMetric(ctx, metricName, v)
 	} else if strings.ToLower(metricType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return err
 		}
 
-		db.updateCounterMetric(ctx, metricName, Counter(newValue))
+		db.updateCounterMetric(ctx, metricName, newValue)
 	}
 
 	return nil
@@ -180,7 +178,7 @@ func (db *DBStore) GetMetric(ctx context.Context, metricName string, metricType 
 
 	switch metricType {
 	case MetricTypeCounter:
-		var counter Counter
+		var counter int64
 		row := db.connection.QueryRowContext(ctx,
 			"SELECT metric_delta FROM counter WHERE metric_id = $1", metricName)
 
@@ -193,7 +191,7 @@ func (db *DBStore) GetMetric(ctx context.Context, metricName string, metricType 
 		}
 		metric.Delta = &counter
 	case MetricTypeGauge:
-		var gauge Gauge
+		var gauge float64
 		row := db.connection.QueryRowContext(ctx,
 			"SELECT metric_value FROM gauge WHERE metric_id = $1", metricName)
 
@@ -229,7 +227,7 @@ func (db *DBStore) GetMetrics(ctx context.Context) (map[string]*Metric, error) {
 	}(counters)
 
 	for counters.Next() {
-		var counter Counter
+		var counter int64
 		metric := Metric{
 			MType: MetricTypeCounter,
 			Delta: &counter,
@@ -261,7 +259,7 @@ func (db *DBStore) GetMetrics(ctx context.Context) (map[string]*Metric, error) {
 	}(gauges)
 
 	for gauges.Next() {
-		var gauge Gauge
+		var gauge float64
 		metric := Metric{
 			MType: MetricTypeGauge,
 			Value: &gauge,
@@ -289,8 +287,8 @@ func (db *DBStore) Close() error {
 	return db.connection.Close()
 }
 
-func (db *DBStore) updateCounterMetric(ctx context.Context, metricName string, metricData Counter) error {
-	var counter Counter
+func (db *DBStore) updateCounterMetric(ctx context.Context, metricName string, metricData int64) error {
+	var counter int64
 	row := db.connection.QueryRowContext(ctx,
 		"SELECT metric_delta FROM counter WHERE metric_id = $1", metricName)
 
@@ -308,7 +306,7 @@ func (db *DBStore) updateCounterMetric(ctx context.Context, metricName string, m
 	return err
 }
 
-func (db *DBStore) updateGaugeMetric(ctx context.Context, metricName string, metricData Gauge) error {
+func (db *DBStore) updateGaugeMetric(ctx context.Context, metricName string, metricData float64) error {
 	_, err := db.connection.ExecContext(ctx,
 		"INSERT INTO gauge (metric_id, metric_value) VALUES ($1, $2) "+
 			"ON CONFLICT (metric_id) DO UPDATE SET metric_value = $2",

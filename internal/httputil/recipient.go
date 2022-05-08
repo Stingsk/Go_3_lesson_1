@@ -36,7 +36,7 @@ type ServerConfig struct {
 	WaitGroup          *sync.WaitGroup
 	SigChan            chan os.Signal
 	Host               string
-	Metrics            map[string]storage.Metric
+	Restore            bool
 	StoreFile          string
 	StoreInterval      time.Duration
 	SignKey            string
@@ -68,6 +68,16 @@ func RunServer(serverConfig ServerConfig) {
 			logrus.Info(err)
 		}
 
+		if serverConfig.Restore {
+			logrus.Info("Load data from  file")
+			err := FileStorage.ReadMetrics()
+			if err != nil {
+				logrus.Info("fail to restore data")
+			}
+		}
+
+		Storage = FileStorage
+
 		go func() {
 			<-serverConfig.SigChan
 			FileStorage.WriteMetrics()
@@ -96,7 +106,6 @@ func RunServer(serverConfig ServerConfig) {
 				}
 			}()
 		}
-		Storage = FileStorage
 	} else {
 		MemoryStorage := storage.NewMemoryStorage()
 		Storage = MemoryStorage

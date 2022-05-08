@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -34,18 +35,19 @@ func (fs *FileStorage) UpdateMetric(_ context.Context, metric Metric) error {
 	fs.Mutex.Lock()
 	defer fs.sync()
 	defer fs.Mutex.Unlock()
-	var valueMetric = fs.metrics[metric.ID]
+	var id = strings.ToLower(metric.ID)
+	var valueMetric = fs.metrics[id]
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
 			valueMetric.Update(metric)
-			fs.metrics[metric.ID] = valueMetric
+			fs.metrics[id] = valueMetric
 			return nil
 		} else {
 			return errors.New("data is empty")
 		}
 	} else {
 		if metric.Delta != nil || metric.Value != nil {
-			fs.metrics[metric.ID] = &metric
+			fs.metrics[id] = &metric
 			return nil
 		} else {
 			return errors.New("data is empty")

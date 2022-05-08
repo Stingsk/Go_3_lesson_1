@@ -116,6 +116,7 @@ func service() http.Handler {
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
 	apiRouter.Post("/update/", savePostMetric)
+	apiRouter.Post("/updates/", savePostMetrics)
 	apiRouter.Post("/value/", getValueMetric)
 	apiRouter.Post("/update/{type}/{name}/{value}", saveMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
@@ -163,6 +164,33 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.JSON(w, r, m)
+
+	logrus.Info(r.RequestURI)
+}
+
+func savePostMetrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	logrus.Info("Url request: " + r.RequestURI)
+
+	if r.Header.Get("Content-Type") != "application/json" {
+
+		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
+	}
+	defer r.Body.Close()
+
+	var m []*storage.Metric
+	errDec := json.NewDecoder(r.Body).Decode(&m)
+	if errDec != nil {
+		http.Error(w, getJSONError("Fail on parse request"), http.StatusBadRequest)
+		return
+	}
+
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	err := Storage.UpdateMetrics(requestContext, m)
+	if err != nil {
+		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
+	}
 
 	logrus.Info(r.RequestURI)
 }

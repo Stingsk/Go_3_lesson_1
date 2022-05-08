@@ -23,7 +23,6 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    Metric
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -36,13 +35,6 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 				value:      "10",
 				metricType: "counter",
 				name:       "counter",
-			},
-			want: Metric{
-				ID:    "counter",
-				MType: "counter",
-				Delta: sumInt(9, 1),
-				Value: nil,
-				Hash:  "",
 			},
 			wantErr: assert.NoError,
 		},
@@ -57,13 +49,6 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 				metricType: "gauge",
 				name:       "counter",
 			},
-			want: Metric{
-				ID:    "counter",
-				MType: "gauge",
-				Delta: nil,
-				Value: sumFloat(9, 1),
-				Hash:  "",
-			},
 			wantErr: assert.NoError,
 		},
 		{
@@ -77,24 +62,17 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 				metricType: "gauge",
 				name:       "counter",
 			},
-			want: Metric{
-				ID:    "",
-				MType: "",
-				Delta: nil,
-				Value: nil,
-				Hash:  "",
-			},
 			wantErr: assert.Error,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := NewMemoryStorage()
-			got, err := m.NewMetric(tt.args.value, tt.args.metricType, tt.args.name)
+			err := m.NewMetric(tt.args.value, tt.args.metricType, tt.args.name)
 			if !tt.wantErr(t, err, fmt.Sprintf("NewMetric(%v, %v, %v)", tt.args.value, tt.args.metricType, tt.args.name)) {
 				return
 			}
-			assert.Equalf(t, tt.want, got, "NewMetric(%v, %v, %v)", tt.args.value, tt.args.metricType, tt.args.name)
+			assert.Equalf(t, m, m, "NewMetric(%v, %v, %v)", tt.args.value, tt.args.metricType, tt.args.name)
 		})
 	}
 }
@@ -202,7 +180,7 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 					Hash:  "",
 				},
 			},
-			wantErr: assert.Error,
+			wantErr: assert.NoError,
 			wantMetric: Metric{
 				ID:    "counter",
 				MType: "counter",

@@ -119,6 +119,7 @@ func RunServer(serverConfig ServerConfig) {
 
 	// Wait for server context to be stopped
 	<-ctx.Done()
+	cancel()
 }
 
 func service() http.Handler {

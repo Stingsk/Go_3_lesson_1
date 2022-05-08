@@ -354,8 +354,9 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 				Metric: tt.fields.Metric,
 				Mutex:  tt.fields.Mutex,
 			}
-			ctx, _ := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
 			tt.wantErr(t, m.UpdateMetric(ctx, tt.args.metric), fmt.Sprintf("UpdateMetric(%v, %v)", ctx, tt.wantMetric))
+			cancel()
 		})
 	}
 }
@@ -448,8 +449,9 @@ func TestMemoryStorage_UpdateMetricByParameters(t *testing.T) {
 				Mutex:  tt.fields.Mutex,
 			}
 
-			ctx, _ := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
 			tt.wantErr(t, m.UpdateMetricByParameters(ctx, tt.args.metricName, tt.args.metricType, tt.args.value), fmt.Sprintf("UpdateMetricByParameters(%v, %v, %v, %v)", ctx, tt.args.metricName, tt.args.metricType, tt.args.value))
+			cancel()
 		})
 	}
 }
@@ -508,8 +510,9 @@ func TestMemoryStorage_UpdateMetrics(t *testing.T) {
 				Mutex:  tt.fields.Mutex,
 			}
 
-			ctx, _ := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
 			tt.wantErr(t, m.UpdateMetrics(ctx, tt.args.metricsBatch), fmt.Sprintf("UpdateMetrics(%v, %v)", ctx, tt.args.metricsBatch))
+			cancel()
 		})
 	}
 }

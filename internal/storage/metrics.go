@@ -45,6 +45,9 @@ func (m *Metric) GetMetricType() string {
 }
 
 func (m *Metric) GetValue() string {
+	if m == nil {
+		return ""
+	}
 	if strings.ToLower(m.MType) == MetricTypeGauge {
 		if m.Value == nil {
 			return ""

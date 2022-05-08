@@ -52,7 +52,7 @@ func (m *Metric) GetValue() string {
 		if m.Value == nil {
 			return ""
 		}
-		return strconv.FormatFloat(*m.Value, 'f', 2, 64)
+		return strconv.FormatFloat(*m.Value, 'f', 3, 64)
 	} else if strings.ToLower(m.MType) == MetricTypeCounter {
 		if m.Delta == nil {
 			return ""

@@ -206,7 +206,7 @@ func (fs *FileStorage) newMetric(value string, metricType string, name string) e
 
 		delta := int64(0)
 		if metric.Delta != nil {
-			delta = int64(*metric.Delta)
+			delta = *metric.Delta
 		}
 		metric.Delta = sumInt(delta, newValue)
 	}

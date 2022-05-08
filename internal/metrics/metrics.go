@@ -54,7 +54,7 @@ func getMetrics(count int) []storage.Metric {
 	var rtm runtime.MemStats
 	// Read full mem stats
 	runtime.ReadMemStats(&rtm)
-	var ms = &storage.MemoryStorage{}
+	var ms = storage.NewMemoryStorage()
 
 	if val, err := ms.NewMetric(strconv.Itoa(runtime.NumGoroutine()), storage.MetricTypeCounter, "numgoroutine"); err == nil {
 		metricData = append(metricData, val)

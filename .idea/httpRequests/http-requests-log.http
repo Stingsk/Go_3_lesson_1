@@ -1,6 +1,58 @@
 POST http://localhost:8080/value/
 Accept: application/json
 Content-Type: application/json
+
+{
+"id" : "TestCounterHandlers",
+"type" : "counter"
+}
+
+<> 2022-05-08T223343.200.json
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-05-08T223314.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+
+{
+"id" : "TestCounterHandlers",
+"type" : "counter"
+}
+
+<> 2022-05-08T223114.404.txt
+
+###
+
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+{
+  "id" : "TestCounterHandlers",
+  "type" : "counter",
+  "delta" : 40
+}
+
+<> 2022-05-08T223009.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
 Host: localhost:8080
 User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
 
@@ -504,33 +556,6 @@ Accept: application/json
 Content-Type: application/json
 
 <> 2022-05-08T180816.200.txt
-
-###
-
-GET http://localhost:8080/value/counter/testSetGet33
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-05-08T180809.200.txt
-
-###
-
-POST http://localhost:8080/update/gauge/testGauge/100
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/gauge/testGauge/100
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/counter/testSetGet33/527
-Content-Type: application/json
 
 ###
 

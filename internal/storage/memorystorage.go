@@ -24,18 +24,19 @@ func NewMemoryStorage() *MemoryStorage {
 func (m *MemoryStorage) UpdateMetric(_ context.Context, metric Metric) error {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
-	var valueMetric = m.Metric[strings.ToLower(metric.ID)]
+	var id = strings.ToLower(metric.ID)
+	var valueMetric = m.Metric[id]
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
 			valueMetric.Update(metric)
-			m.Metric[metric.ID] = valueMetric
+			m.Metric[id] = valueMetric
 			return nil
 		} else {
 			return errors.New("data is empty")
 		}
 	} else {
 		if metric.Delta != nil || metric.Value != nil {
-			m.Metric[metric.ID] = &metric
+			m.Metric[id] = &metric
 			return nil
 		} else {
 			return errors.New("data is empty")

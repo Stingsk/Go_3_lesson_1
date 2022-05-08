@@ -63,11 +63,10 @@ func (m *MemoryStorage) UpdateMetricByParameters(_ context.Context, metricName s
 		}
 		return nil
 	} else {
-		metric, err := m.NewMetric(value, metricType, metricName)
+		err := m.NewMetric(value, metricType, metricName)
 		if err != nil {
 			return err
 		}
-		m.Metric[metricName] = &metric
 
 		return nil
 	}
@@ -102,7 +101,7 @@ func (m *MemoryStorage) Ping(_ context.Context) error {
 	return nil
 }
 
-func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
+func (m *MemoryStorage) NewMetric(value string, metricType string, name string) error {
 	metric := Metric{
 		ID:    name,
 		MType: strings.ToLower(metricType),
@@ -112,13 +111,13 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 	if strings.ToLower(metricType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
 		metric.Value = &v
 	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
 
 		delta := int64(0)
@@ -128,5 +127,6 @@ func (m *MemoryStorage) NewMetric(value string, metricType string, name string) 
 		metric.Delta = sumInt(delta, newValue)
 	}
 
-	return metric, nil
+	m.Metric[name] = &metric
+	return nil
 }

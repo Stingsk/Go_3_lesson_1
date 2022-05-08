@@ -72,11 +72,10 @@ func (fs *FileStorage) UpdateMetricByParameters(_ context.Context, metricName st
 		}
 		return nil
 	} else {
-		metric, err := fs.newMetric(value, metricType, metricName)
+		err := fs.newMetric(value, metricType, metricName)
 		if err != nil {
 			return err
 		}
-		fs.metrics[metricName] = &metric
 
 		return nil
 	}
@@ -186,7 +185,7 @@ func (fs *FileStorage) sync() {
 	//fs.syncChannel <- struct{}{}
 }
 
-func (fs *FileStorage) newMetric(value string, metricType string, name string) (Metric, error) {
+func (fs *FileStorage) newMetric(value string, metricType string, name string) error {
 	metric := Metric{
 		ID:    name,
 		MType: strings.ToLower(metricType),
@@ -196,13 +195,13 @@ func (fs *FileStorage) newMetric(value string, metricType string, name string) (
 	if strings.ToLower(metricType) == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
 		metric.Value = &v
 	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
 
 		delta := int64(0)
@@ -211,6 +210,7 @@ func (fs *FileStorage) newMetric(value string, metricType string, name string) (
 		}
 		metric.Delta = sumInt(delta, newValue)
 	}
+	fs.metrics[name] = &metric
 
-	return metric, nil
+	return nil
 }

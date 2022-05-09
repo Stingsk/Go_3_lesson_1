@@ -176,7 +176,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	mar, _ := json.Marshal(m)
-	logrus.Info("SavePostMetric Value: ", mar)
+	logrus.Info("SavePostMetric Value: ", string(mar))
 	render.JSON(w, r, m)
 
 }
@@ -208,7 +208,7 @@ func savePostMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mar, _ := json.Marshal(m)
-	logrus.Info("SavePostMetrics Value: ", mar)
+	logrus.Info("SavePostMetrics Value: ", string(mar))
 	w.Write([]byte("{ \"success\" : \"success\"}"))
 }
 
@@ -258,7 +258,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	defer requestCancel()
 	valueMetric, err := Storage.GetMetric(requestContext, m.ID, m.MType)
 	mar, _ := json.Marshal(valueMetric)
-	logrus.Info("GetValueMetric Value: ", mar)
+	logrus.Info("GetValueMetric Value: ", string(mar))
 	if err == nil && m.Delta == nil && m.Value == nil {
 		valueMetric.SetHash(SignKey)
 		render.JSON(w, r, &valueMetric)
@@ -286,7 +286,7 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 	defer requestCancel()
 	valueMetric, err := Storage.GetMetric(requestContext, metricName, metricType)
 	mar, _ := json.Marshal(valueMetric)
-	logrus.Info("GetMetric Value: ", mar)
+	logrus.Info("GetMetric Value: ", string(mar))
 	if err == nil && valueMetric.GetMetricType() == metricType {
 		w.Write([]byte(valueMetric.GetValue()))
 	} else {

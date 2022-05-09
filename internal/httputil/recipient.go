@@ -254,9 +254,11 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	par, _ := json.Marshal(m)
+	logrus.Info("GetValueMetric Par: ", string(par))
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer requestCancel()
-	valueMetric, err := Storage.GetMetric(requestContext, m.ID, m.MType)
+	valueMetric, err := Storage.GetMetric(requestContext, strings.ToLower(m.ID), strings.ToLower(m.MType))
 	mar, _ := json.Marshal(valueMetric)
 	logrus.Info("GetValueMetric Value: ", string(mar))
 	if err == nil && m.Delta == nil && m.Value == nil {

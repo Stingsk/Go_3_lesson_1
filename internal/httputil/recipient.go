@@ -175,7 +175,8 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
 		return
 	}
-	logrus.Info("SavePostMetric Value: ", m)
+	mar, _ := json.Marshal(m)
+	logrus.Info("SavePostMetric Value: ", mar)
 	render.JSON(w, r, m)
 
 }
@@ -206,7 +207,8 @@ func savePostMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logrus.Info("SavePostMetrics Value: ", m)
+	mar, _ := json.Marshal(m)
+	logrus.Info("SavePostMetrics Value: ", mar)
 	w.Write([]byte("{ \"success\" : \"success\"}"))
 }
 
@@ -255,10 +257,10 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer requestCancel()
 	valueMetric, err := Storage.GetMetric(requestContext, m.ID, m.MType)
-	logrus.Info("GetValueMetric Value: ", valueMetric)
+	mar, _ := json.Marshal(valueMetric)
+	logrus.Info("GetValueMetric Value: ", mar)
 	if err == nil && m.Delta == nil && m.Value == nil {
 		valueMetric.SetHash(SignKey)
-
 		render.JSON(w, r, &valueMetric)
 	} else {
 		http.Error(w, getJSONError("Data Not Found"), http.StatusNotFound)
@@ -283,7 +285,8 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer requestCancel()
 	valueMetric, err := Storage.GetMetric(requestContext, metricName, metricType)
-	logrus.Info("GetMetric Value: ", valueMetric)
+	mar, _ := json.Marshal(valueMetric)
+	logrus.Info("GetMetric Value: ", mar)
 	if err == nil && valueMetric.GetMetricType() == metricType {
 		w.Write([]byte(valueMetric.GetValue()))
 	} else {

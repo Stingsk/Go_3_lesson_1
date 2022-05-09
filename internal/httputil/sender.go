@@ -26,6 +26,7 @@ type AgentConfig struct {
 	Context        context.Context
 	Messages       *metrics.SensorData
 	WaitGroup      *sync.WaitGroup
+	ServerTimeout  time.Duration
 }
 
 func RunSender(agentConfig AgentConfig) {

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/Stingsk/Go_3_lesson_1/internal/config"
+	"github.com/Stingsk/Go_3_lesson_1/cmd/agent/config"
 	"github.com/caarlos0/env/v6"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
@@ -42,6 +42,7 @@ func main() {
 		Address:        config.Address,
 		SignKey:        config.SignKey,
 		LogLevel:       config.LogLevel,
+		ServerTimeout:  config.ServerTimeout,
 	}
 
 	if err := env.Parse(&agentConfig); err != nil {

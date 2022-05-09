@@ -6,7 +6,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/Stingsk/Go_3_lesson_1/internal/config"
+	"github.com/Stingsk/Go_3_lesson_1/cmd/server/config"
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/caarlos0/env/v6"

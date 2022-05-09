@@ -12,25 +12,27 @@ var (
 		Short: "Metrics for Agent",
 		Long:  "Metrics for Agent",
 	}
-	ReportInterval time.Duration
+	Address        string
 	PollInterval   time.Duration
+	ReportInterval time.Duration
+	ServerTimeout  time.Duration
+	SignKey        string
+	LogLevel       string
 )
 
 const (
-	defaultReportInterval = 10 * time.Second
+	defaultServerAddress  = "127.0.0.1:8080"
 	defaultPollInterval   = 2 * time.Second
+	defaultReportInterval = 10 * time.Second
+	defaultServerTimeout  = 1 * time.Second
 )
-
-type AgentConfig struct {
-	Address        string
-	ReportInterval time.Duration
-	PollInterval   time.Duration
-	SignKey        string
-}
 
 func init() {
 	rootAgentCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
 		"Pair of host:port to send data")
+
+	rootAgentCmd.Flags().DurationVarP(&ServerTimeout, "timeout", "t", defaultServerTimeout,
+		"Timeout for server connection")
 
 	rootAgentCmd.Flags().StringVarP(&SignKey, "key", "k", "",
 		"Key for generate hash")

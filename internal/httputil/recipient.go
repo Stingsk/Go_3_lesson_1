@@ -27,6 +27,7 @@ type Config struct {
 	SignKey            string        `env:"KEY"`
 	DataBaseConnection string        `env:"DATABASE_DSN"`
 	LogLevel           string        `env:"LOG_LEVEL"`
+	StoreFileEmpty     string        `env:"STORE_FILE"`
 }
 
 const (
@@ -53,7 +54,7 @@ func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) 
 	defer wg.Done()
 	server := &http.Server{Addr: getHost(serverConfig.Address), Handler: service()}
 
-	if serverConfig.DataBaseConnection != "" && serverConfig.StoreFile == "" {
+	if serverConfig.DataBaseConnection != "" && serverConfig.StoreFileEmpty == "" {
 		logrus.Info("Start DataBase Store ")
 		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)
 		if err != nil {

@@ -26,6 +26,7 @@ func main() {
 		SignKey:            config.SignKey,
 		DataBaseConnection: config.DataBaseConnection, // "postgresql://localhost:5432/metrics",
 		LogLevel:           config.LogLevel,
+		StoreFileEmpty:     config.StoreFileEmpty,
 	}
 	logrus.Info("Config Server from cmd: ", serverConfig)
 

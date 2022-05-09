@@ -27,11 +27,13 @@ func main() {
 		DataBaseConnection: config.DataBaseConnection, // "postgresql://localhost:5432/metrics",
 		LogLevel:           config.LogLevel,
 	}
+	logrus.Info("Config Server from cmd: ", serverConfig)
 
 	level, err := logrus.ParseLevel(serverConfig.LogLevel)
 	if err != nil {
 		logrus.Error(err)
 	}
+	logrus.Info("Config Server : ", serverConfig)
 	logrus.SetLevel(level)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
@@ -44,7 +46,6 @@ func main() {
 	if err := env.Parse(&serverConfig); err != nil {
 		logrus.Info("Failed to parse environment variables", err)
 	}
-	logrus.Info("Config Server : ", serverConfig)
 	go httputil.RunServer(serverConfig, &wg, sigChan)
 
 	wg.Wait()

@@ -166,6 +166,9 @@ func (db *DBStore) UpdateMetric(ctx context.Context, metric Metric) error {
 }
 
 func (db *DBStore) Ping(_ context.Context) error {
+	if db == nil {
+		return errors.New("db not set")
+	}
 	return db.connection.Ping()
 }
 

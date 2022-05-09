@@ -34,7 +34,7 @@ func main() {
 		StoreFile:          config.StoreFile,
 		StoreInterval:      config.StoreInterval,
 		SignKey:            config.SignKey,
-		DataBaseConnection: config.DataBaseConnection, // "postgresql://localhost:5432/postgres?sslmode=disable",
+		DataBaseConnection: config.DataBaseConnection, // "postgresql://localhost:5432/metrics",
 		LogLevel:           config.LogLevel,
 	}
 

@@ -1,5 +1,39 @@
 GET http://localhost:8080/ping
 
+<> 2022-05-09T215107.501.txt
+
+###
+
+GET http://localhost:8080/ping
+
+###
+
+GET http://localhost:8080/ping
+
+###
+
+GET http://localhost:8080/value/counter/testSetGet33
+Accept: application/json
+Content-Type: application/json
+
+<> 2022-05-09T212101.404.txt
+
+###
+
+POST http://localhost:8080/update/counter/testSetGet33/527
+Content-Type: application/json
+
+###
+
+POST http://localhost:8080/update/gauge/testGauge/100
+Content-Type: application/json
+
+{}
+
+###
+
+GET http://localhost:8080/ping
+
 ###
 
 GET http://localhost:8080/ping
@@ -499,60 +533,6 @@ Content-Type: application/json
 }
 
 <> 2022-05-08T192206.200.json
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "PollCount",
-  "type" : "counter",
-  "delta" : 40
-}
-
-<> 2022-05-08T192021.200.json
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "PollCount",
-  "type" : "counter",
-  "delta" : 40
-}
-
-<> 2022-05-08T191947.200.json
-
-###
-
-GET http://localhost:8080/value/counter/testSetGet33
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-05-08T190710.200.txt
-
-###
-
-POST http://localhost:8080/update/counter/testSetGet33/527
-Content-Type: application/json
-
-###
-
-GET http://localhost:8080/value/gauge/testGauge
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-05-08T190644.200.txt
-
-###
-
-POST http://localhost:8080/update/gauge/testGauge/100
-Content-Type: application/json
-
-{}
 
 ###
 

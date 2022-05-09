@@ -316,7 +316,7 @@ func pingDataBase(w http.ResponseWriter, r *http.Request) {
 	err := Storage.Ping(requestContext)
 	if err != nil {
 		logrus.Error(err)
-		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)
+		http.Error(w, getJSONError(err.Error()), http.StatusInternalServerError)
 		return
 	}
 }

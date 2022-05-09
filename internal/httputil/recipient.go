@@ -19,6 +19,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type Config struct {
+	Address            string        `env:"ADDRESS"`
+	StoreInterval      time.Duration `env:"STORE_INTERVAL"`
+	StoreFile          string        `env:"STORE_FILE"`
+	Restore            bool          `env:"RESTORE"`
+	SignKey            string        `env:"KEY"`
+	DataBaseConnection string        `env:"DATABASE_DSN"`
+	LogLevel           string        `env:"LogLevel"`
+	WaitGroup          *sync.WaitGroup
+	SigChan            chan os.Signal
+}
+
 const (
 	requestTimeout = 1 * time.Second
 )
@@ -30,28 +42,18 @@ type gzipResponseWriter struct {
 	Writer *gzip.Writer
 	http.ResponseWriter
 }
-type ServerConfig struct {
-	WaitGroup          *sync.WaitGroup
-	SigChan            chan os.Signal
-	Host               string
-	Restore            bool
-	StoreFile          string
-	StoreInterval      time.Duration
-	SignKey            string
-	DataBaseConnection string
-}
 
 var SignKey string
 var Storage storage.Repository
 
-func RunServer(serverConfig ServerConfig) {
+func RunServer(serverConfig Config) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	SignKey = serverConfig.SignKey
 
 	defer serverConfig.WaitGroup.Done()
-	server := &http.Server{Addr: getHost(serverConfig.Host), Handler: service()}
+	server := &http.Server{Addr: getHost(serverConfig.Address), Handler: service()}
 
 	if serverConfig.DataBaseConnection != "" {
 		logrus.Info("Start DataBase Store ")

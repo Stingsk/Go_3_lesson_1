@@ -18,24 +18,26 @@ import (
 const protocol string = "http://"
 
 type AgentConfig struct {
-	Context   context.Context
-	Duration  time.Duration
-	Messages  *metrics.SensorData
-	WaitGroup *sync.WaitGroup
-	Host      string
-	SignKey   string
+	Address        string        `env:"ADDRESS"`
+	ReportInterval time.Duration `env:"REPORT_INTERVAL"`
+	PollInterval   time.Duration `env:"POLL_INTERVAL"`
+	SignKey        string        `env:"KEY"`
+	LogLevel       string        `env:"LogLevel"`
+	Context        context.Context
+	Messages       *metrics.SensorData
+	WaitGroup      *sync.WaitGroup
 }
 
 func RunSender(agentConfig AgentConfig) {
 	defer agentConfig.WaitGroup.Done()
 	SignKey = agentConfig.SignKey
-	ticker := time.NewTicker(agentConfig.Duration)
+	ticker := time.NewTicker(agentConfig.ReportInterval)
 	for {
 		select {
 		case <-ticker.C:
 			messagesFromChan := agentConfig.Messages.Get()
 			for _, mes := range messagesFromChan {
-				sendPost(mes, agentConfig.Host)
+				sendPost(mes, agentConfig.Address)
 			}
 		case <-agentConfig.Context.Done():
 			logrus.Error("crash agent")

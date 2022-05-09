@@ -1,11 +1,10 @@
 package config
 
 import (
-	"strconv"
+	"fmt"
+	"regexp"
 	"time"
 
-	"github.com/caarlos0/env/v6"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +13,15 @@ var (
 		Use:   "server",
 		Short: "Metrics for Server",
 		Long:  "Metrics for Server",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			re := regexp.MustCompile(`(DEBUG|INFO|WARNING|ERROR)`)
+
+			if !re.MatchString(LogLevel) {
+				return fmt.Errorf("%w: --log-level", "invalid param specified")
+			}
+
+			return nil
+		},
 	}
 	Address            string
 	Restore            bool
@@ -29,24 +37,6 @@ const (
 	defaultStoreFile     = "/tmp/devops-metrics-db.json"
 	defaultStoreInterval = 300 * time.Second
 )
-
-type Config struct {
-	Address            string
-	StoreInterval      time.Duration
-	StoreFile          string
-	Restore            bool
-	SignKey            string
-	DataBaseConnection string
-}
-
-type configFromEVN struct {
-	Address            string `env:"ADDRESS"`
-	StoreInterval      string `env:"STORE_INTERVAL"`
-	StoreFile          string `env:"STORE_FILE"`
-	Restore            string `env:"RESTORE"`
-	SignKey            string `env:"KEY"`
-	DataBaseConnection string `env:"DATABASE_DSN"`
-}
 
 func init() {
 	rootCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
@@ -70,63 +60,6 @@ func init() {
 		"Set log level: DEBUG|INFO|WARNING|ERROR")
 }
 
-func GetServerConfig() Config {
-	cfg := Config{}
-	configEVN := configFromEVN{}
-
-	if err := env.Parse(&configEVN); err != nil {
-		logrus.Error(err)
-	}
-	logrus.Info("Config EVN : ", configEVN)
-	err := rootCmd.Execute()
-	if err != nil {
-		logrus.Error(err)
-	}
-	logrus.Info("Config Cmd: ", rootCmd)
-
-	if configEVN.Address == "" {
-		cfg.Address = Address
-	} else {
-		cfg.Address = configEVN.Address
-	}
-
-	if configEVN.SignKey == "" {
-		cfg.SignKey = SignKey
-	} else {
-		cfg.SignKey = configEVN.SignKey
-	}
-
-	if configEVN.DataBaseConnection == "" {
-		cfg.DataBaseConnection = DataBaseConnection
-	} else {
-		cfg.DataBaseConnection = configEVN.DataBaseConnection
-	}
-
-	if configEVN.StoreFile == "" {
-		cfg.StoreFile = StoreFile
-	} else {
-		cfg.StoreFile = configEVN.StoreFile
-	}
-
-	if configEVN.Restore == "" {
-		cfg.Restore = Restore
-	} else {
-		var err error
-		cfg.Restore, err = strconv.ParseBool(configEVN.Restore)
-		if err != nil {
-			cfg.Restore = true
-		}
-	}
-
-	if configEVN.StoreInterval == "" {
-		cfg.StoreInterval = StoreInterval
-	} else {
-		var err error
-		cfg.StoreInterval, err = time.ParseDuration(configEVN.StoreInterval)
-		if err != nil {
-			cfg.StoreInterval = defaultStoreInterval
-		}
-	}
-
-	return cfg
+func GetServerConfig() error {
+	return rootCmd.Execute()
 }

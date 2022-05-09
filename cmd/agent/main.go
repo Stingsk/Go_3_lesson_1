@@ -28,9 +28,11 @@ func main() {
 		SignKey:        config.SignKey,
 		LogLevel:       config.LogLevel,
 	}
+	logrus.Info("agent config from cmd: ", agentConfig)
 	if err := env.Parse(&agentConfig); err != nil {
 		logrus.Error("Failed to parse environment variables", err)
 	}
+	logrus.Info("agent config: ", agentConfig)
 	level, err := logrus.ParseLevel(agentConfig.LogLevel)
 	if err != nil {
 		logrus.Error(err)

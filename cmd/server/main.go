@@ -35,6 +35,9 @@ func main() {
 		SignKey:            cfg.SignKey,
 		DataBaseConnection: cfg.DataBaseConnection, // "postgresql://localhost:5432/postgres?sslmode=disable"
 	}
+
+	logrus.Info("Config :", cfg)
+	logrus.Info(cfg)
 	go httputil.RunServer(*serverConfig)
 
 	wg.Wait()

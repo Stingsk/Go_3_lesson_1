@@ -21,6 +21,7 @@ var (
 	StoreFile          string
 	SignKey            string
 	DataBaseConnection string
+	LogLevel           string
 )
 
 const (
@@ -65,6 +66,8 @@ func init() {
 
 	rootCmd.Flags().DurationVarP(&StoreInterval, "interval", "i", defaultStoreInterval,
 		"Seconds to periodically save metrics if 0 save immediately")
+	rootCmd.Flags().StringVarP(&LogLevel, "log-level", "l", "ERROR",
+		"Set log level: DEBUG|INFO|WARNING|ERROR")
 }
 
 func GetServerConfig() Config {

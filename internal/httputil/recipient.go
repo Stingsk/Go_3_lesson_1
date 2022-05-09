@@ -23,8 +23,6 @@ const (
 	requestTimeout = 1 * time.Second
 )
 
-var syncWrite = true
-
 const gauge string = "gauge"
 const counter string = "counter"
 
@@ -82,33 +80,31 @@ func RunServer(serverConfig ServerConfig) {
 		Storage = FileStorage
 
 		go func() {
-			<-serverConfig.SigChan
-			FileStorage.WriteMetrics()
-			logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
-			err := server.Shutdown(ctx)
-			if err != nil {
-				logrus.Fatal(err)
+			ticker := new(time.Ticker)
+			if serverConfig.StoreInterval > 0 {
+				ticker = time.NewTicker(serverConfig.StoreInterval)
 			}
-			cancel()
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					FileStorage.WriteMetrics()
+				case <-syncChannel:
+					if serverConfig.StoreInterval == 0 {
+						FileStorage.WriteMetrics()
+					}
+				case <-serverConfig.SigChan:
+					FileStorage.WriteMetrics()
+					logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
+					err := server.Shutdown(ctx)
+					if err != nil {
+						logrus.Fatal(err)
+					}
+					cancel()
+					return
+				}
+			}
 		}()
-
-		if serverConfig.StoreInterval > 0 {
-			syncWrite = false
-			go func() {
-				ticker := time.NewTicker(serverConfig.StoreInterval)
-				for {
-					<-ticker.C
-					FileStorage.WriteMetrics()
-				}
-			}()
-		} else {
-			go func() {
-				for {
-					<-syncChannel
-					FileStorage.WriteMetrics()
-				}
-			}()
-		}
 	} else {
 		logrus.Info("Start Memory Store ")
 		MemoryStorage := storage.NewMemoryStorage()

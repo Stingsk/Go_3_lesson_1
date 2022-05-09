@@ -36,8 +36,7 @@ func main() {
 		DataBaseConnection: cfg.DataBaseConnection, // "postgresql://localhost:5432/postgres?sslmode=disable"
 	}
 
-	logrus.Info("Config :", cfg)
-	logrus.Info(cfg)
+	logrus.Info("Config Server : ", cfg)
 	go httputil.RunServer(*serverConfig)
 
 	wg.Wait()

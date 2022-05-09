@@ -70,13 +70,16 @@ func init() {
 func GetServerConfig() Config {
 	cfg := Config{}
 	configEVN := configFromEVN{}
+
 	if err := env.Parse(&configEVN); err != nil {
 		logrus.Error(err)
 	}
+	logrus.Info("Config EVN : ", configEVN)
 	err := rootCmd.Execute()
 	if err != nil {
 		logrus.Error(err)
 	}
+	logrus.Info("Config Cmd: ", rootCmd)
 
 	if configEVN.Address == "" {
 		cfg.Address = Address

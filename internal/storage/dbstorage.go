@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	migrations "github.com/Stingsk/Go_3_lesson_1/db"
+	"github.com/Stingsk/Go_3_lesson_1/db/migrations"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"

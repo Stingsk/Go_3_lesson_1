@@ -1,3 +1,78 @@
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "randomvalue",
+"type" : "gauge"
+}
+
+<> 2022-05-09T172837.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "randomvalue",
+"type" : "gauge"
+}
+
+<> 2022-05-09T172826.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "gccpufraction",
+"type" : "gauge"
+}
+
+<> 2022-05-09T172810.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "numgoroutine",
+"type" : "counter"
+}
+
+<> 2022-05-09T172730.200.json
+
+###
+
+POST http://localhost:8080/value/
+Accept: application/json
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: go-resty/2.6.0 (https://github.com/go-resty/resty)
+
+{
+"id" : "numgoroutine",
+"type" : "counter"
+}
+
+<> 2022-05-09T172713.200.json
+
+###
+
 GET http://localhost:8080/value/gauge/TestCounterHandlers1
 Accept: application/json
 Content-Type: application/json
@@ -487,63 +562,6 @@ Content-Type: application/json
 }
 
 <> 2022-05-08T183728.200.json
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "TestCounterHandlers",
-  "type" : "counter",
-  "delta" : 40
-}
-
-<> 2022-05-08T183654.200.json
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "TestCounterHandlers",
-  "type" : "counter",
-  "delta" : 40
-}
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "TestCounterHandlers",
-  "type" : "counter",
-  "delta" : 40
-}
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "TestCounterHandlers",
-  "type" : "counter",
-  "delta" : 40
-}
-
-###
-
-POST http://localhost:8080/update/
-Content-Type: application/json
-
-{
-  "id" : "TestCounterHandlers",
-  "type" : "counter",
-  "delta" : 40
-}
 
 ###
 

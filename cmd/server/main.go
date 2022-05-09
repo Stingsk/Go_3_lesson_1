@@ -33,7 +33,7 @@ func main() {
 		StoreFile:          cfg.StoreFile,
 		StoreInterval:      cfg.StoreInterval,
 		SignKey:            cfg.SignKey,
-		DataBaseConnection: cfg.DataBaseConnection,
+		DataBaseConnection: cfg.DataBaseConnection, // "postgresql://localhost:5432/postgres?sslmode=disable"
 	}
 	go httputil.RunServer(*serverConfig)
 

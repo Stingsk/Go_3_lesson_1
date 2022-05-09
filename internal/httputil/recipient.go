@@ -56,12 +56,14 @@ func RunServer(serverConfig ServerConfig) {
 	server := &http.Server{Addr: getHost(serverConfig.Host), Handler: service()}
 
 	if serverConfig.DataBaseConnection != "" {
+		logrus.Info("Start DataBase Store ")
 		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)
 		if err != nil {
 			logrus.Info(err)
 		}
 		Storage = DBStore
 	} else if serverConfig.StoreFile != "" {
+		logrus.Info("Start File Store ")
 		logrus.Info("StoreFile: " + serverConfig.StoreFile)
 		syncChannel := make(chan struct{}, 1)
 		FileStorage, err := storage.NewFileStorage(serverConfig.StoreFile, syncChannel)
@@ -108,6 +110,7 @@ func RunServer(serverConfig ServerConfig) {
 			}()
 		}
 	} else {
+		logrus.Info("Start Memory Store ")
 		MemoryStorage := storage.NewMemoryStorage()
 		Storage = MemoryStorage
 	}

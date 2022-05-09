@@ -53,7 +53,6 @@ func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) 
 	defer wg.Done()
 	server := &http.Server{Addr: getHost(serverConfig.Address), Handler: service()}
 
-	logrus.Info("DataBaseConnection", serverConfig.DataBaseConnection, "DataBaseConnection")
 	if serverConfig.DataBaseConnection != "" && serverConfig.StoreFile == "" {
 		logrus.Info("Start DataBase Store ")
 		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)

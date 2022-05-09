@@ -33,6 +33,9 @@ func main() {
 	if err != nil {
 		logrus.Error(err)
 	}
+	if err := env.Parse(&serverConfig); err != nil {
+		logrus.Info("Failed to parse environment variables", err)
+	}
 	logrus.Info("Config Server : ", serverConfig)
 	logrus.SetLevel(level)
 	sigChan := make(chan os.Signal, 1)
@@ -43,9 +46,6 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	if err := env.Parse(&serverConfig); err != nil {
-		logrus.Info("Failed to parse environment variables", err)
-	}
 	go httputil.RunServer(serverConfig, &wg, sigChan)
 
 	wg.Wait()

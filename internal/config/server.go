@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"errors"
 	"regexp"
 	"time"
 
@@ -15,9 +15,8 @@ var (
 		Long:  "Metrics for Server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			re := regexp.MustCompile(`(DEBUG|INFO|WARNING|ERROR)`)
-
 			if !re.MatchString(LogLevel) {
-				return fmt.Errorf("%w: --log-level", "invalid param specified")
+				return errors.New("invalid param specified")
 			}
 
 			return nil
@@ -56,7 +55,7 @@ func init() {
 
 	rootCmd.Flags().DurationVarP(&StoreInterval, "interval", "i", defaultStoreInterval,
 		"Seconds to periodically save metrics if 0 save immediately")
-	rootCmd.Flags().StringVarP(&LogLevel, "log-level", "l", "ERROR",
+	rootCmd.Flags().StringVarP(&LogLevel, "log-level", "l", "INFO",
 		"Set log level: DEBUG|INFO|WARNING|ERROR")
 }
 

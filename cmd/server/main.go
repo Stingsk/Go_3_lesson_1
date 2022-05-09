@@ -16,7 +16,7 @@ import (
 func main() {
 	logs.Init()
 	if err := config.GetServerConfig(); err != nil {
-		logrus.Info("Failed to parse command line arguments")
+		logrus.Info("Failed to parse command line arguments", err)
 	}
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
@@ -44,7 +44,7 @@ func main() {
 	}
 	logrus.SetLevel(level)
 	if err := env.Parse(&serverConfig); err != nil {
-		logrus.Info("Failed to parse environment variables")
+		logrus.Info("Failed to parse environment variables", err)
 	}
 	logrus.Info("Config Server : ", serverConfig)
 	go httputil.RunServer(*serverConfig)

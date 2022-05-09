@@ -29,7 +29,6 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 			name: "positive test 1#",
 			fields: fields{
 				Metric: nil,
-				Mutex:  sync.Mutex{},
 			},
 			args: args{
 				value:      "10",
@@ -42,7 +41,6 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 			name: "positive test 2#",
 			fields: fields{
 				Metric: nil,
-				Mutex:  sync.Mutex{},
 			},
 			args: args{
 				value:      "10",
@@ -55,7 +53,6 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 			name: "negative test 1#",
 			fields: fields{
 				Metric: nil,
-				Mutex:  sync.Mutex{},
 			},
 			args: args{
 				value:      "ert",
@@ -104,7 +101,6 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 						Value: sumFloat(9, 1),
 					},
 				},
-				Mutex: sync.Mutex{},
 			},
 			args: args{
 				in0: nil,
@@ -136,7 +132,6 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 						Value: nil,
 					},
 				},
-				Mutex: sync.Mutex{},
 			},
 			args: args{
 				in0: nil,
@@ -168,7 +163,6 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 						Value: nil,
 					},
 				},
-				Mutex: sync.Mutex{},
 			},
 			args: args{
 				in0: nil,
@@ -229,7 +223,6 @@ func TestMemoryStorage_UpdateMetricByParameters(t *testing.T) {
 						Value: sumFloat(9, 1),
 					},
 				},
-				Mutex: sync.Mutex{},
 			},
 			args: args{
 				in0:        nil,
@@ -271,7 +264,6 @@ func TestMemoryStorage_UpdateMetricByParameters(t *testing.T) {
 						Value: nil,
 					},
 				},
-				Mutex: sync.Mutex{},
 			},
 			args: args{
 				in0:        nil,
@@ -318,7 +310,6 @@ func TestMemoryStorage_UpdateMetrics(t *testing.T) {
 						Value: sumFloat(9, 8),
 					},
 				},
-				Mutex: sync.Mutex{},
 			},
 			args: args{
 				in0: context.Background(),
@@ -359,7 +350,6 @@ func TestNewMemoryStorage(t *testing.T) {
 			name: "positive test 1#",
 			want: &MemoryStorage{
 				Metric: map[string]*Metric{},
-				Mutex:  sync.Mutex{},
 			},
 		},
 	}

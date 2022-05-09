@@ -41,7 +41,7 @@ func init() {
 	rootAgentCmd.Flags().DurationVarP(&PollInterval, "pollInterval", "p", defaultPollInterval,
 		"Seconds to periodically send metrics to server")
 
-	rootAgentCmd.Flags().StringVarP(&LogLevel, "log-level", "l", "ERROR",
+	rootAgentCmd.Flags().StringVarP(&LogLevel, "log-level", "l", "INFO",
 		"Set log level: DEBUG|INFO|WARNING|ERROR")
 }
 

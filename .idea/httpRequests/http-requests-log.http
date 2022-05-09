@@ -1,3 +1,23 @@
+GET http://localhost:8080/value/counter/testSetGet33
+Accept: application/json
+Content-Type: application/json
+
+<> 2022-05-09T204025.200.txt
+
+###
+
+POST http://localhost:8080/update/counter/testSetGet33/527
+Content-Type: application/json
+
+###
+
+POST http://localhost:8080/update/gauge/testGauge/100
+Content-Type: application/json
+
+{}
+
+###
+
 POST http://localhost:8080/value/
 Accept: application/json
 Content-Type: application/json
@@ -541,25 +561,6 @@ Accept: application/json
 Content-Type: application/json
 
 <> 2022-05-08T190045.200.txt
-
-###
-
-POST http://localhost:8080/update/gauge/testGauge/100
-Content-Type: application/json
-
-{}
-
-###
-
-POST http://localhost:8080/update/counter/testSetGet33/527
-Content-Type: application/json
-
-###
-
-POST http://localhost:8080/update/gauge/Alloc/90
-Content-Type: application/json
-
-{}
 
 ###
 

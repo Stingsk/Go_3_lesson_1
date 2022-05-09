@@ -19,7 +19,7 @@ import (
 func main() {
 	logs.Init()
 	if err := config.GetAgentConfig(); err != nil {
-		logrus.Error("Failed to parse command line arguments: %v", err)
+		logrus.Error("Failed to parse command line arguments:", err)
 	}
 	logrus.Debug("Start agent")
 	sigChan := make(chan os.Signal, 1)
@@ -45,7 +45,7 @@ func main() {
 	}
 
 	if err := env.Parse(&agentConfig); err != nil {
-		logrus.Error("Failed to parse environment variables")
+		logrus.Error("Failed to parse environment variables", err)
 	}
 	level, err := logrus.ParseLevel(agentConfig.LogLevel)
 	if err != nil {

@@ -21,7 +21,7 @@ var (
 )
 
 const (
-	defaultServerAddress  = "127.0.0.1:8080"
+	defaultServerAddress  = "localhost:8080"
 	defaultPollInterval   = 2 * time.Second
 	defaultReportInterval = 10 * time.Second
 	defaultServerTimeout  = 1 * time.Second

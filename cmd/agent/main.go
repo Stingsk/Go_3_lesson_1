@@ -21,7 +21,22 @@ func main() {
 	if err := config.GetAgentConfig(); err != nil {
 		logrus.Error("Failed to parse command line arguments:", err)
 	}
-	logrus.Debug("Start agent")
+	var agentConfig = httputil.AgentConfig{
+		ReportInterval: config.ReportInterval,
+		PollInterval:   config.PollInterval,
+		Address:        config.Address,
+		SignKey:        config.SignKey,
+		LogLevel:       config.LogLevel,
+	}
+	if err := env.Parse(&agentConfig); err != nil {
+		logrus.Error("Failed to parse environment variables", err)
+	}
+	level, err := logrus.ParseLevel(agentConfig.LogLevel)
+	if err != nil {
+		logrus.Error(err)
+	}
+	logrus.SetLevel(level)
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
 		syscall.SIGINT,
@@ -33,33 +48,12 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	var agentConfig = &httputil.AgentConfig{
-		Context:        ctx,
-		ReportInterval: config.ReportInterval,
-		PollInterval:   config.PollInterval,
-		Messages:       &sensorData,
-		WaitGroup:      wg,
-		Address:        config.Address,
-		SignKey:        config.SignKey,
-		LogLevel:       config.LogLevel,
-		ServerTimeout:  config.ServerTimeout,
-	}
-
-	if err := env.Parse(&agentConfig); err != nil {
-		logrus.Error("Failed to parse environment variables", err)
-	}
-	level, err := logrus.ParseLevel(agentConfig.LogLevel)
-	if err != nil {
-		logrus.Error(err)
-	}
-	logrus.SetLevel(level)
-
 	wg.Add(1)
 	go metrics.RunGetMetrics(ctx, agentConfig.PollInterval, &sensorData, wg)
 
 	wg.Add(1)
 
-	go httputil.RunSender(*agentConfig)
+	go httputil.RunSender(agentConfig, &sensorData, wg, ctx)
 
 	go func() {
 		<-sigChan

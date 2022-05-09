@@ -18,17 +18,7 @@ func main() {
 	if err := config.GetServerConfig(); err != nil {
 		logrus.Info("Failed to parse command line arguments", err)
 	}
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	var serverConfig = &httputil.Config{
-		WaitGroup:          &wg,
-		SigChan:            sigChan,
+	var serverConfig = httputil.Config{
 		Address:            config.Address,
 		Restore:            config.Restore,
 		StoreFile:          config.StoreFile,
@@ -43,11 +33,19 @@ func main() {
 		logrus.Error(err)
 	}
 	logrus.SetLevel(level)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
 	if err := env.Parse(&serverConfig); err != nil {
 		logrus.Info("Failed to parse environment variables", err)
 	}
 	logrus.Info("Config Server : ", serverConfig)
-	go httputil.RunServer(*serverConfig)
+	go httputil.RunServer(serverConfig, &wg, sigChan)
 
 	wg.Wait()
 

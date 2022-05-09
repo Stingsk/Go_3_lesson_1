@@ -26,9 +26,7 @@ type Config struct {
 	Restore            bool          `env:"RESTORE"`
 	SignKey            string        `env:"KEY"`
 	DataBaseConnection string        `env:"DATABASE_DSN"`
-	LogLevel           string        `env:"LogLevel"`
-	WaitGroup          *sync.WaitGroup
-	SigChan            chan os.Signal
+	LogLevel           string        `env:"LOG_LEVEL"`
 }
 
 const (
@@ -46,13 +44,13 @@ type gzipResponseWriter struct {
 var SignKey string
 var Storage storage.Repository
 
-func RunServer(serverConfig Config) {
+func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	SignKey = serverConfig.SignKey
 
-	defer serverConfig.WaitGroup.Done()
+	defer wg.Done()
 	server := &http.Server{Addr: getHost(serverConfig.Address), Handler: service()}
 
 	if serverConfig.DataBaseConnection != "" {
@@ -94,7 +92,7 @@ func RunServer(serverConfig Config) {
 					if serverConfig.StoreInterval == 0 {
 						FileStorage.WriteMetrics()
 					}
-				case <-serverConfig.SigChan:
+				case <-sigChan:
 					FileStorage.WriteMetrics()
 					logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
 					err := server.Shutdown(ctx)

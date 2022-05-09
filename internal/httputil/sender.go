@@ -22,25 +22,21 @@ type AgentConfig struct {
 	ReportInterval time.Duration `env:"REPORT_INTERVAL"`
 	PollInterval   time.Duration `env:"POLL_INTERVAL"`
 	SignKey        string        `env:"KEY"`
-	LogLevel       string        `env:"LogLevel"`
-	Context        context.Context
-	Messages       *metrics.SensorData
-	WaitGroup      *sync.WaitGroup
-	ServerTimeout  time.Duration
+	LogLevel       string        `env:"LOG_LEVEL"`
 }
 
-func RunSender(agentConfig AgentConfig) {
-	defer agentConfig.WaitGroup.Done()
+func RunSender(agentConfig AgentConfig, m *metrics.SensorData, wg *sync.WaitGroup, ctx context.Context) {
+	defer wg.Done()
 	SignKey = agentConfig.SignKey
 	ticker := time.NewTicker(agentConfig.ReportInterval)
 	for {
 		select {
 		case <-ticker.C:
-			messagesFromChan := agentConfig.Messages.Get()
+			messagesFromChan := m.Get()
 			for _, mes := range messagesFromChan {
 				sendPost(mes, agentConfig.Address)
 			}
-		case <-agentConfig.Context.Done():
+		case <-ctx.Done():
 			logrus.Error("crash agent")
 			return
 		}

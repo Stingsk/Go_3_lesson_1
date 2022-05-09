@@ -145,8 +145,8 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Header.Get("Content-Type") != "application/json" {
-
 		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
+		return
 	}
 	defer r.Body.Close()
 
@@ -159,10 +159,12 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 
 	if m.ID == "" || m.MType == "" {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
+		return
 	}
 
 	if !m.IsHashValid(SignKey) {
 		http.Error(w, getJSONError("Hash is invalid"), http.StatusBadRequest)
+		return
 	}
 
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
@@ -171,6 +173,7 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Error(err)
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
+		return
 	}
 	logrus.Info("SavePostMetric Value: ", m)
 	render.JSON(w, r, m)
@@ -182,6 +185,7 @@ func savePostMetrics(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
+		return
 	}
 	defer r.Body.Close()
 
@@ -199,6 +203,7 @@ func savePostMetrics(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Error(err)
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
+		return
 	}
 
 	logrus.Info("SavePostMetrics Value: ", m)
@@ -211,6 +216,7 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 	metricType := strings.ToLower(chi.URLParam(r, "type"))
 	if metricType != gauge && metricType != counter {
 		http.Error(w, "Only metricType  gauge and counter in request are allowed!", http.StatusNotImplemented)
+		return
 	}
 	metricName := strings.ToLower(chi.URLParam(r, "name"))
 	metricValue := chi.URLParam(r, "value")
@@ -222,6 +228,7 @@ func saveMetric(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Error(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 }
 
@@ -242,6 +249,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 
 	if m.ID == "" || m.MType == "" {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
+		return
 	}
 
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
@@ -293,7 +301,8 @@ func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Error(err)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("{ \"error\" : \"error get balues\"}"))
+		w.Write([]byte("{ \"error\" : \"error get values\"}"))
+		return
 	}
 	metricsString := concatenationMetrics(metrics)
 	logrus.Info("Data received: " + metricsString)
@@ -308,10 +317,8 @@ func pingDataBase(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logrus.Error(err)
 		http.Error(w, getJSONError(err.Error()), http.StatusNotImplemented)
+		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("{ \"success\" : \"success\"}"))
 }
 
 func concatenationMetrics(metrics map[string]*storage.Metric) string {

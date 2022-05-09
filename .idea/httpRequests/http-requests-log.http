@@ -1,3 +1,27 @@
+GET http://localhost:8080/ping
+
+###
+
+GET http://localhost:8080/ping
+Accept: application/json
+Content-Type: application/json
+
+###
+
+GET http://localhost:8080/ping
+Accept: application/json
+Content-Type: application/json
+
+###
+
+GET http://localhost:8080/ping
+Accept: application/json
+Content-Type: application/json
+
+<> 2022-05-09T204928.501.txt
+
+###
+
 GET http://localhost:8080/value/counter/testSetGet33
 Accept: application/json
 Content-Type: application/json
@@ -529,38 +553,6 @@ POST http://localhost:8080/update/gauge/testGauge/100
 Content-Type: application/json
 
 {}
-
-###
-
-GET http://localhost:8080/value/gauge/testGauge
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-05-08T190131.200.txt
-
-###
-
-GET http://localhost:8080/value/gauge/Alloc
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-05-08T190113.200.txt
-
-###
-
-GET http://localhost:8080/value/counter/Alloc
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-05-08T190103.404.txt
-
-###
-
-GET http://localhost:8080/value/counter/testSetGet33
-Accept: application/json
-Content-Type: application/json
-
-<> 2022-05-08T190045.200.txt
 
 ###
 

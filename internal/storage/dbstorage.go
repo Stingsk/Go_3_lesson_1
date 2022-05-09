@@ -165,9 +165,8 @@ func (db *DBStore) UpdateMetric(ctx context.Context, metric Metric) error {
 	return nil
 }
 
-func (db *DBStore) Ping(ctx context.Context) error {
-
-	return db.connection.PingContext(ctx)
+func (db *DBStore) Ping(_ context.Context) error {
+	return db.connection.Ping()
 }
 
 func (db *DBStore) GetMetric(ctx context.Context, metricName string, metricType string) (*Metric, error) {
@@ -282,8 +281,6 @@ func (db *DBStore) GetMetrics(ctx context.Context) (map[string]*Metric, error) {
 }
 
 func (db *DBStore) Close() error {
-	logrus.Info("Close database connection")
-
 	return db.connection.Close()
 }
 

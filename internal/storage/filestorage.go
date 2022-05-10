@@ -102,7 +102,6 @@ func (fs *FileStorage) UpdateMetrics(_ context.Context, metricsBatch []*Metric) 
 	fs.Mutex.Lock()
 	defer fs.sync()
 	defer fs.Mutex.Unlock()
-	fs.metrics = make(map[string]*Metric)
 	for _, mb := range metricsBatch {
 		fs.metrics[mb.ID] = mb
 	}

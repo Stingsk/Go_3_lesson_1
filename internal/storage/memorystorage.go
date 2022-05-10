@@ -87,7 +87,6 @@ func (m *MemoryStorage) GetMetrics(_ context.Context) (map[string]*Metric, error
 }
 
 func (m *MemoryStorage) UpdateMetrics(_ context.Context, metricsBatch []*Metric) error {
-	m.Metric = make(map[string]*Metric)
 	for _, mb := range metricsBatch {
 		m.Metric[mb.ID] = mb
 	}

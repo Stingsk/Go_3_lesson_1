@@ -33,10 +33,10 @@ func RunSender(agentConfig AgentConfig, m *metrics.SensorData, wg *sync.WaitGrou
 		select {
 		case <-ticker.C:
 			messagesFromChan := m.Get()
-			for _, mes := range messagesFromChan {
+			/*for _, mes := range messagesFromChan {
 				sendPost(mes, agentConfig.Address)
-			}
-			//sendPostMany(messagesFromChan, agentConfig.Address)
+			}*/
+			sendPostMany(messagesFromChan, agentConfig.Address)
 		case <-ctx.Done():
 			logrus.Error("crash agent")
 			return

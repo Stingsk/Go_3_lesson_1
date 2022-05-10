@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -35,7 +34,7 @@ func (fs *FileStorage) UpdateMetric(_ context.Context, metric Metric) error {
 	fs.Mutex.Lock()
 	defer fs.sync()
 	defer fs.Mutex.Unlock()
-	var id = strings.ToLower(metric.ID)
+	var id = metric.ID
 	var valueMetric = fs.metrics[id]
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {

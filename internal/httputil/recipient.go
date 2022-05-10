@@ -215,12 +215,12 @@ func savePostMetrics(w http.ResponseWriter, r *http.Request) {
 func saveMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 
-	metricType := strings.ToLower(chi.URLParam(r, "type"))
+	metricType := chi.URLParam(r, "type")
 	if metricType != gauge && metricType != counter {
 		http.Error(w, "Only metricType  gauge and counter in request are allowed!", http.StatusNotImplemented)
 		return
 	}
-	metricName := strings.ToLower(chi.URLParam(r, "name"))
+	metricName := chi.URLParam(r, "name")
 	metricValue := chi.URLParam(r, "value")
 
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
@@ -258,7 +258,7 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	logrus.Info("GetValueMetric Par: ", string(par))
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer requestCancel()
-	valueMetric, err := Storage.GetMetric(requestContext, strings.ToLower(m.ID), strings.ToLower(m.MType))
+	valueMetric, err := Storage.GetMetric(requestContext, m.ID, m.MType)
 	mar, _ := json.Marshal(valueMetric)
 	logrus.Info("GetValueMetric Value: ", string(mar))
 	if err == nil && m.Delta == nil && m.Value == nil {
@@ -272,8 +272,8 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 
 func getMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	metricType := strings.ToLower(chi.URLParam(r, "type"))
-	metricName := strings.ToLower(chi.URLParam(r, "name"))
+	metricType := chi.URLParam(r, "type")
+	metricName := chi.URLParam(r, "name")
 
 	if metricType == "" {
 		http.Error(w, "MetricType NotImplemented!", http.StatusNotFound)

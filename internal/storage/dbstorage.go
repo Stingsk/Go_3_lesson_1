@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Stingsk/Go_3_lesson_1/db/migrations"
@@ -137,13 +136,13 @@ func (db *DBStore) UpdateMetricByParameters(ctx context.Context, metricName stri
 		return errors.New("only numbers  params in request are allowed")
 	}
 
-	if strings.ToLower(metricType) == MetricTypeGauge {
+	if metricType == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
 		db.updateGaugeMetric(ctx, metricName, v)
-	} else if strings.ToLower(metricType) == MetricTypeCounter {
+	} else if metricType == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return err
@@ -164,9 +163,9 @@ func (db *DBStore) UpdateMetric(ctx context.Context, metric Metric) error {
 		return errors.New("type is empty")
 	}
 
-	if strings.ToLower(metric.MType) == MetricTypeGauge {
+	if metric.MType == MetricTypeGauge {
 		db.updateGaugeMetric(ctx, metric.ID, *metric.Value)
-	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
+	} else if metric.MType == MetricTypeCounter {
 		db.updateCounterMetric(ctx, metric.ID, *metric.Delta)
 	}
 

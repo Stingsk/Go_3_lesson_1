@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -24,7 +23,7 @@ func NewMemoryStorage() *MemoryStorage {
 func (m *MemoryStorage) UpdateMetric(_ context.Context, metric Metric) error {
 	m.Mutex.Lock()
 	defer m.Mutex.Unlock()
-	var id = strings.ToLower(metric.ID)
+	var id = metric.ID
 	var valueMetric = m.Metric[id]
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
@@ -74,7 +73,7 @@ func (m *MemoryStorage) GetMetric(_ context.Context, name string, _ string) (*Me
 	if name == "" {
 		return &Metric{}, errors.New("empty name")
 	}
-	value, ok := m.Metric[strings.ToLower(name)]
+	value, ok := m.Metric[name]
 
 	if !ok {
 		return &Metric{}, errors.New("name not found")

@@ -6,17 +6,16 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 func (m *Metric) UpdateMetricResource(value string) error {
-	if strings.ToLower(m.MType) == MetricTypeGauge {
+	if m.MType == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
 		m.Value = &v
-	} else if strings.ToLower(m.MType) == MetricTypeCounter {
+	} else if m.MType == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return err
@@ -33,9 +32,9 @@ func (m *Metric) UpdateMetricResource(value string) error {
 }
 
 func (m *Metric) Update(newMetric Metric) {
-	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
+	if newMetric.MType == MetricTypeGauge {
 		m.Value = newMetric.Value
-	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
+	} else if newMetric.MType == MetricTypeCounter {
 		m.Delta = sumInt(*m.Delta, *newMetric.Delta)
 	}
 }
@@ -48,12 +47,12 @@ func (m *Metric) GetValue() string {
 	if m == nil {
 		return ""
 	}
-	if strings.ToLower(m.MType) == MetricTypeGauge {
+	if m.MType == MetricTypeGauge {
 		if m.Value == nil {
 			return ""
 		}
 		return strconv.FormatFloat(*m.Value, 'f', 3, 64)
-	} else if strings.ToLower(m.MType) == MetricTypeCounter {
+	} else if m.MType == MetricTypeCounter {
 		if m.Delta == nil {
 			return ""
 		}
@@ -79,18 +78,18 @@ func (m *Metric) GetHash(key string) string {
 
 func New(value string, metricType string, name string) (Metric, error) {
 	metric := Metric{
-		ID:    strings.ToLower(name),
-		MType: strings.ToLower(metricType),
+		ID:    name,
+		MType: metricType,
 		Delta: nil,
 		Value: nil,
 	}
-	if strings.ToLower(metricType) == MetricTypeGauge {
+	if metricType == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return Metric{}, err
 		}
 		metric.Value = &v
-	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
+	} else if metric.MType == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return Metric{}, err

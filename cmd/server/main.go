@@ -45,6 +45,9 @@ func main() {
 	if err != nil {
 		logrus.Error(err)
 	}
+	if config.DataBaseConnection == "" {
+		serverConfig.DataBaseConnection = config.DataBaseConnection
+	}
 	logrus.SetLevel(level)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,

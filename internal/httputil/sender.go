@@ -33,9 +33,7 @@ func RunSender(agentConfig AgentConfig, m *metrics.SensorData, wg *sync.WaitGrou
 		select {
 		case <-ticker.C:
 			messagesFromChan := m.Get()
-			for _, mes := range messagesFromChan {
-				sendPost(mes, agentConfig.Address)
-			}
+			sendPostMany(messagesFromChan, agentConfig.Address)
 		case <-ctx.Done():
 			logrus.Error("crash agent")
 			return
@@ -73,6 +71,7 @@ func sendPost(metric storage.Metric, host string) {
 	if err != nil {
 		logrus.Error(err)
 	}
+	logrus.Info("Send: ", string(m))
 	response, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(m).
@@ -81,12 +80,30 @@ func sendPost(metric storage.Metric, host string) {
 	if err != nil {
 		logrus.Error(err)
 	}
-
-	// печатаем код ответа
-	logrus.Info("Send: ", metric)
 	logrus.Info("Status code ", response.StatusCode())
-	// и печатаем его
-	logrus.Info(string(response.Body()))
+}
+func sendPostMany(metric []storage.Metric, host string) {
+	endpoint := getHostSend(host) + "/updates/"
+	client := resty.New()
+	if SignKey != "" {
+		for _, mes := range metric {
+			mes.Hash = mes.GetHash(SignKey)
+		}
+	}
+	m, err := json.Marshal(metric)
+	if err != nil {
+		logrus.Error(err)
+	}
+	logrus.Info("Send: ", string(m))
+	response, err := client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(m).
+		Post(endpoint)
+
+	if err != nil {
+		logrus.Error(err)
+	}
+	logrus.Info("Status code ", response.StatusCode())
 }
 
 func getHostSend(host string) string {

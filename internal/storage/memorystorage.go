@@ -98,6 +98,10 @@ func (m *MemoryStorage) Ping(_ context.Context) error {
 	return nil
 }
 
+func (m *MemoryStorage) WriteMetrics() error {
+	return nil
+}
+
 func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
 	metric, err := New(value, metricType, name)
 	if err != nil {

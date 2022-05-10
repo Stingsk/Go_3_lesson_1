@@ -53,6 +53,7 @@ func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) 
 	defer wg.Done()
 	server := &http.Server{Addr: getHost(serverConfig.Address), Handler: service()}
 
+	syncChannel := make(chan struct{}, 1)
 	if serverConfig.DataBaseConnection != "" {
 		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)
 		if err != nil {
@@ -65,7 +66,6 @@ func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) 
 		Storage = DBStore
 	} else if serverConfig.StoreFile != "" {
 		logrus.Info("Start File Store ")
-		syncChannel := make(chan struct{}, 1)
 		FileStorage, err := storage.NewFileStorage(serverConfig.StoreFile, syncChannel)
 		if err != nil {
 			logrus.Info(err)
@@ -78,41 +78,40 @@ func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) 
 				logrus.Info("Fail to restore data")
 			}
 		}
-
 		Storage = FileStorage
 
-		go func() {
-			ticker := new(time.Ticker)
-			if serverConfig.StoreInterval > 0 {
-				ticker = time.NewTicker(serverConfig.StoreInterval)
-			}
-			defer ticker.Stop()
-			for {
-				select {
-				case <-ticker.C:
-					FileStorage.WriteMetrics()
-				case <-syncChannel:
-					if serverConfig.StoreInterval == 0 {
-						FileStorage.WriteMetrics()
-					}
-				case <-sigChan:
-					FileStorage.WriteMetrics()
-					logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
-					err := server.Shutdown(ctx)
-					if err != nil {
-						logrus.Fatal(err)
-					}
-					cancel()
-					return
-				}
-			}
-		}()
 	} else {
 		logrus.Info("Start Memory Store ")
 		MemoryStorage := storage.NewMemoryStorage()
 		Storage = MemoryStorage
 	}
 
+	go func() {
+		ticker := new(time.Ticker)
+		if serverConfig.StoreInterval > 0 {
+			ticker = time.NewTicker(serverConfig.StoreInterval)
+		}
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				Storage.WriteMetrics()
+			case <-syncChannel:
+				if serverConfig.StoreInterval == 0 {
+					Storage.WriteMetrics()
+				}
+			case <-sigChan:
+				Storage.WriteMetrics()
+				logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
+				err := server.Shutdown(ctx)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				cancel()
+				return
+			}
+		}
+	}()
 	// Run the server
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {

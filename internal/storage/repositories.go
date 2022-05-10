@@ -18,6 +18,7 @@ type Repository interface {
 	UpdateMetric(ctx context.Context, metric Metric) error
 
 	Ping(ctx context.Context) error
+	WriteMetrics() error
 }
 
 type Metric struct {

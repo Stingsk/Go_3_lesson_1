@@ -27,12 +27,10 @@ type DBStore struct {
 func NewDBStore(dataBaseConnectionString string) (*DBStore, error) {
 	var db DBStore
 
-	/*conn, err := sql.Open(psqlDriverName, dataBaseConnectionString)
+	conn, err := sql.Open(psqlDriverName, dataBaseConnectionString)
 	if err != nil {
 		return nil, err
-	}*/
-
-	return nil, errors.New("error")
+	}
 
 	/*ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
@@ -41,9 +39,9 @@ func NewDBStore(dataBaseConnectionString string) (*DBStore, error) {
 		return nil, err
 	}*/
 
-	/*db = DBStore{
+	db = DBStore{
 		connection: conn,
-	}*/
+	}
 
 	/*if err = db.migrate(); err != nil {
 		return nil, err
@@ -294,6 +292,10 @@ func (db *DBStore) GetMetrics(ctx context.Context) (map[string]*Metric, error) {
 
 func (db *DBStore) Close() error {
 	return db.connection.Close()
+}
+
+func (db *DBStore) WriteMetrics() error {
+	return nil
 }
 
 func (db *DBStore) updateCounterMetric(ctx context.Context, metricName string, metricData int64) error {

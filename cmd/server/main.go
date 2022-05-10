@@ -25,7 +25,7 @@ func main() {
 		StoreFile:          config.StoreFile,
 		StoreInterval:      config.StoreInterval,
 		SignKey:            config.SignKey,
-		DataBaseConnection: "postgresql://localhost:5432/metrics", //config.DataBaseConnection, // "postgresql://localhost:5432/metrics",
+		DataBaseConnection: config.DataBaseConnection, // "postgresql://localhost:5432/metrics",
 		LogLevel:           config.LogLevel,
 	}
 
@@ -40,7 +40,7 @@ func main() {
 		logrus.Error(err)
 	}
 	if config.DataBaseConnection == "" {
-		//serverConfig.DataBaseConnection = config.DataBaseConnection
+		serverConfig.DataBaseConnection = config.DataBaseConnection
 	}
 	logrus.SetLevel(level)
 	sigChan := make(chan os.Signal, 1)

@@ -44,7 +44,7 @@ func NewDBStore(dataBaseConnectionString string) (*DBStore, error) {
 		connection: conn,
 	}
 
-	if err := db.migrate(); err != nil {
+	if err = db.migrate(); err != nil {
 		return nil, err
 	}
 
@@ -341,7 +341,7 @@ func (db *DBStore) migrate() error {
 		return err
 	}
 
-	if err := migration.Up(); !errors.Is(err, migrate.ErrNoChange) {
+	if err = migration.Up(); !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
 

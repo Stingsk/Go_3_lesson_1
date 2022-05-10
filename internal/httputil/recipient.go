@@ -56,13 +56,13 @@ func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) 
 	if serverConfig.DataBaseConnection != "" {
 		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)
 		if err != nil {
-			logrus.Info(err)
+			logrus.Fatal(err)
+			server.Shutdown(ctx)
+			cancel()
+			return
 		}
-		err = DBStore.Ping(ctx)
 
-		if err == nil {
-			Storage = DBStore
-		}
+		Storage = DBStore
 	} else if serverConfig.StoreFile != "" {
 		logrus.Info("Start File Store ")
 		syncChannel := make(chan struct{}, 1)

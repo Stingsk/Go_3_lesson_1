@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Stingsk/Go_3_lesson_1/db/migrations"
-	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -326,24 +325,24 @@ func (db *DBStore) updateGaugeMetric(ctx context.Context, metricName string, met
 func (db *DBStore) migrate() error {
 	data := bindata.Resource(migrations.AssetNames(), migrations.Asset)
 
-	sourceDriver, err := bindata.WithInstance(data)
+	_, err := bindata.WithInstance(data)
 	if err != nil {
 		return err
 	}
 
-	dbDriver, err := postgres.WithInstance(db.connection, &postgres.Config{})
+	_, err = postgres.WithInstance(db.connection, &postgres.Config{})
 	if err != nil {
 		return err
 	}
 
-	migration, err := migrate.NewWithInstance(migrationSourceName, sourceDriver, psqlDriverName, dbDriver)
+	/*migration, err := migrate.NewWithInstance(migrationSourceName, sourceDriver, psqlDriverName, dbDriver)
 	if err != nil {
 		return err
 	}
 
 	if err = migration.Up(); !errors.Is(err, migrate.ErrNoChange) {
 		return err
-	}
+	}*/
 
 	return nil
 }

@@ -32,6 +32,11 @@ func NewDBStore(dataBaseConnectionString string) (*DBStore, error) {
 		return nil, err
 	}
 
+	err = db.connection.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	db = DBStore{
 		connection: conn,
 	}

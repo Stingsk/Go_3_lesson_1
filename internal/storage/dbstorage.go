@@ -33,9 +33,9 @@ func NewDBStore(dataBaseConnectionString string) (*DBStore, error) {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
-	err = db.connection.PingContext(ctx)
+	err = conn.PingContext(ctx)
 	if err != nil {
 		return nil, err
 	}

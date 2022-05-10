@@ -27,7 +27,6 @@ type Config struct {
 	SignKey            string        `env:"KEY"`
 	DataBaseConnection string        `env:"DATABASE_DSN"`
 	LogLevel           string        `env:"LOG_LEVEL"`
-	StoreFileEmpty     string        `env:"STORE_FILE"`
 }
 
 const (
@@ -54,61 +53,67 @@ func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) 
 	defer wg.Done()
 	server := &http.Server{Addr: getHost(serverConfig.Address), Handler: service()}
 
-	if serverConfig.DataBaseConnection != "" && serverConfig.StoreFileEmpty == "" {
-		logrus.Info("Start DataBase Store ")
+	if serverConfig.DataBaseConnection != "" {
 		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)
 		if err != nil {
 			logrus.Info(err)
 		}
-		Storage = DBStore
-	} else if serverConfig.StoreFile != "" {
-		logrus.Info("Start File Store ")
-		syncChannel := make(chan struct{}, 1)
-		FileStorage, err := storage.NewFileStorage(serverConfig.StoreFile, syncChannel)
-		if err != nil {
-			logrus.Info(err)
-		}
+		err = DBStore.Ping(ctx)
 
-		if serverConfig.Restore {
-			logrus.Info("Load data from  file")
-			err := FileStorage.ReadMetrics()
+		if err == nil {
+			Storage = DBStore
+		}
+	}
+	if Storage == nil {
+		if serverConfig.StoreFile != "" {
+			logrus.Info("Start File Store ")
+			syncChannel := make(chan struct{}, 1)
+			FileStorage, err := storage.NewFileStorage(serverConfig.StoreFile, syncChannel)
 			if err != nil {
-				logrus.Info("Fail to restore data")
+				logrus.Info(err)
 			}
-		}
 
-		Storage = FileStorage
-
-		go func() {
-			ticker := new(time.Ticker)
-			if serverConfig.StoreInterval > 0 {
-				ticker = time.NewTicker(serverConfig.StoreInterval)
-			}
-			defer ticker.Stop()
-			for {
-				select {
-				case <-ticker.C:
-					FileStorage.WriteMetrics()
-				case <-syncChannel:
-					if serverConfig.StoreInterval == 0 {
-						FileStorage.WriteMetrics()
-					}
-				case <-sigChan:
-					FileStorage.WriteMetrics()
-					logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
-					err := server.Shutdown(ctx)
-					if err != nil {
-						logrus.Fatal(err)
-					}
-					cancel()
-					return
+			if serverConfig.Restore {
+				logrus.Info("Load data from  file")
+				err := FileStorage.ReadMetrics()
+				if err != nil {
+					logrus.Info("Fail to restore data")
 				}
 			}
-		}()
-	} else {
-		logrus.Info("Start Memory Store ")
-		MemoryStorage := storage.NewMemoryStorage()
-		Storage = MemoryStorage
+
+			Storage = FileStorage
+
+			go func() {
+				ticker := new(time.Ticker)
+				if serverConfig.StoreInterval > 0 {
+					ticker = time.NewTicker(serverConfig.StoreInterval)
+				}
+				defer ticker.Stop()
+				for {
+					select {
+					case <-ticker.C:
+						FileStorage.WriteMetrics()
+					case <-syncChannel:
+						if serverConfig.StoreInterval == 0 {
+							FileStorage.WriteMetrics()
+						}
+					case <-sigChan:
+						FileStorage.WriteMetrics()
+						logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
+						err := server.Shutdown(ctx)
+						if err != nil {
+							logrus.Fatal(err)
+						}
+						cancel()
+						return
+					}
+				}
+			}()
+		} else {
+			logrus.Info("Start Memory Store ")
+			MemoryStorage := storage.NewMemoryStorage()
+			Storage = MemoryStorage
+		}
 	}
 
 	// Run the server

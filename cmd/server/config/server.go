@@ -29,7 +29,6 @@ var (
 	SignKey            string
 	DataBaseConnection string
 	LogLevel           string
-	StoreFileEmpty     string
 )
 
 const (
@@ -51,16 +50,8 @@ func init() {
 	rootCmd.Flags().BoolVarP(&Restore, "restore", "r", true,
 		"Flag to load initial metrics from storage ")
 
-	rootCmd.Flags().StringVarP(&StoreFile, "file", "f", "",
+	rootCmd.Flags().StringVarP(&StoreFile, "file", "f", defaultStoreFile,
 		"Path to save metrics")
-
-	if StoreFile == "" {
-		StoreFileEmpty = ""
-		StoreFile = defaultStoreFile
-	} else {
-		StoreFileEmpty = defaultStoreFile
-		StoreFile = defaultStoreFile
-	}
 
 	rootCmd.Flags().DurationVarP(&StoreInterval, "interval", "i", defaultStoreInterval,
 		"Seconds to periodically save metrics if 0 save immediately")

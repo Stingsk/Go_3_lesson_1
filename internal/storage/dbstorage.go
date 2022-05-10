@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Stingsk/Go_3_lesson_1/db/migrations"
 	"github.com/golang-migrate/migrate/v4"
@@ -32,7 +33,9 @@ func NewDBStore(dataBaseConnectionString string) (*DBStore, error) {
 		return nil, err
 	}
 
-	err = db.connection.Ping()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
+	defer cancel()
+	err = db.connection.PingContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -170,11 +173,11 @@ func (db *DBStore) UpdateMetric(ctx context.Context, metric Metric) error {
 	return nil
 }
 
-func (db *DBStore) Ping(_ context.Context) error {
+func (db *DBStore) Ping(ctx context.Context) error {
 	if db == nil {
 		return errors.New("db not set")
 	}
-	return db.connection.Ping()
+	return db.connection.PingContext(ctx)
 }
 
 func (db *DBStore) GetMetric(ctx context.Context, metricName string, metricType string) (*Metric, error) {

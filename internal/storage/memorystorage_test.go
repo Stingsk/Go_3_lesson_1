@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +11,6 @@ import (
 func TestMemoryStorage_NewMetric(t *testing.T) {
 	type fields struct {
 		Metric map[string]*Metric
-		Mutex  sync.Mutex
 	}
 	type args struct {
 		value      string
@@ -77,7 +75,6 @@ func TestMemoryStorage_NewMetric(t *testing.T) {
 func TestMemoryStorage_UpdateMetric(t *testing.T) {
 	type fields struct {
 		Metric map[string]*Metric
-		Mutex  sync.Mutex
 	}
 	type args struct {
 		in0    context.Context
@@ -198,7 +195,6 @@ func TestMemoryStorage_UpdateMetric(t *testing.T) {
 func TestMemoryStorage_UpdateMetricByParameters(t *testing.T) {
 	type fields struct {
 		Metric map[string]*Metric
-		Mutex  sync.Mutex
 	}
 	type args struct {
 		in0        context.Context
@@ -243,7 +239,6 @@ func TestMemoryStorage_UpdateMetricByParameters(t *testing.T) {
 						Value: nil,
 					},
 				},
-				Mutex: sync.Mutex{},
 			},
 			args: args{
 				in0:        nil,
@@ -287,7 +282,6 @@ func TestMemoryStorage_UpdateMetricByParameters(t *testing.T) {
 func TestMemoryStorage_UpdateMetrics(t *testing.T) {
 	type fields struct {
 		Metric map[string]*Metric
-		Mutex  sync.Mutex
 	}
 	type args struct {
 		in0          context.Context

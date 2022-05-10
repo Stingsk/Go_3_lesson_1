@@ -27,7 +27,6 @@ func main() {
 		DataBaseConnection: config.DataBaseConnection, // "postgresql://localhost:5432/metrics",
 		LogLevel:           config.LogLevel,
 	}
-	logrus.Info("Config Server from cmd: ", serverConfig)
 
 	level, err := logrus.ParseLevel(serverConfig.LogLevel)
 	if err != nil {
@@ -36,6 +35,13 @@ func main() {
 	if err := env.Parse(&serverConfig); err != nil {
 		logrus.Info("Failed to parse environment variables", err)
 	}
+	if val, ok := os.LookupEnv("DATABASE_DSN"); !ok {
+		logrus.Info("DATABASE_DSN not ok")
+		serverConfig.DataBaseConnection = config.DataBaseConnection
+	} else {
+		logrus.Info("DATABASE_DSN ok", val)
+	}
+	logrus.Info("Config Server from cmd: ", serverConfig)
 	logrus.Info("Config Server : ", serverConfig)
 	logrus.SetLevel(level)
 	sigChan := make(chan os.Signal, 1)

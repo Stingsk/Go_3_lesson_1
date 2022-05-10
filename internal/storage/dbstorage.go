@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Stingsk/Go_3_lesson_1/db/migrations"
 	"github.com/golang-migrate/migrate/v4"
@@ -32,20 +33,20 @@ func NewDBStore(dataBaseConnectionString string) (*DBStore, error) {
 		return nil, err
 	}
 
-	/*ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 	err = conn.PingContext(ctx)
 	if err != nil {
 		return nil, err
-	}*/
+	}
 
 	db = DBStore{
 		connection: conn,
 	}
 
-	/*if err = db.migrate(); err != nil {
+	if err = db.migrate(); err != nil {
 		return nil, err
-	}*/
+	}
 
 	return &db, nil
 }

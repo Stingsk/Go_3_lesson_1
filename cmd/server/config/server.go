@@ -1,8 +1,6 @@
 package config
 
 import (
-	"errors"
-	"regexp"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -13,14 +11,6 @@ var (
 		Use:   "server",
 		Short: "Metrics for Server",
 		Long:  "Metrics for Server",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			re := regexp.MustCompile(`(DEBUG|INFO|WARNING|ERROR)`)
-			if !re.MatchString(LogLevel) {
-				return errors.New("invalid param specified")
-			}
-
-			return nil
-		},
 	}
 	Address            string
 	Restore            bool

@@ -18,6 +18,13 @@ func main() {
 	if err := config.GetServerConfig(); err != nil {
 		logrus.Info("Failed to parse command line arguments", err)
 	}
+
+	if val, ok := os.LookupEnv("DATABASE_DSN"); !ok {
+		logrus.Info("DATABASE_DSN not ok", val)
+		config.DataBaseConnection = ""
+	} else {
+		logrus.Info("DATABASE_DSN ok", val)
+	}
 	var serverConfig = httputil.Config{
 		Address:            config.Address,
 		Restore:            config.Restore,
@@ -28,21 +35,16 @@ func main() {
 		LogLevel:           config.LogLevel,
 	}
 
+	logrus.Info("Config Server from cmd: ", serverConfig)
+
+	if err := env.Parse(&serverConfig); err != nil {
+		logrus.Info("Failed to parse environment variables", err)
+	}
+	logrus.Info("Config Server : ", serverConfig)
 	level, err := logrus.ParseLevel(serverConfig.LogLevel)
 	if err != nil {
 		logrus.Error(err)
 	}
-	if err := env.Parse(&serverConfig); err != nil {
-		logrus.Info("Failed to parse environment variables", err)
-	}
-	if val, ok := os.LookupEnv("DATABASE_DSN"); !ok {
-		logrus.Info("DATABASE_DSN not ok")
-		serverConfig.DataBaseConnection = config.DataBaseConnection
-	} else {
-		logrus.Info("DATABASE_DSN ok", val)
-	}
-	logrus.Info("Config Server from cmd: ", serverConfig)
-	logrus.Info("Config Server : ", serverConfig)
 	logrus.SetLevel(level)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,

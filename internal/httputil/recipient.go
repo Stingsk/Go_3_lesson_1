@@ -30,7 +30,7 @@ type Config struct {
 }
 
 const (
-	requestTimeout = 1 * time.Second
+	requestTimeout = 2 * time.Second
 )
 
 const gauge string = "gauge"
@@ -317,6 +317,9 @@ func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	logrus.Info(r.RequestURI)
 }
 func pingDataBase(w http.ResponseWriter, r *http.Request) {
+
+	http.Error(w, getJSONError("test"), http.StatusInternalServerError)
+	return
 	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
 	defer requestCancel()
 	err := Storage.Ping(requestContext)

@@ -19,12 +19,6 @@ func main() {
 		logrus.Info("Failed to parse command line arguments", err)
 	}
 
-	if val, ok := os.LookupEnv("DATABASE_DSN"); !ok {
-		logrus.Info("DATABASE_DSN not ok", val)
-		config.DataBaseConnection = ""
-	} else {
-		logrus.Info("DATABASE_DSN ok", val)
-	}
 	var serverConfig = httputil.Config{
 		Address:            config.Address,
 		Restore:            config.Restore,

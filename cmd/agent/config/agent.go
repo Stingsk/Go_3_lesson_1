@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 
+	"github.com/caarlos0/env/v6"
 	"github.com/spf13/cobra"
 )
 
@@ -12,12 +13,12 @@ var (
 		Short: "Metrics for Agent",
 		Long:  "Metrics for Agent",
 	}
-	Address        string
-	PollInterval   time.Duration
-	ReportInterval time.Duration
-	ServerTimeout  time.Duration
-	SignKey        string
-	LogLevel       string
+	address        string
+	pollInterval   time.Duration
+	reportInterval time.Duration
+	serverTimeout  time.Duration
+	signKey        string
+	logLevel       string
 )
 
 const (
@@ -27,26 +28,49 @@ const (
 	defaultServerTimeout  = 1 * time.Second
 )
 
-func init() {
-	rootAgentCmd.Flags().StringVarP(&Address, "address", "a", defaultServerAddress,
+type Config struct {
+	Address        string        `env:"ADDRESS"`
+	ReportInterval time.Duration `env:"REPORT_INTERVAL"`
+	PollInterval   time.Duration `env:"POLL_INTERVAL"`
+	SignKey        string        `env:"KEY"`
+	LogLevel       string        `env:"LOG_LEVEL"`
+}
+
+func setConfig() {
+	rootAgentCmd.Flags().StringVarP(&address, "address", "a", defaultServerAddress,
 		"Pair of host:port to send data")
 
-	rootAgentCmd.Flags().DurationVarP(&ServerTimeout, "timeout", "t", defaultServerTimeout,
+	rootAgentCmd.Flags().DurationVarP(&serverTimeout, "timeout", "t", defaultServerTimeout,
 		"Timeout for server connection")
 
-	rootAgentCmd.Flags().StringVarP(&SignKey, "key", "k", "",
+	rootAgentCmd.Flags().StringVarP(&signKey, "key", "k", "",
 		"Key for generate hash")
 
-	rootAgentCmd.Flags().DurationVarP(&ReportInterval, "reportInterval", "r", defaultReportInterval,
+	rootAgentCmd.Flags().DurationVarP(&reportInterval, "reportInterval", "r", defaultReportInterval,
 		"Seconds to periodically save metrics")
 
-	rootAgentCmd.Flags().DurationVarP(&PollInterval, "pollInterval", "p", defaultPollInterval,
+	rootAgentCmd.Flags().DurationVarP(&pollInterval, "pollInterval", "p", defaultPollInterval,
 		"Seconds to periodically send metrics to server")
 
-	rootAgentCmd.Flags().StringVarP(&LogLevel, "log-level", "l", "INFO",
+	rootAgentCmd.Flags().StringVarP(&logLevel, "log-level", "l", "INFO",
 		"Set log level: DEBUG|INFO|WARNING|ERROR")
 }
 
-func GetAgentConfig() error {
-	return rootAgentCmd.Execute()
+func GetAgentConfig() (Config, error) {
+	setConfig()
+	rootAgentCmd.Execute()
+
+	var agentConfig = Config{
+		ReportInterval: reportInterval,
+		PollInterval:   pollInterval,
+		Address:        address,
+		SignKey:        signKey,
+		LogLevel:       logLevel,
+	}
+
+	if err := env.Parse(&agentConfig); err != nil {
+		return Config{}, err
+	}
+
+	return agentConfig, nil
 }

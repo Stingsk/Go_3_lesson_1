@@ -18,21 +18,30 @@ import (
 
 type SensorData struct {
 	mu   sync.RWMutex
-	last []storage.Metric
+	last map[string]storage.Metric
 }
 
 func (d *SensorData) Store(data []storage.Metric) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	if d.last == nil {
+		d.last = make(map[string]storage.Metric)
+	}
 
-	d.last = data
+	for _, s := range data {
+		d.last[s.ID] = s
+	}
 }
 
 func (d *SensorData) Get() []storage.Metric {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+	var metric []storage.Metric
+	for _, s := range d.last {
+		metric = append(metric, s)
+	}
 
-	return d.last
+	return metric
 }
 
 func RunGetMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) {
@@ -52,15 +61,13 @@ func RunGetMetrics(ctx context.Context, duration time.Duration, messages *Sensor
 	}
 }
 
-func RunGetMemoryAndCpuMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) {
+func RunGetMemoryAndCPUMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) {
 	ticker := time.NewTicker(duration)
-	count := 0
 	for {
 		select {
 		case <-ticker.C:
-			metrics := getMemoryAndCpuMetrics(count)
+			metrics := getMemoryAndCPUMetrics()
 			messages.Store(metrics)
-			count++
 		case <-ctx.Done():
 			wg.Done()
 			logrus.Error("crash shutdown")
@@ -179,7 +186,7 @@ func getMetrics(count int) []storage.Metric {
 	return metricData
 }
 
-func getMemoryAndCpuMetrics(count int) []storage.Metric {
+func getMemoryAndCPUMetrics() []storage.Metric {
 
 	var ms = storage.NewMemoryStorage()
 	var metricData []storage.Metric

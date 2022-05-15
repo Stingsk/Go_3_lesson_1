@@ -41,7 +41,7 @@ func main() {
 	wg.Add(1)
 	go metrics.RunGetMetrics(ctx, agentConfig.PollInterval, &sensorData, wg)
 	wg.Add(1)
-	go metrics.RunGetMemoryAndCpuMetrics(ctx, agentConfig.PollInterval, &sensorData, wg)
+	go metrics.RunGetMemoryAndCPUMetrics(ctx, agentConfig.PollInterval, &sensorData, wg)
 
 	wg.Add(1)
 

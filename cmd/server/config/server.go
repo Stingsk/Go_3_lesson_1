@@ -80,8 +80,8 @@ func GetServerConfig() (Config, error) {
 	if err := env.Parse(&serverConfig); err != nil {
 		return Config{}, err
 	}
-	if serverConfig.DataBaseConnection == "" {
-		serverConfig.DataBaseConnection = serverConfig.DataBaseConnection
+	if dataBaseConnection == "" {
+		serverConfig.DataBaseConnection = dataBaseConnection
 	}
 
 	return serverConfig, nil

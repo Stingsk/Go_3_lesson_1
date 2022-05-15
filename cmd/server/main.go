@@ -20,6 +20,9 @@ func main() {
 	}
 	logrus.Info("Config Server : ", serverConfig)
 	level, err := logrus.ParseLevel(serverConfig.LogLevel)
+	if err != nil {
+		logrus.Error("Fail to read log level: ", err)
+	}
 	logrus.SetLevel(level)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,

@@ -1,88 +1,111 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"strconv"
-	"strings"
+	"sync"
 )
 
 type MemoryStorage struct {
+	Metric map[string]*Metric
+	Mutex  sync.Mutex
 }
 
-func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
-	metric := Metric{
-		ID:    strings.ToLower(name),
-		MType: strings.ToLower(metricType),
-		Delta: nil,
-		Value: nil,
-	}
-	if strings.ToLower(metricType) == MetricTypeGauge {
-		v, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return Metric{}, err
-		}
-		metric.Value = &v
-	} else if strings.ToLower(metric.MType) == MetricTypeCounter {
-		newValue, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			return Metric{}, err
-		}
+func NewMemoryStorage() *MemoryStorage {
+	var m MemoryStorage
 
-		delta := int64(0)
-		if metric.Delta != nil {
-			delta = *metric.Delta
-		}
-		metric.Delta = sumInt(delta, newValue)
-	}
+	m.Metric = make(map[string]*Metric)
 
-	return metric, nil
+	return &m
 }
 
-func (m *MemoryStorage) UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error) {
-	metricResourceMap.Mutex.Lock()
-	defer metricResourceMap.Mutex.Unlock()
-
-	var valueMetric = metricResourceMap.Metric[strings.ToLower(metric.ID)]
+func (m *MemoryStorage) UpdateMetric(_ context.Context, metric Metric) error {
+	m.Mutex.Lock()
+	defer m.Mutex.Unlock()
+	var id = metric.ID
+	var valueMetric = m.Metric[id]
 	if valueMetric.GetValue() != "" {
 		if metric.Delta != nil || metric.Value != nil {
 			valueMetric.Update(metric)
-			metricResourceMap.Metric[strings.ToLower(metric.ID)] = valueMetric
-			return valueMetric, nil
+			m.Metric[id] = valueMetric
+			return nil
 		} else {
-			return Metric{}, errors.New("data is empty")
+			return errors.New("data is empty")
 		}
 	} else {
 		if metric.Delta != nil || metric.Value != nil {
-			metricResourceMap.Metric[strings.ToLower(metric.ID)] = metric
-			return metric, nil
+			m.Metric[id] = &metric
+			return nil
 		} else {
-			return Metric{}, errors.New("data is empty")
+			return errors.New("data is empty")
 		}
 	}
 }
 
-func (m *MemoryStorage) UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error) {
-	metricResourceMap.Mutex.Lock()
-	defer metricResourceMap.Mutex.Unlock()
+func (m *MemoryStorage) UpdateMetricByParameters(_ context.Context, metricName string, metricType string, value string) error {
+	m.Mutex.Lock()
+	defer m.Mutex.Unlock()
 	_, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		return Metric{}, errors.New("only numbers  params in request are allowed")
+		return errors.New("only numbers  params in request are allowed")
 	}
 
-	var valueMetric, found = metricResourceMap.Metric[metricName]
+	var valueMetric, found = m.Metric[metricName]
 	if found {
 		err := valueMetric.UpdateMetricResource(value)
-		metricResourceMap.Metric[strings.ToLower(metricName)] = valueMetric
+		m.Metric[metricName] = valueMetric
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
-		return valueMetric, nil
+		return nil
 	} else {
-		metric, err := m.NewMetric(value, metricType, metricName)
+		_, err := m.NewMetric(value, metricType, metricName)
 		if err != nil {
-			return Metric{}, err
+			return err
 		}
-		metricResourceMap.Metric[metricName] = metric
-		return metric, nil
+
+		return nil
 	}
+}
+
+func (m *MemoryStorage) GetMetric(_ context.Context, name string, _ string) (*Metric, error) {
+	if name == "" {
+		return &Metric{}, errors.New("empty name")
+	}
+	value, ok := m.Metric[name]
+
+	if !ok {
+		return &Metric{}, errors.New("name not found")
+	}
+
+	return value, nil
+}
+func (m *MemoryStorage) GetMetrics(_ context.Context) (map[string]*Metric, error) {
+	return m.Metric, nil
+}
+
+func (m *MemoryStorage) UpdateMetrics(_ context.Context, metricsBatch []*Metric) error {
+	for _, mb := range metricsBatch {
+		m.Metric[mb.ID] = mb
+	}
+
+	return nil
+}
+
+func (m *MemoryStorage) Ping(_ context.Context) error {
+	return nil
+}
+
+func (m *MemoryStorage) WriteMetrics() error {
+	return nil
+}
+
+func (m *MemoryStorage) NewMetric(value string, metricType string, name string) (Metric, error) {
+	metric, err := New(value, metricType, name)
+	if err != nil {
+		return Metric{}, err
+	}
+	m.Metric[name] = &metric
+	return metric, nil
 }

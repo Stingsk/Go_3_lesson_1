@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stingsk/Go_3_lesson_1/internal/file"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -20,7 +19,19 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var syncWrite = true
+type Config struct {
+	Address            string        `env:"ADDRESS"`
+	StoreInterval      time.Duration `env:"STORE_INTERVAL"`
+	StoreFile          string        `env:"STORE_FILE"`
+	Restore            bool          `env:"RESTORE"`
+	SignKey            string        `env:"KEY"`
+	DataBaseConnection string        `env:"DATABASE_DSN"`
+	LogLevel           string        `env:"LOG_LEVEL"`
+}
+
+const (
+	requestTimeout = 2 * time.Second
+)
 
 const gauge string = "gauge"
 const counter string = "counter"
@@ -29,51 +40,78 @@ type gzipResponseWriter struct {
 	Writer *gzip.Writer
 	http.ResponseWriter
 }
-type ServerConfig struct {
-	WaitGroup     *sync.WaitGroup
-	SigChan       chan os.Signal
-	Host          string
-	Metrics       map[string]storage.Metric
-	StoreFile     string
-	StoreInterval time.Duration
-}
 
-var MetricLocal *storage.MetricResourceMap
-var StoreFile string
+var SignKey string
+var Storage storage.Repository
 
-func RunServer(serverConfig ServerConfig) {
-	StoreFile = serverConfig.StoreFile
-	MetricLocal = &storage.MetricResourceMap{
-		Metric:     nil,
-		Mutex:      sync.Mutex{},
-		Repository: &storage.MemoryStorage{},
-	}
-	MetricLocal.Metric = serverConfig.Metrics
-	defer serverConfig.WaitGroup.Done()
-	server := &http.Server{Addr: getHost(serverConfig.Host), Handler: service()}
+func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) {
 	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		<-serverConfig.SigChan
-		file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
-		logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
-		err := server.Shutdown(ctx)
+	defer cancel()
+
+	SignKey = serverConfig.SignKey
+
+	defer wg.Done()
+	server := &http.Server{Addr: getHost(serverConfig.Address), Handler: service()}
+
+	syncChannel := make(chan struct{}, 1)
+	if serverConfig.DataBaseConnection != "" {
+		DBStore, err := storage.NewDBStore(serverConfig.DataBaseConnection)
 		if err != nil {
 			logrus.Fatal(err)
+			server.Shutdown(ctx)
+			cancel()
+			return
 		}
-		cancel()
-	}()
 
-	if serverConfig.StoreInterval > 0 {
-		go func() {
-			ticker := time.NewTicker(serverConfig.StoreInterval)
-			for {
-				<-ticker.C
-				file.WriteMetrics(serverConfig.StoreFile, MetricLocal)
+		Storage = DBStore
+	} else if serverConfig.StoreFile != "" {
+		logrus.Info("Start File Store ")
+		FileStorage, err := storage.NewFileStorage(serverConfig.StoreFile, syncChannel)
+		if err != nil {
+			logrus.Info(err)
+		}
+
+		if serverConfig.Restore {
+			logrus.Info("Load data from  file")
+			err := FileStorage.ReadMetrics()
+			if err != nil {
+				logrus.Info("Fail to restore data")
 			}
-		}()
-		syncWrite = false
+		}
+		Storage = FileStorage
+
+	} else {
+		logrus.Info("Start Memory Store ")
+		MemoryStorage := storage.NewMemoryStorage()
+		Storage = MemoryStorage
 	}
 
+	go func() {
+		ticker := new(time.Ticker)
+		if serverConfig.StoreInterval > 0 {
+			ticker = time.NewTicker(serverConfig.StoreInterval)
+		}
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				Storage.WriteMetrics()
+			case <-syncChannel:
+				if serverConfig.StoreInterval == 0 {
+					Storage.WriteMetrics()
+				}
+			case <-sigChan:
+				Storage.WriteMetrics()
+				logrus.Info("Save data before Shutdown to " + serverConfig.StoreFile)
+				err := server.Shutdown(ctx)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				cancel()
+				return
+			}
+		}
+	}()
 	// Run the server
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
@@ -88,9 +126,11 @@ func service() http.Handler {
 	apiRouter := chi.NewRouter()
 	setMiddlewares(apiRouter)
 	apiRouter.Post("/update/", savePostMetric)
+	apiRouter.Post("/updates/", savePostMetrics)
 	apiRouter.Post("/value/", getValueMetric)
 	apiRouter.Post("/update/{type}/{name}/{value}", saveMetric)
 	apiRouter.Get("/value/{type}/{name}", getMetric)
+	apiRouter.Get("/ping", pingDataBase)
 	apiRouter.Get("/", getAllMetrics)
 	apiRouter.Post("/update/*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getJSONError("Method NotFound!"), http.StatusNotFound)
@@ -103,11 +143,10 @@ func service() http.Handler {
 
 func savePostMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	logrus.Info("Url request: " + r.RequestURI)
 
 	if r.Header.Get("Content-Type") != "application/json" {
-
 		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
+		return
 	}
 	defer r.Body.Close()
 
@@ -120,47 +159,83 @@ func savePostMetric(w http.ResponseWriter, r *http.Request) {
 
 	if m.ID == "" || m.MType == "" {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
+		return
 	}
 
-	var valueMetric, err = MetricLocal.Repository.UpdateMetric(MetricLocal, m)
+	if !m.IsHashValid(SignKey) {
+		http.Error(w, getJSONError("Hash is invalid"), http.StatusBadRequest)
+		return
+	}
+
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	err := Storage.UpdateMetric(requestContext, m)
 	if err != nil {
+		logrus.Error(err)
 		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
+		return
+	}
+	mar, _ := json.Marshal(m)
+	logrus.Info("SavePostMetric Value: ", string(mar))
+	render.JSON(w, r, m)
+
+}
+
+func savePostMetrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
+		return
+	}
+	defer r.Body.Close()
+
+	var m []*storage.Metric
+	err := json.NewDecoder(r.Body).Decode(&m)
+	if err != nil {
+		logrus.Error(err)
+		http.Error(w, getJSONError("Fail on parse request"), http.StatusBadRequest)
+		return
 	}
 
-	render.JSON(w, r, valueMetric)
-
-	if syncWrite {
-		file.WriteMetrics(StoreFile, MetricLocal)
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	err = Storage.UpdateMetrics(requestContext, m)
+	if err != nil {
+		logrus.Error(err)
+		http.Error(w, getJSONError("Data is empty"), http.StatusBadRequest)
+		return
 	}
-	logrus.Info(r.RequestURI)
+
+	mar, _ := json.Marshal(m)
+	logrus.Info("SavePostMetrics Value: ", string(mar))
+	w.Write([]byte("{ \"success\" : \"success\"}"))
 }
 
 func saveMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	logrus.Info("Url request: " + r.RequestURI)
 
-	metricType := strings.ToLower(chi.URLParam(r, "type"))
+	metricType := chi.URLParam(r, "type")
 	if metricType != gauge && metricType != counter {
 		http.Error(w, "Only metricType  gauge and counter in request are allowed!", http.StatusNotImplemented)
+		return
 	}
-	metricName := strings.ToLower(chi.URLParam(r, "name"))
-	metricValue := strings.ToLower(chi.URLParam(r, "value"))
+	metricName := chi.URLParam(r, "name")
+	metricValue := chi.URLParam(r, "value")
 
-	var _, err = MetricLocal.Repository.UpdateMetricByParameters(MetricLocal, metricName, metricType, metricValue)
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	logrus.Info("SaveMetric Value: ", metricType, metricName, metricValue)
+	err := Storage.UpdateMetricByParameters(requestContext, metricName, metricType, metricValue)
 	if err != nil {
+		logrus.Error(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-
-	if syncWrite {
-		file.WriteMetrics(StoreFile, MetricLocal)
-	}
-	logrus.Info(r.RequestURI)
 }
 
 func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	logrus.Info("Url request: " + r.RequestURI)
-
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, getJSONError("Only application/json  can be Content-Type"), http.StatusUnsupportedMediaType)
 	}
@@ -169,32 +244,36 @@ func getValueMetric(w http.ResponseWriter, r *http.Request) {
 	var m storage.Metric
 	err := json.NewDecoder(r.Body).Decode(&m)
 	if err != nil {
+		logrus.Error(err)
 		http.Error(w, getJSONError("Fail on parse request"), http.StatusBadRequest)
 		return
 	}
 
 	if m.ID == "" || m.MType == "" {
 		http.Error(w, getJSONError("ID or MType is empty"), http.StatusBadRequest)
+		return
 	}
 
-	var valueMetric, found = MetricLocal.Metric[strings.ToLower(m.ID)]
-	if found && m.Delta == nil && m.Value == nil {
+	par, _ := json.Marshal(m)
+	logrus.Info("GetValueMetric Par: ", string(par))
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	valueMetric, err := Storage.GetMetric(requestContext, m.ID, m.MType)
+	mar, _ := json.Marshal(valueMetric)
+	logrus.Info("GetValueMetric Value: ", string(mar))
+	if err == nil && m.Delta == nil && m.Value == nil {
+		valueMetric.SetHash(SignKey)
 		render.JSON(w, r, &valueMetric)
-		logrus.Info("Send data")
 	} else {
 		http.Error(w, getJSONError("Data Not Found"), http.StatusNotFound)
 	}
 
-	logrus.Info(w.Header().Get("Content-Type"))
-	logrus.Info(r.Body)
-	logrus.Info(r.Header)
 }
 
 func getMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	logrus.Info("Url request: " + r.RequestURI)
-	metricType := strings.ToLower(chi.URLParam(r, "type"))
-	metricName := strings.ToLower(chi.URLParam(r, "name"))
+	metricType := chi.URLParam(r, "type")
+	metricName := chi.URLParam(r, "name")
 
 	if metricType == "" {
 		http.Error(w, "MetricType NotImplemented!", http.StatusNotFound)
@@ -204,11 +283,16 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "MetricName NotImplemented!", http.StatusNotFound)
 		return
 	}
-	var valueMetric, found = MetricLocal.Metric[metricName]
-	if found && valueMetric.GetMetricType() == metricType {
-		logrus.Info("Data received: " + valueMetric.GetValue())
+
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	valueMetric, err := Storage.GetMetric(requestContext, metricName, metricType)
+	mar, _ := json.Marshal(valueMetric)
+	logrus.Info("GetMetric Value: ", string(mar))
+	if err == nil && valueMetric.GetMetricType() == metricType {
 		w.Write([]byte(valueMetric.GetValue()))
 	} else {
+		logrus.Error(err)
 		http.Error(w, "Value NotFound!", http.StatusNotFound)
 		return
 	}
@@ -216,15 +300,33 @@ func getMetric(w http.ResponseWriter, r *http.Request) {
 
 func getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	logrus.Info("Url request: " + r.RequestURI)
-	metricsString := concatenationMetrics(MetricLocal.Metric)
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	metrics, err := Storage.GetMetrics(requestContext)
+	if err != nil {
+		logrus.Error(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{ \"error\" : \"error get values\"}"))
+		return
+	}
+	metricsString := concatenationMetrics(metrics)
 	logrus.Info("Data received: " + metricsString)
 	w.Write([]byte(metricsString))
 
 	logrus.Info(r.RequestURI)
 }
+func pingDataBase(w http.ResponseWriter, r *http.Request) {
+	requestContext, requestCancel := context.WithTimeout(r.Context(), requestTimeout)
+	defer requestCancel()
+	err := Storage.Ping(requestContext)
+	if err != nil {
+		logrus.Error(err)
+		http.Error(w, getJSONError(err.Error()), http.StatusInternalServerError)
+		return
+	}
+}
 
-func concatenationMetrics(metrics map[string]storage.Metric) string {
+func concatenationMetrics(metrics map[string]*storage.Metric) string {
 	s := ""
 	for name, element := range metrics {
 		s += name + ": " + element.GetValue() + "\r"
@@ -244,6 +346,7 @@ func setMiddlewares(router *chi.Mux) {
 }
 
 func getJSONError(errorText string) string {
+	logrus.Error(errorText)
 	return "{ \"error\" : \"" + errorText + "\"}"
 }
 

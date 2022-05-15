@@ -1,6 +1,8 @@
 package storage
 
-import "sync"
+import (
+	"context"
+)
 
 const (
 	MetricTypeGauge   string = "gauge"
@@ -8,9 +10,15 @@ const (
 )
 
 type Repository interface {
-	NewMetric(value string, metricType string, name string) (Metric, error)
-	UpdateMetric(metricResourceMap *MetricResourceMap, metric Metric) (Metric, error)
-	UpdateMetricByParameters(metricResourceMap *MetricResourceMap, metricName string, metricType string, value string) (Metric, error)
+	GetMetric(ctx context.Context, name string, metricType string) (*Metric, error)
+	GetMetrics(ctx context.Context) (map[string]*Metric, error)
+
+	UpdateMetrics(ctx context.Context, metricsBatch []*Metric) error
+	UpdateMetricByParameters(ctx context.Context, metricName string, metricType string, value string) error
+	UpdateMetric(ctx context.Context, metric Metric) error
+
+	Ping(ctx context.Context) error
+	WriteMetrics() error
 }
 
 type Metric struct {
@@ -18,10 +26,5 @@ type Metric struct {
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
 	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
-}
-
-type MetricResourceMap struct {
-	Metric     map[string]Metric
-	Mutex      sync.Mutex
-	Repository Repository
+	Hash  string   `json:"hash,omitempty"`  // Значение хеш-функции
 }

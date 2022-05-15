@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14.2
+    shm_size: 1gb
+    environment:
+      POSTGRES_DB: metrics
+      POSTGRES_USER: dbmetric
+      POSTGRES_PASSWORD: dbmetricpass
+    ports:
+      - "5432:5432"

@@ -1,18 +1,21 @@
 package storage
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"strconv"
-	"strings"
 )
 
 func (m *Metric) UpdateMetricResource(value string) error {
-	if strings.ToLower(m.MType) == MetricTypeGauge {
+	if m.MType == MetricTypeGauge {
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
 		m.Value = &v
-	} else if strings.ToLower(m.MType) == MetricTypeCounter {
+	} else if m.MType == MetricTypeCounter {
 		newValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return err
@@ -29,9 +32,9 @@ func (m *Metric) UpdateMetricResource(value string) error {
 }
 
 func (m *Metric) Update(newMetric Metric) {
-	if strings.ToLower(newMetric.MType) == MetricTypeGauge {
+	if newMetric.MType == MetricTypeGauge {
 		m.Value = newMetric.Value
-	} else if strings.ToLower(newMetric.MType) == MetricTypeCounter {
+	} else if newMetric.MType == MetricTypeCounter {
 		m.Delta = sumInt(*m.Delta, *newMetric.Delta)
 	}
 }
@@ -41,12 +44,15 @@ func (m *Metric) GetMetricType() string {
 }
 
 func (m *Metric) GetValue() string {
-	if strings.ToLower(m.MType) == MetricTypeGauge {
+	if m == nil {
+		return ""
+	}
+	if m.MType == MetricTypeGauge {
 		if m.Value == nil {
 			return ""
 		}
 		return strconv.FormatFloat(*m.Value, 'f', 3, 64)
-	} else if strings.ToLower(m.MType) == MetricTypeCounter {
+	} else if m.MType == MetricTypeCounter {
 		if m.Delta == nil {
 			return ""
 		}
@@ -54,6 +60,62 @@ func (m *Metric) GetValue() string {
 	}
 
 	return ""
+}
+func (m *Metric) GetHash(key string) string {
+	var metricString string
+	switch {
+	case m.MType == MetricTypeGauge:
+		metricString = fmt.Sprintf("%s:%s:%f", m.ID, MetricTypeGauge, *(m.Value))
+	case m.MType == MetricTypeCounter:
+		metricString = fmt.Sprintf("%s:%s:%d", m.ID, MetricTypeCounter, *(m.Delta))
+	}
+
+	h := hmac.New(sha256.New, []byte(key))
+	h.Write([]byte(metricString))
+
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func New(value string, metricType string, name string) (Metric, error) {
+	metric := Metric{
+		ID:    name,
+		MType: metricType,
+		Delta: nil,
+		Value: nil,
+	}
+	if metricType == MetricTypeGauge {
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return Metric{}, err
+		}
+		metric.Value = &v
+	} else if metric.MType == MetricTypeCounter {
+		newValue, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return Metric{}, err
+		}
+
+		delta := int64(0)
+		if metric.Delta != nil {
+			delta = *metric.Delta
+		}
+		metric.Delta = sumInt(delta, newValue)
+	}
+
+	return metric, nil
+}
+func (m *Metric) IsHashValid(key string) bool {
+	if key == "" {
+		return true
+	}
+
+	return m.Hash == m.GetHash(key)
+}
+
+func (m *Metric) SetHash(key string) {
+	if key != "" {
+		m.Hash = m.GetHash(key)
+	}
 }
 
 func sumInt(first int64, second int64) *int64 {

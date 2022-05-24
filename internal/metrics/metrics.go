@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"runtime"
 	"strconv"
@@ -9,26 +10,38 @@ import (
 	"time"
 
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/sirupsen/logrus"
 )
 
 type SensorData struct {
 	mu   sync.RWMutex
-	last []storage.Metric
+	last map[string]storage.Metric
 }
 
 func (d *SensorData) Store(data []storage.Metric) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	if d.last == nil {
+		d.last = make(map[string]storage.Metric)
+	}
 
-	d.last = data
+	for _, s := range data {
+		d.last[s.ID] = s
+	}
 }
 
 func (d *SensorData) Get() []storage.Metric {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
+	var metric []storage.Metric
+	for _, s := range d.last {
+		metric = append(metric, s)
+	}
 
-	return d.last
+	return metric
 }
 
 func RunGetMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) {
@@ -48,6 +61,20 @@ func RunGetMetrics(ctx context.Context, duration time.Duration, messages *Sensor
 	}
 }
 
+func RunGetMemoryAndCPUMetrics(ctx context.Context, duration time.Duration, messages *SensorData, wg *sync.WaitGroup) {
+	ticker := time.NewTicker(duration)
+	for {
+		select {
+		case <-ticker.C:
+			metrics := getMemoryAndCPUMetrics()
+			messages.Store(metrics)
+		case <-ctx.Done():
+			wg.Done()
+			logrus.Error("crash shutdown")
+			return
+		}
+	}
+}
 func getMetrics(count int) []storage.Metric {
 
 	var metricData []storage.Metric
@@ -154,6 +181,33 @@ func getMetrics(count int) []storage.Metric {
 
 	if val, err := ms.NewMetric(strconv.Itoa(count), storage.MetricTypeCounter, "PollCount"); err == nil {
 		metricData = append(metricData, val)
+	}
+
+	return metricData
+}
+
+func getMemoryAndCPUMetrics() []storage.Metric {
+
+	var ms = storage.NewMemoryStorage()
+	var metricData []storage.Metric
+
+	memory, err := mem.VirtualMemory()
+	if err == nil {
+		if val, err := ms.NewMetric(strconv.FormatUint(memory.Total, 10), storage.MetricTypeGauge, "TotalMemory"); err == nil {
+			metricData = append(metricData, val)
+		}
+		if val, err := ms.NewMetric(strconv.FormatUint(memory.Free, 10), storage.MetricTypeGauge, "FreeMemory"); err == nil {
+			metricData = append(metricData, val)
+		}
+	}
+
+	processor, err := cpu.Percent(1*time.Second, true)
+	if err == nil {
+		for index, p := range processor {
+			if val, err := ms.NewMetric(strconv.FormatFloat(p, 'f', 2, 64), storage.MetricTypeGauge, fmt.Sprintf("CPUutilization%d", index+1)); err == nil {
+				metricData = append(metricData, val)
+			}
+		}
 	}
 
 	return metricData

@@ -8,24 +8,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Stingsk/Go_3_lesson_1/cmd/agent/config"
+	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 
-	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 )
 
 const protocol string = "http://"
 
-type AgentConfig struct {
-	Address        string        `env:"ADDRESS"`
-	ReportInterval time.Duration `env:"REPORT_INTERVAL"`
-	PollInterval   time.Duration `env:"POLL_INTERVAL"`
-	SignKey        string        `env:"KEY"`
-	LogLevel       string        `env:"LOG_LEVEL"`
-}
-
-func RunSender(agentConfig AgentConfig, m *metrics.SensorData, wg *sync.WaitGroup, ctx context.Context) {
+func RunSender(agentConfig config.Config, m *metrics.SensorData, wg *sync.WaitGroup, ctx context.Context) {
 	defer wg.Done()
 	SignKey = agentConfig.SignKey
 	ticker := time.NewTicker(agentConfig.ReportInterval)

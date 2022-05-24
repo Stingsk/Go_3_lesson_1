@@ -8,8 +8,6 @@ import (
 	"syscall"
 
 	"github.com/Stingsk/Go_3_lesson_1/cmd/agent/config"
-	"github.com/caarlos0/env/v6"
-
 	"github.com/Stingsk/Go_3_lesson_1/internal/httputil"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/metrics"
@@ -18,21 +16,11 @@ import (
 
 func main() {
 	logs.Init()
-	if err := config.GetAgentConfig(); err != nil {
-		logrus.Error("Failed to parse command line arguments:", err)
+	agentConfig, err := config.GetAgentConfig()
+	if err != nil {
+		logrus.Fatal("Failed to parse command line arguments:", err)
 	}
-	var agentConfig = httputil.AgentConfig{
-		ReportInterval: config.ReportInterval,
-		PollInterval:   config.PollInterval,
-		Address:        config.Address,
-		SignKey:        config.SignKey,
-		LogLevel:       config.LogLevel,
-	}
-	logrus.Info("agent config from cmd: ", agentConfig)
-	if err := env.Parse(&agentConfig); err != nil {
-		logrus.Error("Failed to parse environment variables", err)
-	}
-	logrus.Info("agent config: ", agentConfig)
+
 	level, err := logrus.ParseLevel(agentConfig.LogLevel)
 	if err != nil {
 		logrus.Error(err)
@@ -52,6 +40,8 @@ func main() {
 
 	wg.Add(1)
 	go metrics.RunGetMetrics(ctx, agentConfig.PollInterval, &sensorData, wg)
+	wg.Add(1)
+	go metrics.RunGetMemoryAndCPUMetrics(ctx, agentConfig.PollInterval, &sensorData, wg)
 
 	wg.Add(1)
 

@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Stingsk/Go_3_lesson_1/cmd/server/config"
 	"github.com/Stingsk/Go_3_lesson_1/internal/logs"
 	"github.com/Stingsk/Go_3_lesson_1/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -18,16 +19,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/sirupsen/logrus"
 )
-
-type Config struct {
-	Address            string        `env:"ADDRESS"`
-	StoreInterval      time.Duration `env:"STORE_INTERVAL"`
-	StoreFile          string        `env:"STORE_FILE"`
-	Restore            bool          `env:"RESTORE"`
-	SignKey            string        `env:"KEY"`
-	DataBaseConnection string        `env:"DATABASE_DSN"`
-	LogLevel           string        `env:"LOG_LEVEL"`
-}
 
 const (
 	requestTimeout = 2 * time.Second
@@ -44,7 +35,7 @@ type gzipResponseWriter struct {
 var SignKey string
 var Storage storage.Repository
 
-func RunServer(serverConfig Config, wg *sync.WaitGroup, sigChan chan os.Signal) {
+func RunServer(serverConfig config.Config, wg *sync.WaitGroup, sigChan chan os.Signal) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
